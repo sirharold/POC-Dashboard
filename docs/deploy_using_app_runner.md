@@ -1,61 +1,69 @@
-# Despliegue con AWS App Runner (Estrategia Recomendada)
+# Deployment Guide: AWS App Runner (Recommended Strategy)
 
-Esta guía detalla cómo desplegar la aplicación usando **AWS App Runner**, un servicio totalmente gestionado que es más moderno, económico y escalable que una instancia EC2 para este caso de uso.
+This guide details how to deploy the application using **AWS App Runner**, a fully managed service that is more modern, cost-effective, and scalable than a traditional EC2 instance for this use case.
 
-**Ventajas:**
-- **Costo Eficiente:** App Runner puede escalar a cero, por lo que solo pagas cuando la aplicación está en uso.
-- **Totalmente Gestionado:** AWS se encarga del servidor, el balanceo de carga, la seguridad y la escalabilidad.
-- **Despliegue Sencillo:** Se despliega directamente desde tu repositorio de código.
+**Key Advantages:**
 
----
-
-### Prerrequisitos
-
-1.  **Código Refactorizado:** La aplicación ha sido actualizada para usar la librería `boto3` en lugar de `aws-cli`.
-2.  **`Dockerfile` Existente:** El proyecto ahora incluye un `Dockerfile` en su raíz, que le dice a App Runner cómo construir la aplicación.
-3.  **Repositorio de Código:** Tu código debe estar en un repositorio de GitHub (o Bitbucket).
+- **Cost-Effective:** App Runner can scale down to zero, so you only pay for compute when the application is actively being used.
+- **Fully Managed:** AWS handles the server infrastructure, load balancing, security, and scaling.
+- **Simple Deployments:** Deploys directly from your source code repository.
 
 ---
 
-### Paso 1: Crear un Rol de IAM para App Runner
+### Prerequisites
 
-App Runner necesita permisos para poder llamar a los servicios de EC2 y CloudWatch en tu nombre.
-
-1.  **Ve a IAM** en tu consola de AWS y crea un **nuevo Rol**.
-2.  **Entidad de confianza:** Selecciona **"Servicio de AWS"**.
-3.  **Caso de uso:** Busca y selecciona **"EC2"** en la lista. (Sí, EC2. App Runner asumirá este rol como si fuera una instancia).
-4.  **Añadir permisos:** Busca y añade las mismas políticas que antes:
-    *   `CloudWatchReadOnlyAccess`
-    *   `AmazonEC2ReadOnlyAccess`
-5.  **Nombra el rol:** Usa un nombre descriptivo, como `AppRunnerServiceRole`, y finaliza la creación.
+1. **Boto3 Refactoring:** The application code has been updated to use the `boto3` library instead of relying on the `aws-cli`.
+2. **Dockerfile:** The project root contains a `Dockerfile`, which provides instructions for App Runner to build the application container.
+3. **Source Code Repository:** Your code must be pushed to a GitHub (or Bitbucket) repository.
 
 ---
 
-### Paso 2: Configurar y Lanzar el Servicio en App Runner
+### Step 1: Create an IAM Role for App Runner
 
-1.  **Navega a AWS App Runner** en la consola.
-2.  Haz clic en **"Crear un servicio"**.
-3.  **Fuente y despliegue:**
-    *   **Fuente:** Selecciona **"Repositorio de código fuente"**.
-    *   **Conexión:** Si es la primera vez, crea una nueva conexión a tu cuenta de GitHub. Autoriza a AWS para que pueda ver tus repositorios.
-    *   **Repositorio:** Elige el repositorio de tu proyecto y la rama (ej. `main`).
-    *   **Despliegue:** Selecciona **"Automático"** para que cada cambio en la rama se despliegue solo.
-4.  **Configuración de la compilación (Build):**
-    *   En la sección "Configurar la compilación", selecciona **"Usar un Dockerfile"**.
-    *   App Runner detectará automáticamente el `Dockerfile` en tu repositorio.
-5.  **Configuración del servicio:**
-    *   **Nombre del servicio:** Elige un nombre, como `dashboard-epmaps-beta`.
-    *   **Puerto:** Escribe `8501`.
-    *   **Rol de instancia:** En la sección de "Seguridad", busca y selecciona el rol que creaste en el Paso 1 (`AppRunnerServiceRole`).
-6.  **Revisa y crea:** Haz clic en **"Siguiente"**, revisa la configuración y finalmente en **"Crear y desplegar"**.
+App Runner needs permissions to call AWS services (EC2, CloudWatch) on your behalf.
+
+1. Navigate to **IAM** in the AWS Console.
+2. Create a new **Role**.
+3. For **Trusted entity type**, select **"AWS service"**.
+4. For **Use case**, find and select **"App Runner"**. In the dropdown below, choose **"App Runner EC2 access"**. This creates the correct trust policy.
+5. Click **Next**.
+6. On the **Add permissions** page, search for and add the following AWS managed policies:
+   * `CloudWatchReadOnlyAccess`
+   * `AmazonEC2ReadOnlyAccess`
+7. Click **Next**.
+8. **Name the role:** Use a descriptive name, such as `AppRunnerServiceRole`, and finish creating the role.
 
 ---
 
-### Paso 3: Acceder a la Aplicación
+### Step 2: Create and Configure the App Runner Service
 
-1.  **Espera:** El primer despliegue tardará varios minutos. App Runner está construyendo el contenedor desde tu `Dockerfile` y poniéndolo en línea.
-2.  **Accede a la URL:** Una vez que el estado del servicio sea **"Running"**, App Runner te proporcionará un **"Dominio predeterminado"** (una URL terminada en `.awsapprunner.com`).
+1. Navigate to **AWS App Runner** in the console.
+2. Click **"Create service"**.
+3. **Source and deployment:**
+   * **Source:** Choose **"Source code repository"**.
+   * **Connection:** If this is your first time, create a new connection to your GitHub account. Authorize AWS to access your repositories.
+   * **Repository:** Choose your project's repository and the branch to deploy (e.g., `main`).
+   * **Deployment trigger:** Select **"Automatic"** to have every push to the branch trigger a new deployment.
+4. Click **Next**.
+5. **Configure build:**
+   * On this page, select the option **"Configure all settings here"**.
+   * App Runner will **automatically detect** the `Dockerfile` in your repository. You do not need to select a "Runtime" from the dropdown menu.
+   * The only setting you must confirm on this screen is the port.
+   * **Port:** Enter `8501`.
+6. Click **Next**.
+7. **Configure service:**
+   * **Service name:** Choose a name for your service, like `dashboard-epmaps-beta`.
+   * **Security - Instance role:** In this section, find and select the IAM role you created in Step 1 (`AppRunnerServiceRole`).
+8. Click **Next**.
+9. **Review and create:** Review the configuration and click **"Create & deploy"**.
 
-    `https://<id_unico>.awsapprunner.com`
+---
 
-Cualquier persona con esta URL podrá acceder a la versión beta de tu aplicación. La URL ya es segura (HTTPS).
+### Step 3: Access Your Application
+
+1. **Wait for Deployment:** The first deployment will take several minutes. App Runner is building the container image from your `Dockerfile` and deploying it. You can view the progress in the deployment logs.
+2. **Access the URL:** Once the service status changes to **"Running"**, App Runner will provide a **"Default domain"**. This is the public URL for your application.
+
+   `https://<unique_id>.awsapprunner.com`
+
+Anyone with this URL can now access the beta version of your application. The URL is already secured with HTTPS.
