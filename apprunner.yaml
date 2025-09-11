@@ -1,6 +1,0 @@
-version: 1.0
-build:
-  type: docker
-  dockerfile: ./Dockerfile
-run:
-  port: 8501
