@@ -1,0 +1,82 @@
+# Configuration file for the SAP Infrastructure Dashboard
+
+vm_status:
+  # ISU
+  SRVISUASCS: "green"
+  SRVISUPRD: "red"
+  SRVISUPRDDB: "yellow"
+  # ERP
+  SRVERPPRD: "green"
+  SRVSAPERPBDD: "yellow"
+  # SOLMAN
+  SOLMANPRD: "green"
+  # BO
+  SRVBOPRD: "green"
+  # BW
+  SRVBWPRD: "yellow"
+  SRVSAPBWBDD: "green"
+  # CRM
+  SRVCRMASCS: "green"
+  SRVCRMPRD: "yellow"
+  SRVCRMPRDDB: "green"
+  # Domain Controller
+  "SRVDCON4-(AD-DNS)": "green"
+  # MCF
+  SRVGTWPRDCS: "green"
+  SRVGTWPRDPAS: "yellow"
+  SRVMOBPRD: "green"
+  SRVHANDBPRD: "red"
+  # PO
+  "SRVPOPRDCS - RESPALDO 2025-08-11": "yellow"
+  "SRVPOPRDDB - RESPALDO 2025-08-11": "green"
+  "SRVPOPRDPAS - RESPALDO 2025-08-11": "green"
+  # SAO
+  SRVSAOBDD: "green"
+  SRVSAOPRD: "yellow"
+  # Otros
+  "DMZ-SRVSAPROU": "green"
+  "DMZ-SRVWDPRD": "green"
+  SRVALMCS: "yellow"
+  SRVALMPRDN: "green"
+  "SRVSTG (SRVALMPRD)": "red"
+  # POC Real Server
+  "SRV-REAL-POC": "green"
+  "SRV-CRM-POC": "yellow"
+
+server_groups:
+  - name: "ISU"
+    servers: ["SRVISUASCS", "SRVISUPRD", "SRVISUPRDDB"]
+    css_class: "group-isu"
+  - name: "ERP"
+    servers: ["SRVERPPRD", "SRVSAPERPBDD"]
+    css_class: "group-erp"
+  - name: "SOLMAN"
+    servers: ["SOLMANPRD"]
+    css_class: "group-solman"
+  - name: "BO"
+    servers: ["SRVBOPRD"]
+    css_class: "group-bo"
+  - name: "BW"
+    servers: ["SRVBWPRD", "SRVSAPBWBDD"]
+    css_class: "group-bw"
+  - name: "CRM"
+    servers: ["SRVCRMASCS", "SRVCRMPRD", "SRVCRMPRDDB"]
+    css_class: "group-crm"
+  - name: "Domain Controller"
+    servers: ["SRVDCON4-(AD-DNS)"]
+    css_class: "group-dc"
+  - name: "MCF"
+    servers: ["SRVGTWPRDCS", "SRVGTWPRDPAS", "SRVMOBPRD", "SRVHANDBPRD"]
+    css_class: "group-mcf"
+  - name: "PO"
+    servers: ["SRVPOPRDCS - RESPALDO 2025-08-11", "SRVPOPRDDB - RESPALDO 2025-08-11", "SRVPOPRDPAS - RESPALDO 2025-08-11"]
+    css_class: "group-po"
+  - name: "SAO"
+    servers: ["SRVSAOBDD", "SRVSAOPRD"]
+    css_class: "group-sao"
+  - name: "Otros"
+    servers: ["DMZ-SRVSAPROU", "DMZ-SRVWDPRD", "SRVALMCS", "SRVALMPRDN", "SRVSTG (SRVALMPRD)"]
+    css_class: "group-otros"
+  - name: "POC - Real Server"
+    servers: ["SRV-REAL-POC", "SRV-CRM-POC"]
+    css_class: "group-bo" # Reusing a style for now

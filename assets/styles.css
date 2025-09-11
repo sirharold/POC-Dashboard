@@ -1,0 +1,413 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ==========================================================================
+   GLOBAL STYLES
+   ========================================================================== */
+
+.stApp {
+    background: linear-gradient(180deg, #0a0f1c 0%, #1a1f2e 100%);
+    font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: white !important;
+}
+
+p {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.stMarkdown {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* ==========================================================================
+   MAIN TITLE
+   ========================================================================== */
+
+h1 {
+    background: linear-gradient(90deg, #00d4ff 0%, #00ff88 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 2.5rem !important;
+    font-weight: 700 !important;
+    text-align: center;
+    margin-bottom: 1rem !important;
+    letter-spacing: -1px;
+}
+
+/* ==========================================================================
+   METRIC CARDS
+   ========================================================================== */
+
+[data-testid="metric-container"] {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.5rem;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+[data-testid="metric-container"]:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.1);
+}
+
+[data-testid="metric-container"] label {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 0.75rem !important;
+}
+
+[data-testid="metric-container"] [data-testid="stMetricValue"] {
+    color: white !important;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+}
+
+[data-testid="metric-container"] [data-testid="stMetricDelta"] {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 0.7rem !important;
+}
+
+[data-testid="metric-container"] > div > div {
+    color: white !important;
+}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+
+.stButton > button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.75rem;
+}
+
+.stButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+
+/* Back button special styling */
+[key="back_btn"] {
+    background: linear-gradient(135deg, #1f77b4 0%, #00d4ff 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600 !important;
+    padding: 1rem 2.5rem !important;
+    font-size: 1rem !important;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3) !important;
+}
+
+[key="back_btn"]:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 30px rgba(0, 212, 255, 0.5) !important;
+}
+
+/* ==========================================================================
+   PROGRESS BARS
+   ========================================================================== */
+
+.stProgress > div > div > div {
+    background: linear-gradient(90deg, #00d4ff 0%, #00ff88 100%);
+    height: 6px !important;
+    border-radius: 3px;
+}
+
+.stProgress {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.stProgress > div > div > div > div {
+    color: white !important;
+}
+
+/* ==========================================================================
+   SERVER CARDS
+   ========================================================================== */
+
+.server-card {
+    border-radius: 12px;
+    padding: 12px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative !important;
+    overflow: hidden;
+    margin-bottom: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    user-select: none;
+    min-height: 120px;
+}
+
+.server-card:active {
+    transform: translateY(-1px) !important;
+}
+
+.server-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 212, 255, 0.2);
+}
+
+/* Server card status variants */
+.server-card-green {
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 212, 255, 0.1) 100%);
+    border-color: rgba(0, 255, 136, 0.3);
+}
+
+.server-card-green:hover {
+    box-shadow: 0 8px 24px rgba(0, 255, 136, 0.3);
+    border-color: rgba(0, 255, 136, 0.5);
+}
+
+.server-card-yellow {
+    background: linear-gradient(135deg, rgba(255, 183, 0, 0.15) 0%, rgba(255, 160, 0, 0.1) 100%);
+    border-color: rgba(255, 183, 0, 0.3);
+}
+
+.server-card-yellow:hover {
+    box-shadow: 0 8px 24px rgba(255, 183, 0, 0.3);
+    border-color: rgba(255, 183, 0, 0.5);
+}
+
+.server-card-red {
+    background: linear-gradient(135deg, rgba(255, 0, 110, 0.15) 0%, rgba(255, 68, 88, 0.1) 100%);
+    border-color: rgba(255, 0, 110, 0.3);
+}
+
+.server-card-red:hover {
+    box-shadow: 0 8px 24px rgba(255, 0, 110, 0.3);
+    border-color: rgba(255, 0, 110, 0.5);
+}
+
+.server-name {
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+    word-wrap: break-word;
+    line-height: 1.2;
+}
+
+/* Link wrapper for clickable cards */
+.card-link {
+    text-decoration: none !important;
+    color: inherit !important;
+    display: block;
+}
+
+/* ==========================================================================
+   ALERT BAR
+   ========================================================================== */
+
+.alert-bar-container {
+    width: 100%;
+}
+
+.alert-bar {
+    display: flex;
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+    margin-bottom: 4px;
+}
+
+.alert-bar > div {
+    height: 100%;
+    transition: width 0.5s ease-in-out;
+}
+
+.alert-bar-critical { background-color: #ff006e; }
+.alert-bar-warning { background-color: #ffb700; }
+.alert-bar-ok { background-color: #00ff88; }
+
+.alert-bar-labels {
+    display: flex;
+    justify-content: space-around;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ==========================================================================
+   GROUP CONTAINERS
+   ========================================================================== */
+
+.group-container {
+    position: relative;
+    padding: 16px;
+    margin-bottom: 16px;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.group-container:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
+.group-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Group color variants */
+.group-solman { 
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, rgba(138, 43, 226, 0.05) 100%); 
+    border: 1px solid rgba(138, 43, 226, 0.3); 
+}
+.group-solman:before { background: linear-gradient(90deg, #8a2be2 0%, #9370db 100%); }
+.group-solman .group-title { color: #9370db; text-shadow: 0 0 15px rgba(147, 112, 219, 0.5); }
+
+.group-bo { 
+    background: linear-gradient(135deg, rgba(255, 20, 147, 0.1) 0%, rgba(255, 20, 147, 0.05) 100%); 
+    border: 1px solid rgba(255, 20, 147, 0.3); 
+}
+.group-bo:before { background: linear-gradient(90deg, #ff1493 0%, #ff69b4 100%); }
+.group-bo .group-title { color: #ff69b4; text-shadow: 0 0 15px rgba(255, 105, 180, 0.5); }
+
+.group-bw { 
+    background: linear-gradient(135deg, rgba(32, 178, 170, 0.1) 0%, rgba(32, 178, 170, 0.05) 100%); 
+    border: 1px solid rgba(32, 178, 170, 0.3); 
+}
+.group-bw:before { background: linear-gradient(90deg, #20b2aa 0%, #48d1cc 100%); }
+.group-bw .group-title { color: #48d1cc; text-shadow: 0 0 15px rgba(72, 209, 204, 0.5); }
+
+.group-crm { 
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%); 
+    border: 1px solid rgba(255, 215, 0, 0.3); 
+}
+.group-crm:before { background: linear-gradient(90deg, #ffd700 0%, #ffed4e 100%); }
+.group-crm .group-title { color: #ffd700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+
+.group-dc { 
+    background: linear-gradient(135deg, rgba(220, 20, 60, 0.1) 0%, rgba(220, 20, 60, 0.05) 100%); 
+    border: 1px solid rgba(220, 20, 60, 0.3); 
+}
+.group-dc:before { background: linear-gradient(90deg, #dc143c 0%, #ff6347 100%); }
+.group-dc .group-title { color: #ff6347; text-shadow: 0 0 15px rgba(255, 99, 71, 0.5); }
+
+.group-erp { 
+    background: linear-gradient(135deg, rgba(255, 127, 14, 0.1) 0%, rgba(255, 127, 14, 0.05) 100%); 
+    border: 1px solid rgba(255, 127, 14, 0.3); 
+}
+.group-erp:before { background: linear-gradient(90deg, #ff7f0e 0%, #ff9a00 100%); }
+.group-erp .group-title { color: #ff9a00; text-shadow: 0 0 15px rgba(255, 154, 0, 0.5); }
+
+.group-mcf { 
+    background: linear-gradient(135deg, rgba(0, 206, 209, 0.1) 0%, rgba(0, 206, 209, 0.05) 100%); 
+    border: 1px solid rgba(0, 206, 209, 0.3); 
+}
+.group-mcf:before { background: linear-gradient(90deg, #00ced1 0%, #00ffff 100%); }
+.group-mcf .group-title { color: #00ffff; text-shadow: 0 0 15px rgba(0, 255, 255, 0.5); }
+
+.group-isu { 
+    background: linear-gradient(135deg, rgba(31, 119, 180, 0.1) 0%, rgba(31, 119, 180, 0.05) 100%); 
+    border: 1px solid rgba(31, 119, 180, 0.3); 
+}
+.group-isu:before { background: linear-gradient(90deg, #1f77b4 0%, #00d4ff 100%); }
+.group-isu .group-title { color: #00d4ff; text-shadow: 0 0 15px rgba(0, 212, 255, 0.5); }
+
+.group-po { 
+    background: linear-gradient(135deg, rgba(50, 205, 50, 0.1) 0%, rgba(50, 205, 50, 0.05) 100%); 
+    border: 1px solid rgba(50, 205, 50, 0.3); 
+}
+.group-po:before { background: linear-gradient(90deg, #32cd32 0%, #7fff00 100%); }
+.group-po .group-title { color: #7fff00; text-shadow: 0 0 15px rgba(127, 255, 0, 0.5); }
+
+.group-sao { 
+    background: linear-gradient(135deg, rgba(218, 112, 214, 0.1) 0%, rgba(218, 112, 214, 0.05) 100%); 
+    border: 1px solid rgba(218, 112, 214, 0.3); 
+}
+.group-sao:before { background: linear-gradient(90deg, #da70d6 0%, #ff00ff 100%); }
+.group-sao .group-title { color: #ff00ff; text-shadow: 0 0 15px rgba(255, 0, 255, 0.5); }
+
+.group-otros { 
+    background: linear-gradient(135deg, rgba(128, 128, 128, 0.1) 0%, rgba(128, 128, 128, 0.05) 100%); 
+    border: 1px solid rgba(128, 128, 128, 0.3); 
+}
+.group-otros:before { background: linear-gradient(90deg, #808080 0%, #a9a9a9 100%); }
+.group-otros .group-title { color: #a9a9a9; text-shadow: 0 0 15px rgba(169, 169, 169, 0.5); }
+
+/* ==========================================================================
+   ALARM INDICATORS
+   ========================================================================== */
+
+.alarm-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+}
+
+.alarm-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(4px);
+}
+
+/* ==========================================================================
+   FORM ELEMENTS
+   ========================================================================== */
+
+.stSelectbox label {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.stSelectbox > div > div {
+    color: white !important;
+}
+
+.stSelectbox > div > div {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white !important;
+}
+
+.stSelectbox [data-baseweb="select"] {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.stSelectbox [data-baseweb="select"] > div {
+    background-color: transparent;
+    color: white !important;
+}
+
+/* ==========================================================================
+   PLOTLY CHARTS
+   ========================================================================== */
+
+.js-plotly-plot {
+    margin: 0 !important;
+    padding: 0 !important;
+}
