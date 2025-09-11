@@ -1,7 +1,6 @@
 version: 1.0
 build:
   type: docker
-  dockerfile: Dockerfile
+  dockerfile: ./Dockerfile
 run:
-  command: streamlit run app.py
   port: 8501

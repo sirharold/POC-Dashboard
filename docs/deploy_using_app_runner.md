@@ -20,18 +20,32 @@ This guide details how to deploy the application using **AWS App Runner**, a ful
 
 ### Step 1: Create an IAM Role for App Runner
 
-App Runner needs permissions to call AWS services (EC2, CloudWatch) on your behalf.
+App Runner needs permissions to call AWS services (EC2, CloudWatch) on your behalf. This involves two key parts: the **Trust Policy** (who can use the role) and **Permissions Policies** (what the role can do).
 
-1. Navigate to **IAM** in the AWS Console.
-2. Create a new **Role**.
-3. For **Trusted entity type**, select **"AWS service"**.
-4. For **Use case**, find and select **"App Runner"**. In the dropdown below, choose **"App Runner EC2 access"**. This creates the correct trust policy.
-5. Click **Next**.
-6. On the **Add permissions** page, search for and add the following AWS managed policies:
-   * `CloudWatchReadOnlyAccess`
-   * `AmazonEC2ReadOnlyAccess`
-7. Click **Next**.
-8. **Name the role:** Use a descriptive name, such as `AppRunnerServiceRole`, and finish creating the role.
+1.  Navigate to **IAM** in the AWS Console.
+2.  Go to **Roles** and click **"Create role"**.
+3.  For **Trusted entity type**, select **"Custom trust policy"**.
+4.  Paste the following JSON into the policy editor. This explicitly allows the App Runner service to use this role.
+    ```json
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": "tasks.apprunner.amazonaws.com"
+                },
+                "Action": "sts:AssumeRole"
+            }
+        ]
+    }
+    ```
+5.  Click **Next**.
+6.  On the **Add permissions** page, search for and add the following AWS managed policies. These define what the role is allowed to do:
+    *   `CloudWatchReadOnlyAccess`
+    *   `AmazonEC2ReadOnlyAccess`
+7.  Click **Next**.
+8.  **Name the role:** Use a descriptive name, such as `AppRunnerServiceRole`, add an optional description, and finish creating the role.
 
 ---
 
@@ -53,6 +67,7 @@ App Runner needs permissions to call AWS services (EC2, CloudWatch) on your beha
 6. Click **Next**.
 7. **Configure service:**
    * **Service name:** Choose a name for your service, like `dashboard-epmaps-beta`.
+   * **Virtual CPU & Memory:** Start with the most cost-effective option: **1 vCPU** and **2 GB** of memory. You can monitor usage and scale this up later if needed.
    * **Security - Instance role:** In this section, find and select the IAM role you created in Step 1 (`AppRunnerServiceRole`).
 8. Click **Next**.
 9. **Review and create:** Review the configuration and click **"Create & deploy"**.
