@@ -64,12 +64,64 @@ def get_aws_data():
         return instances_list
 
     except ClientError as e:
-        # In a real app, you'd log this. For the POC, we print and return empty.
-        print(f"Boto3 ClientError: {e}")
+        # Log to a file for debugging
+        with open("/tmp/streamlit_aws_debug.log", "a") as f:
+            f.write(f"[{time.ctime()}] Boto3 ClientError: {e}\n")
         return []
     except Exception as e:
-        print(f"An unexpected error occurred in get_aws_data: {e}")
+        with open("/tmp/streamlit_aws_debug.log", "a") as f:
+            f.write(f"[{time.ctime()}] An unexpected error occurred in get_aws_data: {e}\n")
         return []
+
+def get_aws_data():
+    """
+    Fetches all necessary data from AWS using boto3.
+    Called by the background thread.
+    """
+    try:
+        # Use the default session, which will use the IAM role in a deployed environment
+        ec2 = boto3.client('ec2')
+        cloudwatch = boto3.client('cloudwatch')
+
+        # Fetch instances with the DashboardGroup tag
+        paginator = ec2.get_paginator('describe_instances')
+        instance_pages = paginator.paginate(
+            Filters=[{'Name': 'tag-key', 'Values': ['DashboardGroup']}]
+        )
+
+        instances_list = []
+        for page in instance_pages:
+            for reservation in page['Reservations']:
+                for instance in reservation['Instances']:
+                    tags = {tag['Key']: tag['Value'] for tag in instance.get('Tags', [])}
+                    instances_list.append({
+                        'ID': instance['InstanceId'],
+                        'Name': tags.get('Name', instance['InstanceId']),
+                        'State': instance['State']['Name'],
+                        'DashboardGroup': tags.get('DashboardGroup', 'Uncategorized')
+                    })
+        
+        # Debugging: Log the raw response and processed list
+        with open("/tmp/streamlit_aws_debug.log", "a") as f:
+            f.write(f"[{time.ctime()}] Raw EC2 response (first page): {list(instance_pages)[0] if instance_pages else 'No pages'}\n")
+            f.write(f"[{time.ctime()}] Processed instances_list: {instances_list}\n")
+        
+        # Fetch all alarms and map them to instances in memory for efficiency
+        alarm_paginator = cloudwatch.get_paginator('describe_alarms')
+        alarm_pages = alarm_paginator.paginate()
+        instance_alarms = defaultdict(list)
+        for page in alarm_pages:
+            for alarm in page['MetricAlarms']:
+                for dimension in alarm['Dimensions']:
+                    if dimension['Name'] == 'InstanceId':
+                        instance_alarms[dimension['Value']].append(alarm['StateValue'])
+                        break
+        
+        # Attach alarm counts to each instance
+        for instance in instances_list:
+            instance['Alarms'] = Counter(instance_alarms.get(instance['ID'], []))
+
+        return instances_list
 
 def update_cache_in_background(interval_seconds: int):
     """Daemon thread to periodically fetch data and update the shared cache."""
