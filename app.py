@@ -268,6 +268,7 @@ def display_dashboard_page():
     current_env = ENVIRONMENTS[st.session_state.env_index]
     with nav_cols[1]:
         st.markdown(f"<h1 style='text-align: center;'>Dashboard {current_env}</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 0.8em; color: grey;'>Esta página se autorecarga cada 30 segundos</p>", unsafe_allow_html=True)
     
     st.divider()
 
