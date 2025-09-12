@@ -10,9 +10,68 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 - Streamlit (framework principal)
 - Boto3 (AWS SDK para Python)
 - Docker (Contenedores)
-- AWS App Runner (Despliegue Serverless)
+- AWS App Runner / EC2 (Despliegue Serverless / Instancia)
+- GitHub Actions (CI/CD)
+- YAML (Configuración)
 
 ## Registro de Desarrollo
+
+### 2025-09-12 - Versión 6.1: Simplificación de Navegación - Solo POC AWS Alive
+
+#### Resumen
+Se simplificó la navegación de la aplicación para mostrar únicamente la página "POC AWS Alive" en el sidebar, ocultando todas las páginas auxiliares y de entornos de prueba (Production, QA, DEV). La aplicación ahora redirige automáticamente a POC AWS Alive al iniciar.
+
+#### Cambios Implementados
+
+1. **Redirección Automática en `app.py`**:
+   * Se eliminó el sidebar manual con múltiples enlaces
+   * Se implementó redirección automática a POC AWS Alive usando `st.switch_page()`
+   * Se configuró `initial_sidebar_state="collapsed"` para ocultar el sidebar por defecto
+
+2. **Renombrado de Página Principal**:
+   * `pages/4_POC.py` → `pages/POC_AWS_Alive.py`
+   * Esto elimina el prefijo numérico y mejora la claridad del nombre
+
+3. **Actualización de Referencias de Navegación**:
+   * Se actualizaron todas las referencias en `_5_POC_Detalles.py` para apuntar a `POC_AWS_Alive.py`
+   * Las páginas con prefijo `_` permanecen ocultas del sidebar como es esperado
+
+#### Justificación
+El usuario reportó que las páginas con prefijo `_` seguían apareciendo en el sidebar debido al uso de navegación manual con `st.sidebar.page_link()`. Al eliminar esta navegación manual y usar el comportamiento automático de Streamlit, solo las páginas sin prefijo `_` son visibles, logrando el objetivo de mostrar únicamente POC AWS Alive.
+
+### 2025-09-12 - Versión 6.0 (Beta 2): Refactorización Arquitectónica y Despliegue Automatizado
+
+#### Resumen
+Esta versión representa la refactorización más grande hasta la fecha. La aplicación monolítica (`app.py`) fue desmantelada y reconstruida sobre una arquitectura modular, escalable y configurable, alineada con las mejores prácticas de desarrollo de software. Además, se implementó un flujo de despliegue continuo (CI/CD).
+
+#### Cambios Implementados
+
+1.  **Arquitectura Multi-Página y Componentizada**:
+    *   La aplicación se transformó en una **aplicación multi-página**, con archivos dedicados para cada entorno (`Producción`, `QA`, `DEV`) en el directorio `pages/`.
+    *   Se crearon **componentes de UI reutilizables** (`server_card.py`, `group_container.py`) para encapsular la lógica de renderizado y promover la reutilización de código.
+    *   La lógica común y funciones de ayuda se centralizaron en `utils/helpers.py`.
+
+2.  **Configuración Externa con `config.yaml`**:
+    *   Toda la definición de servidores, grupos y estados se movió a un archivo `config.yaml`.
+    *   **Beneficio:** Ahora es posible añadir, modificar o eliminar servidores y grupos sin necesidad de editar el código Python, facilitando enormemente el mantenimiento.
+
+3.  **Mejoras de Navegación y Experiencia de Usuario**:
+    *   `app.py` ahora funciona como un **portal de bienvenida** que construye una barra de navegación lateral personalizada, ofreciendo una experiencia más limpia.
+    *   Se añadió un **navegador entre entornos** (flechas ᐊ y ᐅ) en las páginas principales.
+    *   La navegación a las páginas de detalle fue refactorizada para usar **parámetros de consulta en la URL** (`st.query_params`), un método más robusto y estándar que `st.session_state`.
+
+4.  **Optimización de la Página POC (AWS Live)**:
+    *   La página `4_POC.py` fue rediseñada para usar un **sistema de cache en memoria compartida**.
+    *   Un **hilo de fondo (background thread)** se encarga de actualizar los datos desde AWS (`boto3`) cada 30 segundos.
+    *   **Beneficio:** Todos los usuarios concurrentes acceden a la misma cache, lo que reduce drásticamente las llamadas a la API de AWS, mejora el rendimiento y la escalabilidad de la aplicación.
+
+5.  **Despliegue Continuo con GitHub Actions**:
+    *   Se creó el flujo de trabajo `.github/workflows/deploy.yml`.
+    *   Este flujo **automatiza el despliegue** de la aplicación en la instancia EC2 designada cada vez que se realiza un `push` a la rama `main`.
+    *   Utiliza `AWS SSM Send-Command` para ejecutar los comandos de actualización en la instancia de forma segura.
+
+#### Decisión de Arquitectura
+Se adoptó una arquitectura modular y basada en configuración para preparar la aplicación para un crecimiento futuro. La separación de la configuración (`config.yaml`), la lógica (`utils/`), los componentes de UI (`components/`) y las vistas (`pages/`) hace que el sistema sea más fácil de entender, mantener y escalar. La implementación de CI/CD con GitHub Actions profesionaliza el ciclo de vida del desarrollo.
 
 ### 2025-09-10 - Versión 5.0 (Beta 1): Modernización y Preparación para Despliegue
 
@@ -123,14 +182,37 @@ Para continuar el desarrollo:
 3. Revisar este archivo para entender el contexto
 4. Consultar README.md para ver el changelog actualizado
 
-## Estructura del Proyecto
+## Estructura del Proyecto (v6.0)
 
 ```
 POC/
-├── app.py                    # Aplicación principal
-├── requirements.txt          # Dependencias
-├── DEVELOPMENT_HISTORY.md    # Este archivo
-└── README.md                # Documentación y changelog
+├── .github/                    # Flujos de trabajo de CI/CD
+│   └── workflows/
+│       └── deploy.yml
+├── app.py                      # Página principal y navegador
+├── config.yaml                 # Configuración de servidores y grupos
+├── Dockerfile                  # Contenerización de la aplicación
+├── requirements.txt            # Dependencias de Python
+├── assets/
+│   └── styles.css              # Hoja de estilos CSS
+├── components/
+│   ├── group_container.py      # Componente para grupos de servidores
+│   └── server_card.py          # Componente para tarjetas de servidor
+├── docs/
+│   ├── deploy_using_app_runner.md
+│   └── deploy_using_ec2instance.md
+├── pages/
+│   ├── 1_Production.py         # Página para el entorno de Producción (oculta del menú)
+│   ├── 2_QA.py                 # Página para el entorno de QA (oculta del menú)
+│   ├── 3_DEV.py                # Página para el entorno de DEV (oculta del menú)
+│   ├── POC_AWS_Alive.py        # Página principal con datos reales de AWS (única visible)
+│   ├── _1_Detalles_del_Servidor.py # Página de detalle (oculta)
+│   ├── _5_POC_Detalles.py      # Página de detalles POC (oculta)
+│   └── _vm_details.py          # Página de detalles VM (oculta)
+├── utils/
+│   └── helpers.py              # Funciones de ayuda y lógica compartida
+├── DEVELOPMENT_HISTORY.md      # Este archivo
+└── README.md                   # Documentación principal
 ```
 
 ### 2025-09-10 - Segunda Iteración: Múltiples Grupos de Servidores

@@ -4,12 +4,13 @@ Dashboard de monitoreo centralizado para máquinas virtuales, diseñado para vis
 
 ## Características Actuales
 
-- 🚦 Visualización del estado de VMs en tiempo real desde AWS.
-- 📊 Conteo de alarmas de CloudWatch por instancia (OK, Alarma, Datos Insuficientes).
-- 📈 Métricas de CPU en vivo desde CloudWatch.
-- ☁️ Arquitectura Multi-Usuario eficiente con caché compartido en background.
-- 🐳 Soporte para despliegue en contenedores (Docker).
-- 🚀 Estrategia de despliegue recomendada usando AWS App Runner.
+- 🏛️ **Arquitectura Multi-Página**: Navegación dedicada para cada entorno (PROD, QA, DEV).
+- ⚙️ **Configuración Externa**: Los servidores y grupos se gestionan desde `config.yaml`, sin tocar el código.
+- 🧩 **Componentes Reutilizables**: UI modular que facilita el mantenimiento y la expansión.
+- ☁️ **Integración Real con AWS**: Una página POC se conecta en tiempo real a AWS usando `boto3`.
+- ⚡ **Cache Inteligente**: La página de AWS utiliza un hilo de fondo y una cache compartida para un rendimiento óptimo y multiusuario.
+- 🚀 **Despliegue Continuo (CI/CD)**: Automatización del despliegue a EC2 mediante **GitHub Actions** cada vez que se actualiza la rama `main`.
+- 🐳 **Soporte para Contenedores**: `Dockerfile` incluido para despliegues portables.
 
 ---
 
@@ -18,73 +19,75 @@ Dashboard de monitoreo centralizado para máquinas virtuales, diseñado para vis
 ### Ejecución Local (para Desarrollo)
 
 1.  **Clonar el repositorio**
-    ```bash
-    git clone [url-del-repo]
-    cd [nombre-del-repo]
-    ```
-2.  **Instalar dependencias**
-    ```bash
-    pip install -r requirements.txt
-    ```
-3.  **Configurar credenciales de AWS**
-    Asegúrate de tener tus credenciales de AWS configuradas localmente para que `boto3` pueda usarlas. La forma más común es con el comando `aws configure`.
+2.  **Instalar dependencias**: `pip install -r requirements.txt`
+3.  **Configurar credenciales de AWS** (si se va a usar la página POC Live).
+4.  **Ejecutar la aplicación**: `streamlit run app.py`
 
-4.  **Ejecutar la aplicación**
-    ```bash
-    streamlit run app.py
-    ```
+### Despliegue en AWS
 
-### Despliegue en AWS (Recomendado)
+Existen dos métodos de despliegue documentados:
 
-La estrategia recomendada para producción o una beta compartida es usar **AWS App Runner**, que es una solución serverless, económica y totalmente gestionada.
-
-- **Consulta la guía de despliegue detallada aquí:** [`docs/deploy_using_app_runner.md`](docs/deploy_using_app_runner.md)
-
-También existe una guía para el despliegue alternativo en una instancia EC2:
-- **Guía para EC2:** [`docs/deploy_using_ec2instance.md`](docs/deploy_using_ec2instance.md)
+1.  **AWS App Runner (Recomendado)**: Serverless, económico y gestionado.
+    - **Guía:** [`docs/deploy_using_app_runner.md`](docs/deploy_using_app_runner.md)
+2.  **Instancia EC2 con CI/CD (Configuración Actual)**: Despliegue automatizado desde GitHub.
+    - **Guía:** [`docs/deploy_using_ec2instance.md`](docs/deploy_using_ec2instance.md)
 
 ---
 
-## Estructura del Proyecto
+## Estructura del Proyecto (v6.0)
 
 ```
 POC/
-├── app.py                    # Script principal (redirige a la página de Producción)
-├── Dockerfile                # Receta para construir el contenedor de la aplicación
-├── requirements.txt          # Dependencias de Python
-├── config.yaml               # Configuración de grupos de servidores (para páginas mock)
+├── .github/                    # Flujos de trabajo de CI/CD
+│   └── workflows/
+│       └── deploy.yml
+├── app.py                      # Página principal y navegador
+├── config.yaml                 # Configuración de servidores y grupos
+├── Dockerfile                  # Contenerización de la aplicación
+├── requirements.txt            # Dependencias de Python
 ├── assets/
-│   └── styles.css           # Estilos CSS
+│   └── styles.css              # Hoja de estilos CSS
+├── components/
+│   ├── group_container.py      # Componente para grupos de servidores
+│   └── server_card.py          # Componente para tarjetas de servidor
 ├── docs/
-│   ├── deploy_using_app_runner.md # Guía de despliegue con App Runner
-│   └── deploy_using_ec2instance.md  # Guía de despliegue con EC2
+│   ├── deploy_using_app_runner.md
+│   └── deploy_using_ec2instance.md
 ├── pages/
-│   ├── 1_Production.py       # Dashboard del ambiente de Producción (Mock)
-│   ├── 2_QA.py               # Dashboard del ambiente de QA (Mock)
-│   ├── 3_DEV.py              # Dashboard del ambiente de DEV (Mock)
-│   ├── 4_POC.py              # Dashboard con datos reales de AWS
-│   └── hidden/               # Subpáginas no visibles en el menú
-│       ├── _1_Detalles_del_Servidor.py
-│       └── _5_POC_Detalles.py
+│   ├── 1_Production.py         # Página para el entorno de Producción
+│   ├── 2_QA.py                 # Página para el entorno de QA
+│   ├── 3_DEV.py                # Página para el entorno de DEV
+│   ├── 4_POC.py                # Página con datos reales de AWS
+│   └── _1_Detalles_del_Servidor.py # Página de detalle (oculta)
 ├── utils/
-│   └── helpers.py           # Funciones auxiliares
-└── DEVELOPMENT_HISTORY.md    # Histórico detallado de desarrollo
+│   └── helpers.py              # Funciones de ayuda y lógica compartida
+├── DEVELOPMENT_HISTORY.md      # Histórico detallado de cambios
+└── README.md                   # Este archivo
 ```
 
 ---
 
 ## Changelog Reciente
 
+### [6.0.0] - 2025-09-12 (Beta 2)
+
+#### Agregado
+- **Arquitectura Modular**: La aplicación fue refactorizada a un modelo multi-página con componentes reutilizables (`components/`) y lógica centralizada (`utils/`).
+- **Configuración Externa**: Se añadió `config.yaml` para gestionar servidores y grupos fuera del código.
+- **Despliegue Automatizado**: Se implementó un flujo de CI/CD con GitHub Actions para actualizar la instancia EC2 automáticamente.
+- **Cache Inteligente en POC**: La página de AWS ahora usa un hilo de fondo para actualizar una cache compartida, mejorando el rendimiento.
+
+#### Modificado
+- **Navegación**: `app.py` ahora es un portal de bienvenida. La navegación a detalles usa `st.query_params`.
+
 ### [5.0.0] - 2025-09-10 (Beta 1)
 
 #### Agregado
-- **Soporte para Contenedores:** Se añadió un `Dockerfile` para empaquetar la aplicación, permitiendo despliegues modernos.
-- **Guías de Despliegue:** Se crearon documentos detallados para desplegar la aplicación usando **AWS App Runner** (recomendado) y EC2.
+- **Soporte para Contenedores:** Se añadió un `Dockerfile`.
+- **Guías de Despliegue:** Se crearon documentos para AWS App Runner y EC2.
 
 #### Modificado
-- **Refactorización a `boto3`:** Se eliminó por completo la dependencia de `aws-cli`. Todas las llamadas a AWS ahora se realizan de forma nativa en Python usando la librería `boto3`, lo que mejora la seguridad, el rendimiento y la portabilidad.
-- **Navegación Mejorada:** Se corrigió la navegación a las páginas de detalle y se limpió la barra lateral para una mejor experiencia de usuario.
-- **Página de Inicio:** La aplicación ahora carga directamente en la página de "Producción".
+- **Refactorización a `boto3`:** Se eliminó la dependencia de `aws-cli`.
 
 *(Para ver el historial completo, revisa el archivo `DEVELOPMENT_HISTORY.md`)*
 

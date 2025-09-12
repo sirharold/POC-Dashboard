@@ -121,7 +121,7 @@ def display_page(instance_id: str):
     instance_name = next((tag['Value'] for tag in details.get('Tags', []) if tag['Key'] == 'Name'), instance_id)
     
     st.markdown(f"<h1>Detalles de <span style='color: #00d4ff;'>{instance_name}</span></h1>", unsafe_allow_html=True)
-    st.page_link("pages/4_POC.py", label="← Volver al Dashboard POC", icon="☁️")
+    st.page_link("pages/POC_AWS_Alive.py", label="← Volver al Dashboard POC", icon="☁️")
     st.divider()
 
     col1, col2 = st.columns([1, 2])
@@ -191,4 +191,4 @@ if 'poc_vm_id' in st.session_state and st.session_state.poc_vm_id:
 else:
     st.error("No se ha seleccionado ninguna instancia.")
     st.info("Por favor, regrese al dashboard del POC y seleccione un servidor.")
-    st.page_link("pages/4_POC.py", label="← Volver al Dashboard POC", icon="☁️")
+    st.page_link("pages/POC_AWS_Alive.py", label="← Volver al Dashboard POC", icon="☁️")
