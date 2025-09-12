@@ -185,8 +185,8 @@ h1 {
 }
 
 .server-card-red {
-    background: linear-gradient(135deg, rgba(255, 0, 110, 0.15) 0%, rgba(255, 68, 88, 0.1) 100%);
-    border-color: rgba(255, 0, 110, 0.3);
+    background: linear-gradient(135deg, rgba(255, 0, 110, 0.15) 0%, rgba(255, 68, 88, 0.1) 100%); 
+    border-color: rgba(255, 0, 110, 0.3); 
 }
 
 .server-card-red:hover {
@@ -412,12 +412,7 @@ h1 {
     padding: 0 !important;
 }
 
-/* Hide default Streamlit sidebar elements */
-[data-testid="stSidebarNav"] > ul:first-child {
+/* Hide the default auto-generated page list in the sidebar */
+[data-testid="stSidebarNav"] > div:first-child {
     display: none !important;
-}
-
-/* Adjust spacing if needed after hiding default nav */
-[data-testid="stSidebarNav"] {
-    padding-top: 0 !important;
 }
