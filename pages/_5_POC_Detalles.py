@@ -26,7 +26,7 @@ st.set_page_config(
 def get_instance_details(instance_id: str):
     """Fetches detailed information for a single EC2 instance using boto3."""
     try:
-        ec2 = boto3.client('ec2')
+        ec2 = boto3.client('ec2', region_name='us-east-1')
         response = ec2.describe_instances(InstanceIds=[instance_id])
         if response['Reservations'] and response['Reservations'][0]['Instances']:
             return response['Reservations'][0]['Instances'][0]
@@ -38,7 +38,7 @@ def get_instance_details(instance_id: str):
 def get_alarms_for_instance(instance_id: str):
     """Fetches all CloudWatch alarms for a specific instance using boto3."""
     try:
-        cloudwatch = boto3.client('cloudwatch')
+        cloudwatch = boto3.client('cloudwatch', region_name='us-east-1')
         paginator = cloudwatch.get_paginator('describe_alarms')
         pages = paginator.paginate()
         instance_alarms = []
@@ -54,7 +54,7 @@ def get_alarms_for_instance(instance_id: str):
 def get_cpu_utilization(instance_id: str):
     """Fetches the most recent CPUUtilization metric from CloudWatch using boto3."""
     try:
-        cloudwatch = boto3.client('cloudwatch')
+        cloudwatch = boto3.client('cloudwatch', region_name='us-east-1')
         response = cloudwatch.get_metric_statistics(
             Namespace='AWS/EC2',
             MetricName='CPUUtilization',
@@ -72,7 +72,7 @@ def get_cpu_utilization(instance_id: str):
 def get_memory_utilization(instance_id: str):
     """Fetches the most recent memory utilization metric from the CloudWatch Agent."""
     try:
-        cloudwatch = boto3.client('cloudwatch')
+        cloudwatch = boto3.client('cloudwatch', region_name='us-east-1')
         response = cloudwatch.get_metric_statistics(
             Namespace='CWAgent',
             MetricName='mem_used_percent',
@@ -90,7 +90,7 @@ def get_memory_utilization(instance_id: str):
 def get_disk_utilization(instance_id: str):
     """Fetches the most recent disk utilization metric for the root path ('/')."""
     try:
-        cloudwatch = boto3.client('cloudwatch')
+        cloudwatch = boto3.client('cloudwatch', region_name='us-east-1')
         response = cloudwatch.get_metric_statistics(
             Namespace='CWAgent',
             MetricName='disk_used_percent',
