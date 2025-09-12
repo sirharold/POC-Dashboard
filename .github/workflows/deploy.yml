@@ -26,7 +26,7 @@ jobs:
           --instance-ids $(aws ec2 describe-instances --filters "Name=tag:Name,Values=Streamlit-App-Server" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].InstanceId" --output text --region us-east-1) \
           --document-name "AWS-RunShellScript" \
           --comment "Deploy Streamlit app from GitHub Actions" \
-          --parameters commands="'cd ${{ secrets.APP_PATH }} && git pull origin main && /usr/bin/python3.11 -m pip install -r requirements.txt && sudo systemctl restart ${{ secrets.STREAMLIT_SERVICE_NAME }} && sudo systemctl status ${{ secrets.STREAMLIT_SERVICE_NAME }}'" \
+          --parameters commands="'set -x && cd ${{ secrets.APP_PATH }} && echo \"Current directory: $(pwd)\" && git pull origin main 2>&1 | tee /tmp/git_pull_output.log && echo \"Git pull output:\" && cat /tmp/git_pull_output.log && /usr/bin/python3.11 -m pip install -r requirements.txt && sudo systemctl restart ${{ secrets.STREAMLIT_SERVICE_NAME }} && sudo systemctl status ${{ secrets.STREAMLIT_SERVICE_NAME }}'" \
           --timeout-seconds 600 \
           --region us-east-1
 
