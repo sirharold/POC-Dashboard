@@ -70,16 +70,13 @@ def get_aws_data():
             for reservation in page['Reservations']:
                 for instance in reservation['Instances']:
                     tags = {tag['Key']: tag['Value'] for tag in instance.get('Tags', [])}
-                    environment_tag = tags.get('Environment', 'Unknown')
                     instances_list.append({
                         'ID': instance['InstanceId'],
                         'Name': tags.get('Name', instance['InstanceId']),
                         'State': instance['State']['Name'],
                         'DashboardGroup': tags.get('DashboardGroup', 'Uncategorized'),
-                        'Environment': environment_tag # <-- Captura el tag Environment
+                        'Environment': tags.get('Environment', 'Unknown') # <-- Captura el tag Environment
                     })
-                    with open("/tmp/streamlit_aws_debug.log", "a") as f:
-                        f.write(f"[{time.ctime()}] Instance {instance['InstanceId']} - Environment: {environment_tag}\n")
         
         alarm_paginator = cloudwatch.get_paginator('describe_alarms')
         alarm_pages = alarm_paginator.paginate()
