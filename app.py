@@ -1,5 +1,3 @@
-
-
 import streamlit as st
 import boto3
 import time
@@ -119,9 +117,8 @@ def get_cpu_utilization(instance_id: str):
 def display_detail_page(instance_id: str):
     """Renders the entire detail page for the given instance ID."""
     details = get_instance_details(instance_id)
-    if st.button("← Volver al Dashboard"):
-        del st.session_state.poc_vm_id
-        st.rerun()
+    
+    st.markdown("<a href='/' target='_self' style='text-decoration: none;'>← Volver al Dashboard</a>", unsafe_allow_html=True)
         
     if not details:
         st.error(f"No se pudieron obtener los detalles para la instancia con ID: {instance_id}")
@@ -242,12 +239,8 @@ if "cache_thread_started" not in st.session_state:
 # 2. Cargar CSS
 load_css()
 
-# 3. Revisar si hay navegación desde query params
-if 'poc_vm_id' in st.query_params and 'poc_vm_id' not in st.session_state:
-    st.session_state.poc_vm_id = st.query_params['poc_vm_id']
-
-# 4. Router principal: decidir qué vista mostrar
-if 'poc_vm_id' in st.session_state and st.session_state.poc_vm_id:
-    display_detail_page(st.session_state.poc_vm_id)
+# 3. Router principal: decidir qué vista mostrar basado en la URL
+if 'poc_vm_id' in st.query_params:
+    display_detail_page(st.query_params['poc_vm_id'])
 else:
     display_dashboard_page()
