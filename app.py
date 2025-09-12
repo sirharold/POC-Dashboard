@@ -1,5 +1,3 @@
-
-
 import streamlit as st
 import boto3
 import time
@@ -14,7 +12,7 @@ from utils.helpers import load_css, create_alarm_item_html
 # CONFIGURACIÓN
 # ========================================================================
 st.set_page_config(
-    page_title="POC AWS Dashboard",
+    page_title="Dashboard EPMAPS",
     page_icon="☁️",
     layout="wide",
 )
@@ -57,14 +55,15 @@ _data_cache = {"instances": [], "last_updated": None}
 _lock = threading.Lock()
 
 def get_aws_data():
-    """Fetches all necessary data from AWS using boto3 via cross-account role."""
+    """Fetches all necessary data from AWS and includes Environment tag."""
     try:
         ec2 = get_cross_account_boto3_client('ec2')
         cloudwatch = get_cross_account_boto3_client('cloudwatch')
         if not ec2 or not cloudwatch:
-            return [] # Retorna vacío si no se pudieron obtener los clientes
+            return []
 
         paginator = ec2.get_paginator('describe_instances')
+        # Fetch instances that have a DashboardGroup tag
         instance_pages = paginator.paginate(Filters=[{'Name': 'tag-key', 'Values': ['DashboardGroup']}])
         instances_list = []
         for page in instance_pages:
@@ -75,8 +74,10 @@ def get_aws_data():
                         'ID': instance['InstanceId'],
                         'Name': tags.get('Name', instance['InstanceId']),
                         'State': instance['State']['Name'],
-                        'DashboardGroup': tags.get('DashboardGroup', 'Uncategorized')
+                        'DashboardGroup': tags.get('DashboardGroup', 'Uncategorized'),
+                        'Environment': tags.get('Environment', 'Unknown') # <-- Captura el tag Environment
                     })
+        
         alarm_paginator = cloudwatch.get_paginator('describe_alarms')
         alarm_pages = alarm_paginator.paginate()
         instance_alarms = defaultdict(list)
@@ -88,12 +89,10 @@ def get_aws_data():
                         break
         for instance in instances_list:
             instance['Alarms'] = Counter(instance_alarms.get(instance['ID'], []))
+        
         return instances_list
-    except ClientError as e:
-        with open("/tmp/streamlit_aws_debug.log", "a") as f:
-            f.write(f"[{time.ctime()}] Boto3 ClientError: {e}\n")
-        return []
     except Exception as e:
+        # Log any other exceptions
         with open("/tmp/streamlit_aws_debug.log", "a") as f:
             f.write(f"[{time.ctime()}] An unexpected error occurred in get_aws_data: {e}\n")
         return []
@@ -108,7 +107,7 @@ def update_cache_in_background(interval_seconds: int):
         time.sleep(interval_seconds)
 
 # ========================================================================
-# FUNCIONES DE LA VISTA DE DETALLES
+# FUNCIONES DE LA VISTA DE DETALLES (Sin cambios)
 # ========================================================================
 @st.cache_data(ttl=60)
 def get_instance_details(instance_id: str):
@@ -154,20 +153,14 @@ def get_cpu_utilization(instance_id: str):
         return None
 
 def display_detail_page(instance_id: str):
-    """Renders the entire detail page for the given instance ID."""
     details = get_instance_details(instance_id)
-    
     st.markdown("<a href='/' target='_self' style='text-decoration: none;'>← Volver al Dashboard</a>", unsafe_allow_html=True)
-        
     if not details:
         st.error(f"No se pudieron obtener los detalles para la instancia con ID: {instance_id}")
         return
-
     instance_name = next((tag['Value'] for tag in details.get('Tags', []) if tag['Key'] == 'Name'), instance_id)
-    
     st.markdown(f"<h1>Detalles de <span style='color: #00d4ff;'>{instance_name}</span></h1>", unsafe_allow_html=True)
     st.divider()
-
     col1, col2 = st.columns([1, 2])
     with col1:
         st.markdown("## ℹ️ Información General")
@@ -196,7 +189,7 @@ def display_detail_page(instance_id: str):
             st.info("No hay datos de CPU (AWS/EC2) disponibles.")
 
 # =======================================================================
-# FUNCIONES DE LA VISTA DE DASHBOARD
+# FUNCIONES DE LA VISTA DE DASHBOARD (Modificadas)
 # =======================================================================
 def get_state_color_and_status(state: str):
     if state == 'running': return 'green', '99%'
@@ -231,39 +224,55 @@ def create_group_container(group_name: str, instances: list):
         with cols[idx % 3]:
             create_server_card(instance)
 
-def build_dashboard_from_cache():
+def build_and_display_dashboard(environment: str):
     with _lock:
         instances = deepcopy(_data_cache["instances"])
         last_updated = _data_cache["last_updated"]
+    
     if not instances and not last_updated:
         st.info("Cargando datos desde AWS... La primera actualización puede tardar hasta 30 segundos.")
-        return None
-    elif not instances and last_updated:
-        st.warning("No se encontraron instancias con la etiqueta 'DashboardGroup' en la última actualización.")
-        return last_updated
-    grouped_instances = defaultdict(list)
-    for instance in instances:
-        grouped_instances[instance.get('DashboardGroup') or 'Uncategorized'].append(instance)
-    for group_name, instance_list in sorted(grouped_instances.items()):
-        create_group_container(group_name, instance_list)
-    return last_updated
+        return
+    
+    # Filtra las instancias por el entorno seleccionado
+    filtered_instances = [inst for inst in instances if inst.get('Environment') == environment]
+
+    if not filtered_instances:
+        st.warning(f"No se encontraron instancias con el tag 'Environment={environment}'.")
+    else:
+        grouped_instances = defaultdict(list)
+        for instance in filtered_instances:
+            grouped_instances[instance.get('DashboardGroup') or 'Uncategorized'].append(instance)
+        for group_name, instance_list in sorted(grouped_instances.items()):
+            create_group_container(group_name, instance_list)
+    
+    if last_updated:
+        time_since_update = int(time.time() - last_updated)
+        st.sidebar.markdown(f"<div style='font-size: 0.9rem; text-align: center; color: grey;'>Última Act: {time_since_update}s atrás</div>", unsafe_allow_html=True)
 
 def display_dashboard_page():
-    REFRESH_INTERVAL = 30
-    title_col, timer_col = st.columns([4, 1])
-    title_col.markdown("<h1>☁️ POC - AWS Live</h1>", unsafe_allow_html=True)
-    timer_placeholder = timer_col.empty()
-    dashboard_placeholder = st.empty()
-    while True:
-        with dashboard_placeholder.container():
-            last_updated = build_dashboard_from_cache()
-        if last_updated:
-            for _ in range(REFRESH_INTERVAL):
-                time_since_update = int(time.time() - last_updated)
-                timer_placeholder.markdown(f"<div style='font-size: 1.2rem; text-align: right; color: grey; padding-top: 1.5rem;'>Última Act: {time_since_update}s atrás</div>", unsafe_allow_html=True)
-                time.sleep(1)
-        else:
-            time.sleep(1)
+    # --- Lógica de Navegación de Entornos ---
+    ENVIRONMENTS = ["Production", "QA", "DEV"]
+    if 'env_index' not in st.session_state:
+        st.session_state.env_index = 0
+
+    nav_cols = st.columns([1, 10, 1])
+    with nav_cols[0]:
+        if st.button("←", use_container_width=True):
+            st.session_state.env_index = (st.session_state.env_index - 1) % len(ENVIRONMENTS)
+            st.rerun()
+    with nav_cols[2]:
+        if st.button("→", use_container_width=True):
+            st.session_state.env_index = (st.session_state.env_index + 1) % len(ENVIRONMENTS)
+            st.rerun()
+    
+    current_env = ENVIRONMENTS[st.session_state.env_index]
+    with nav_cols[1]:
+        st.markdown(f"<h1 style='text-align: center;'>Dashboard {current_env}</h1>", unsafe_allow_html=True)
+    
+    st.divider()
+
+    # --- Renderizado del Dashboard ---
+    build_and_display_dashboard(current_env)
 
 # ========================================================================
 # LÓGICA PRINCIPAL (ROUTER)
