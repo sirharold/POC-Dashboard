@@ -1,0 +1,37 @@
+name: Deploy Streamlit App to EC2
+
+on:
+  push:
+    branches:
+      - main # O la rama que uses para despliegues
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Deploy to EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          # Navegar al directorio de la aplicación
+          cd ${{ secrets.APP_PATH }}
+
+          # Jalar los últimos cambios del repositorio
+          git pull origin main # Asegúrate de que 'main' sea tu rama de despliegue
+
+          # Instalar/actualizar dependencias de Python
+          # Asegúrate de que python3.11 y pip estén en el PATH del usuario ssm-user
+          /usr/bin/python3.11 -m pip install -r requirements.txt
+
+          # Reiniciar el servicio Streamlit
+          sudo systemctl restart ${{ secrets.STREAMLIT_SERVICE_NAME }}
+          sudo systemctl status ${{ secrets.STREAMLIT_SERVICE_NAME }}
+        EOF
