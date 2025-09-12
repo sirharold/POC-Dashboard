@@ -26,7 +26,7 @@ jobs:
           --instance-ids $(aws ec2 describe-instances --filters "Name=tag:Name,Values=streamlit-dashboard" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].InstanceId" --output text --region us-east-1) \
           --document-name "AWS-RunShellScript" \
           --comment "Deploy Streamlit app from GitHub Actions" \
-          --parameters commands="'set -x && cd ${{ secrets.APP_PATH }} && sudo chown -R ssm-user:ssm-user . && sudo -u ssm-user git pull origin main && sudo -u ssm-user /usr/bin/python3.13 -m pip install -r requirements.txt && sudo systemctl restart ${{ secrets.STREAMLIT_SERVICE_NAME }}'" \
+          --parameters commands="'set -x && cd ${{ secrets.APP_PATH }} && sudo chown -R ec2-user:ec2-user . && sudo -u ec2-user git pull origin main && sudo -u ec2-user /usr/bin/python3.13 -m pip install -r requirements.txt && sudo systemctl restart ${{ secrets.STREAMLIT_SERVICE_NAME }}'" \
           --timeout-seconds 600 \
           --region us-east-1
 
