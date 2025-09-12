@@ -6,7 +6,7 @@ import streamlit as st
 # By manually building the sidebar, we gain full control over which pages
 # are displayed, bypassing the anomalous behavior of the default auto-generated
 # sidebar.
-#Using github actions to deploy streamlit app: parte 2
+#Using github actions to deploy streamlit app: parte 3
 
 st.set_page_config(
     page_title="Dashboard EPMAPS",
