@@ -157,7 +157,7 @@ def main():
         st.switch_page("pages/_5_POC_Detalles.py")
 
     title_col, timer_col = st.columns([4, 1])
-    title_col.markdown("<h1>☁️ POC - AWS Live 10v</h1>", unsafe_allow_html=True)
+    title_col.markdown("<h1>☁️ POC - AWS Live</h1>", unsafe_allow_html=True)
     timer_placeholder = timer_col.empty()
     
     dashboard_placeholder = st.empty()
