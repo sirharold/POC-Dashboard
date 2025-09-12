@@ -1,3 +1,5 @@
+
+
 import streamlit as st
 import boto3
 import time
@@ -17,6 +19,37 @@ st.set_page_config(
     layout="wide",
 )
 
+# ========================================================================
+# LÓGICA DE ACCESO A MÚLTIPLES CUENTAS (CROSS-ACCOUNT)
+# ========================================================================
+
+@st.cache_data(ttl=900) # Cachea las credenciales temporales por 15 minutos
+def get_cross_account_boto3_client(service_name: str):
+    """
+    Asume el rol de la cuenta cliente y retorna un cliente de boto3 para el servicio especificado.
+    """
+    role_to_assume_arn = "arn:aws:iam::011528297340:role/RecolectorDeDashboard"
+    
+    try:
+        sts_client = boto3.client('sts')
+        response = sts_client.assume_role(
+            RoleArn=role_to_assume_arn,
+            RoleSessionName='StreamlitDashboardSession' # Nombre de sesión requerido
+        )
+        
+        credentials = response['Credentials']
+        
+        return boto3.client(
+            service_name,
+            region_name='us-east-1',
+            aws_access_key_id=credentials['AccessKeyId'],
+            aws_secret_access_key=credentials['SecretAccessKey'],
+            aws_session_token=credentials['SessionToken'],
+        )
+    except ClientError as e:
+        st.error(f"Error al asumir el rol de AWS: {e}. Asegúrate de que los permisos de IAM entre cuentas estén bien configurados.")
+        return None
+
 # =======================================================================
 # CACHE COMPARTIDO Y THREAD DE ACTUALIZACIÓN
 # =======================================================================
@@ -24,10 +57,13 @@ _data_cache = {"instances": [], "last_updated": None}
 _lock = threading.Lock()
 
 def get_aws_data():
-    """Fetches all necessary data from AWS using boto3."""
+    """Fetches all necessary data from AWS using boto3 via cross-account role."""
     try:
-        ec2 = boto3.client('ec2', region_name='us-east-1')
-        cloudwatch = boto3.client('cloudwatch', region_name='us-east-1')
+        ec2 = get_cross_account_boto3_client('ec2')
+        cloudwatch = get_cross_account_boto3_client('cloudwatch')
+        if not ec2 or not cloudwatch:
+            return [] # Retorna vacío si no se pudieron obtener los clientes
+
         paginator = ec2.get_paginator('describe_instances')
         instance_pages = paginator.paginate(Filters=[{'Name': 'tag-key', 'Values': ['DashboardGroup']}])
         instances_list = []
@@ -77,7 +113,8 @@ def update_cache_in_background(interval_seconds: int):
 @st.cache_data(ttl=60)
 def get_instance_details(instance_id: str):
     try:
-        ec2 = boto3.client('ec2', region_name='us-east-1')
+        ec2 = get_cross_account_boto3_client('ec2')
+        if not ec2: return None
         response = ec2.describe_instances(InstanceIds=[instance_id])
         if response['Reservations'] and response['Reservations'][0]['Instances']:
             return response['Reservations'][0]['Instances'][0]
@@ -88,7 +125,8 @@ def get_instance_details(instance_id: str):
 @st.cache_data(ttl=60)
 def get_alarms_for_instance(instance_id: str):
     try:
-        cloudwatch = boto3.client('cloudwatch', region_name='us-east-1')
+        cloudwatch = get_cross_account_boto3_client('cloudwatch')
+        if not cloudwatch: return []
         paginator = cloudwatch.get_paginator('describe_alarms')
         pages = paginator.paginate()
         instance_alarms = []
@@ -103,7 +141,8 @@ def get_alarms_for_instance(instance_id: str):
 @st.cache_data(ttl=60)
 def get_cpu_utilization(instance_id: str):
     try:
-        cloudwatch = boto3.client('cloudwatch', region_name='us-east-1')
+        cloudwatch = get_cross_account_boto3_client('cloudwatch')
+        if not cloudwatch: return None
         response = cloudwatch.get_metric_statistics(
             Namespace='AWS/EC2', MetricName='CPUUtilization',
             Dimensions=[{'Name': 'InstanceId', 'Value': instance_id}],
