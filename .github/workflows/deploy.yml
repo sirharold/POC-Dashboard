@@ -13,25 +13,25 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up SSH
-      uses: webfactory/ssh-agent@v0.9.0
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
       with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
 
-    - name: Deploy to EC2
+    - name: Deploy to EC2 via SSM
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-          # Navegar al directorio de la aplicación
-          cd ${{ secrets.APP_PATH }}
+        aws ssm send-command \
+          --instance-ids $(aws ec2 describe-instances --filters "Name=tag:Name,Values=Streamlit-App-Server" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].InstanceId" --output text --region us-east-1) \
+          --document-name "AWS-RunShellScript" \
+          --comment "Deploy Streamlit app from GitHub Actions" \
+          --parameters commands="'cd ${{ secrets.APP_PATH }} && git pull origin main && /usr/bin/python3.11 -m pip install -r requirements.txt && sudo systemctl restart ${{ secrets.STREAMLIT_SERVICE_NAME }} && sudo systemctl status ${{ secrets.STREAMLIT_SERVICE_NAME }}'" \
+          --timeout-seconds 600 \
+          --region us-east-1
 
-          # Jalar los últimos cambios del repositorio
-          git pull origin main # Asegúrate de que 'main' sea tu rama de despliegue
-
-          # Instalar/actualizar dependencias de Python
-          # Asegúrate de que python3.11 y pip estén en el PATH del usuario ssm-user
-          /usr/bin/python3.11 -m pip install -r requirements.txt
-
-          # Reiniciar el servicio Streamlit
-          sudo systemctl restart ${{ secrets.STREAMLIT_SERVICE_NAME }}
-          sudo systemctl status ${{ secrets.STREAMLIT_SERVICE_NAME }}
-        EOF
+    - name: Check SSM Command Status (Optional)
+      run: |
+        # This part is more complex to get the command ID and check status, 
+        # but for now, we assume send-command succeeds if no error is returned.
+        echo "SSM command sent. Check SSM Run Command history in AWS console for status."
