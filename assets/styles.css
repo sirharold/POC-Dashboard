@@ -411,3 +411,13 @@ h1 {
     margin: 0 !important;
     padding: 0 !important;
 }
+
+/* Hide default Streamlit sidebar elements */
+[data-testid="stSidebarNav"] > ul:first-child {
+    display: none !important;
+}
+
+/* Adjust spacing if needed after hiding default nav */
+[data-testid="stSidebarNav"] {
+    padding-top: 0 !important;
+}
