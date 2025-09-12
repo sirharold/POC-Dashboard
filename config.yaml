@@ -1,5 +1,9 @@
 # Configuration file for the SAP Infrastructure Dashboard
 
+# Global settings
+settings:
+  show_aws_errors: false # Set to true to display AWS errors on the dashboard
+
 vm_status:
   # ISU
   SRVISUASCS: "green"

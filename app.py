@@ -7,6 +7,7 @@ from collections import defaultdict, Counter
 from copy import deepcopy
 from botocore.exceptions import ClientError
 from utils.helpers import load_css, create_alarm_item_html
+import yaml
 
 # ========================================================================
 # CONFIGURACIÓN
@@ -16,6 +17,12 @@ st.set_page_config(
     page_icon="☁️",
     layout="wide",
 )
+
+# Cargar configuración desde config.yaml
+with open("config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
+SHOW_AWS_ERRORS = config['settings']['show_aws_errors']
 
 # ========================================================================
 # LÓGICA DE ACCESO A MÚLTIPLES CUENTAS (CROSS-ACCOUNT)
@@ -92,9 +99,11 @@ def get_aws_data():
         
         return instances_list
     except Exception as e:
-        # Log any other exceptions
+        error_message = f"Error al obtener datos de AWS: {e}"
         with open("/tmp/streamlit_aws_debug.log", "a") as f:
-            f.write(f"[{time.ctime()}] An unexpected error occurred in get_aws_data: {e}\n")
+            f.write(f"[{time.ctime()}] {error_message}\n")
+        with _lock:
+            _data_cache["error_message"] = error_message
         return []
 
 def update_cache_in_background(interval_seconds: int):
@@ -228,7 +237,11 @@ def build_and_display_dashboard(environment: str):
     with _lock:
         instances = deepcopy(_data_cache["instances"])
         last_updated = _data_cache["last_updated"]
+        error_message = _data_cache.get("error_message")
     
+    if SHOW_AWS_ERRORS and error_message:
+        st.error(f"Error de AWS: {error_message}")
+
     if not instances and not last_updated:
         st.info("Cargando datos desde AWS... La primera actualización puede tardar hasta 30 segundos.")
         return
@@ -274,6 +287,10 @@ def display_dashboard_page():
 
     # --- Renderizado del Dashboard ---
     build_and_display_dashboard(current_env)
+
+    # Auto-reload mechanism
+    time.sleep(30) # Wait for 30 seconds
+    st.rerun() # Rerun the script
 
 # ========================================================================
 # LÓGICA PRINCIPAL (ROUTER)
