@@ -29,7 +29,6 @@ REFRESH_INTERVAL_SECONDS = config['settings']['refresh_interval_seconds']
 # LÓGICA DE ACCESO A MÚLTIPLES CUENTAS (CROSS-ACCOUNT)
 # ========================================================================
 
-@st.cache_resource(ttl=900) # Cachea las credenciales temporales por 15 minutos
 def get_cross_account_boto3_client(service_name: str):
     """
     Asume el rol de la cuenta cliente y retorna un cliente de boto3 para el servicio especificado.
