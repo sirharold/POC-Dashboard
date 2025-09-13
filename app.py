@@ -128,12 +128,6 @@ def get_aws_data():
         # Fetch all EC2 instances
         response = ec2.describe_instances()
         
-        # Get all CloudWatch alarms
-        alarm_paginator = cloudwatch.get_paginator('describe_alarms')
-        all_alarms = []
-        for page in alarm_paginator.paginate():
-            all_alarms.extend(page['MetricAlarms'])
-        
         # Process each instance
         for reservation in response['Reservations']:
             for instance in reservation['Instances']:
@@ -147,13 +141,19 @@ def get_aws_data():
                 if 'DashboardGroup' not in tags:
                     continue
                 
-                # Count alarms for this instance
+                # Get alarms for this specific instance using the same logic as get_alarms_for_instance()
                 instance_alarms = Counter()
-                for alarm in all_alarms:
-                    dimensions = alarm.get('Dimensions', [])
-                    if any(d['Name'] == 'InstanceId' and d['Value'] == instance_id for d in dimensions):
-                        alarm_state = alarm.get('StateValue', 'UNKNOWN')
-                        instance_alarms[alarm_state] += 1
+                try:
+                    alarm_paginator = cloudwatch.get_paginator('describe_alarms')
+                    pages = alarm_paginator.paginate()
+                    for page in pages:
+                        for alarm in page['MetricAlarms']:
+                            if any(dim['Name'] == 'InstanceId' and dim['Value'] == instance_id for dim in alarm['Dimensions']):
+                                alarm_state = alarm.get('StateValue', 'UNKNOWN')
+                                instance_alarms[alarm_state] += 1
+                except Exception as e:
+                    with open("/tmp/streamlit_aws_debug.log", "a") as f:
+                        f.write(f"[{time.ctime()}] Error getting alarms for instance {instance_id}: {str(e)}\n")
                 
                 # Create instance data structure
                 instance_data = {
@@ -171,7 +171,7 @@ def get_aws_data():
         # Log the results
         with open("/tmp/streamlit_aws_debug.log", "a") as f:
             f.write(f"[{time.ctime()}] Found {len(instances_data)} instances with DashboardGroup tag\n")
-            f.write(f"[{time.ctime()}] Total alarms processed: {len(all_alarms)}\n")
+            f.write(f"[{time.ctime()}] Processed alarms individually per instance\n")
         
         return instances_data
         
