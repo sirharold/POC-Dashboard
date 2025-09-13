@@ -153,8 +153,8 @@ def update_cache_in_background(interval_seconds: int):
         # Test AWS connection first
         status, err = test_aws_connection()
         with _lock:
-            _data_cache["connection_status"] = status
-            _data_cache["connection_error"] = err
+            st.session_state.data_cache["connection_status"] = status
+            st.session_state.data_cache["connection_error"] = err
         with open("/tmp/streamlit_aws_debug.log", "a") as f:
             f.write(f"[{time.ctime()}] Background thread: AWS Connection Status: {status}, Error: {err}\n")
 

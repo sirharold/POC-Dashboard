@@ -53,12 +53,21 @@ jobs:
         config['settings']['version'] = new_version
 
         with open(config_path, 'w') as f:
-            yaml.dump(config, f, default_flow_flow_style=False)
+            yaml.dump(config, f, default_flow_style=False)
 
         print(f'New version: {new_version}')
 
         with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
-            fh.write(f'new_version={new_version}
-')
-EOF
+            fh.write(f'new_version={new_version}\n')
+        EOF
+
+    - name: Configure Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
     - name: Commit and push new version
+      run: |
+        git add config.yaml
+        git commit -m "Bump version to ${{ steps.bump_version_script.outputs.new_version }}"
+        git push
