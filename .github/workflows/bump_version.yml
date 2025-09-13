@@ -1,0 +1,68 @@
+name: Bump Version
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'config.yaml' # Only run if config.yaml changes, to avoid infinite loops
+
+jobs:
+  bump_version:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Fetch all history for git operations
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install PyYAML
+
+    - name: Bump version in config.yaml
+      id: bump_version_script
+      run: |
+        python -c "
+import yaml
+import re
+
+config_path = 'config.yaml'
+with open(config_path, 'r') as f:
+    config = yaml.safe_load(f)
+
+current_version = config['settings']['version']
+print(f'Current version: {current_version}')
+
+# Extract major, minor, patch
+match = re.match(r'v(\d+)\.(\d+)\.(\d+)', current_version)
+if match:
+    major, minor, patch = map(int, match.groups())
+    new_patch = patch + 1
+    new_version = f'v{major}.{minor}.{new_patch}'
+else:
+    # Fallback if version format is unexpected
+    new_version = current_version + '.bump'
+
+config['settings']['version'] = new_version
+
+with open(config_path, 'w') as f:
+    yaml.dump(config, f, default_flow_style=False)
+
+print(f'New version: {new_version}')
+print(f'::set-output name=new_version::{new_version}')
+"
+    - name: Commit and push new version
+      run: |
+        git config user.name "GitHub Actions Bot"
+        git config user.email "actions@github.com"
+        git add config.yaml
+        git commit -m "Bump version to ${{ steps.bump_version_script.outputs.new_version }} [skip ci]" || echo "No changes to commit"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

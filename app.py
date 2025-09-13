@@ -305,6 +305,10 @@ def build_and_display_dashboard(environment: str):
         st.error(f"Error de AWS: {error_message}")
         display_debug_log()
 
+    # Log _data_cache content for debugging
+    with open("/tmp/streamlit_aws_debug.log", "a") as f:
+        f.write(f"[{time.ctime()}] Main thread: _data_cache instances count: {len(instances)}, connection_status: {connection_status}\n")
+
     # Display AWS connection status
     with _lock:
         connection_status = _data_cache.get("connection_status", "Desconocido")
@@ -363,20 +367,9 @@ def display_dashboard_page():
     # --- Renderizado del Dashboard ---
     build_and_display_dashboard(current_env)
 
-    # Auto-reload mechanism with countdown
-    if 'countdown' not in st.session_state:
-        st.session_state.countdown = REFRESH_INTERVAL_SECONDS
-
-    countdown_placeholder = st.empty()
-    if st.session_state.countdown > 0:
-        countdown_placeholder.markdown(f"<p style='text-align: center; font-size: 0.8em; color: grey;'>Esta página se autorecarga en {st.session_state.countdown} segundos...</p>", unsafe_allow_html=True)
-        st.session_state.countdown -= 1
-        time.sleep(1)
-        st.rerun()
-    else:
-        countdown_placeholder.markdown(f"<p style='text-align: center; font-size: 0.8em; color: grey;'>Cargando...</p>", unsafe_allow_html=True)
-        st.session_state.countdown = REFRESH_INTERVAL_SECONDS # Reset countdown
-        st.rerun() # Force a full refresh
+    # Auto-reload mechanism
+    time.sleep(REFRESH_INTERVAL_SECONDS) # Wait for the configured interval
+    st.rerun() # Rerun the script
 
 # ========================================================================
 # LÓGICA PRINCIPAL (ROUTER)
