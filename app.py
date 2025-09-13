@@ -147,13 +147,34 @@ def get_aws_data():
                 if 'DashboardGroup' not in tags:
                     continue
                 
-                # Count alarms for this instance
+                # Count alarms for this instance and check for recently recovered
                 instance_alarms = Counter()
+                recently_recovered = 0
                 for alarm in all_alarms:
                     dimensions = alarm.get('Dimensions', [])
                     if any(d['Name'] == 'InstanceId' and d['Value'] == instance_id for d in dimensions):
                         alarm_state = alarm.get('StateValue', 'UNKNOWN')
+                        
+                        # Check if alarm recently transitioned from ALARM to OK
+                        state_transition_time = alarm.get('StateUpdatedTimestamp')
+                        if (alarm_state == 'OK' and 
+                            alarm.get('StateReasonData') and 
+                            state_transition_time and
+                            (datetime.datetime.now(datetime.timezone.utc) - state_transition_time).total_seconds() < 1800):  # 30 minutes
+                            # Check if previous state was ALARM
+                            try:
+                                state_reason = alarm.get('StateReason', '')
+                                if 'Threshold Crossed' in state_reason or alarm.get('StateReasonData', '').find('ALARM') != -1:
+                                    recently_recovered += 1
+                                    continue
+                            except:
+                                pass
+                        
                         instance_alarms[alarm_state] += 1
+                
+                # Add recently recovered count
+                if recently_recovered > 0:
+                    instance_alarms['RECENTLY_RECOVERED'] = recently_recovered
                 
                 # Create instance data structure
                 instance_data = {
@@ -162,7 +183,8 @@ def get_aws_data():
                     'State': instance_state,
                     'Environment': tags.get('Environment', 'Unknown'),
                     'DashboardGroup': tags.get('DashboardGroup', 'Uncategorized'),
-                    'Alarms': instance_alarms
+                    'Alarms': instance_alarms,
+                    'PrivateIP': instance.get('PrivateIpAddress', 'N/A')
                 }
                 
                 instances_data.append(instance_data)
@@ -225,6 +247,71 @@ def get_cpu_utilization(instance_id: str):
     except ClientError:
         return None
 
+@st.cache_data(ttl=60)
+def get_memory_utilization(instance_id: str):
+    try:
+        cloudwatch = get_cross_account_boto3_client('cloudwatch')
+        if not cloudwatch: return None
+        # Try CWAgent namespace first
+        response = cloudwatch.get_metric_statistics(
+            Namespace='CWAgent', MetricName='mem_used_percent',
+            Dimensions=[{'Name': 'InstanceId', 'Value': instance_id}],
+            StartTime=datetime.datetime.utcnow() - datetime.timedelta(minutes=15),
+            EndTime=datetime.datetime.utcnow(), Period=300, Statistics=['Average']
+        )
+        return sorted(response['Datapoints'], key=lambda x: x['Timestamp'], reverse=True)[0] if response['Datapoints'] else None
+    except ClientError:
+        return None
+
+@st.cache_data(ttl=60)
+def get_disk_utilization(instance_id: str):
+    try:
+        cloudwatch = get_cross_account_boto3_client('cloudwatch')
+        if not cloudwatch: return []
+        
+        disk_metrics = []
+        # Try to get disk metrics from CWAgent
+        paginator = cloudwatch.get_paginator('list_metrics')
+        pages = paginator.paginate(
+            Namespace='CWAgent',
+            MetricName='disk_used_percent',
+            Dimensions=[{'Name': 'InstanceId', 'Value': instance_id}]
+        )
+        
+        for page in pages:
+            for metric in page['Metrics']:
+                # Get the device/path dimension
+                device = None
+                path = None
+                for dim in metric['Dimensions']:
+                    if dim['Name'] == 'device':
+                        device = dim['Value']
+                    elif dim['Name'] == 'path':
+                        path = dim['Value']
+                
+                if device or path:
+                    # Get the latest value
+                    response = cloudwatch.get_metric_statistics(
+                        Namespace='CWAgent',
+                        MetricName='disk_used_percent',
+                        Dimensions=metric['Dimensions'],
+                        StartTime=datetime.datetime.utcnow() - datetime.timedelta(minutes=15),
+                        EndTime=datetime.datetime.utcnow(),
+                        Period=300,
+                        Statistics=['Average']
+                    )
+                    
+                    if response['Datapoints']:
+                        latest = sorted(response['Datapoints'], key=lambda x: x['Timestamp'], reverse=True)[0]
+                        disk_metrics.append({
+                            'device': device or path or 'Unknown',
+                            'usage': latest['Average']
+                        })
+        
+        return disk_metrics
+    except ClientError:
+        return []
+
 def display_detail_page(instance_id: str):
     details = get_instance_details(instance_id)
     st.markdown("<a href='/' target='_self' style='text-decoration: none;'>← Volver al Dashboard</a>", unsafe_allow_html=True)
@@ -247,19 +334,58 @@ def display_detail_page(instance_id: str):
         if alarms:
             for alarm in alarms:
                 state = alarm.get('StateValue')
-                color = "red" if state == "ALARM" else "yellow" if state == "INSUFFICIENT_DATA" else "green"
-                st.markdown(create_alarm_item_html(alarm.get('AlarmName'), color), unsafe_allow_html=True)
+                color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
+                alarm_arn = alarm.get('AlarmArn')
+                st.markdown(create_alarm_item_html(alarm.get('AlarmName'), color, alarm_arn), unsafe_allow_html=True)
         else:
             st.info("No se encontraron alarmas para esta instancia.")
     with col2:
         st.markdown("## 📊 Métricas de Rendimiento")
+        
+        # CPU Metric
         cpu_datapoint = get_cpu_utilization(instance_id)
         if cpu_datapoint:
             cpu_avg = round(cpu_datapoint.get('Average', 0), 2)
             st.markdown("**🖥️ Utilización de CPU (promedio 5 min)**")
             st.progress(cpu_avg / 100, f"{cpu_avg}%")
         else:
-            st.info("No hay datos de CPU (AWS/EC2) disponibles.")
+            st.info("No hay datos de CPU disponibles.")
+        
+        # Memory Metric
+        st.markdown("---")
+        memory_datapoint = get_memory_utilization(instance_id)
+        if memory_datapoint:
+            mem_avg = round(memory_datapoint.get('Average', 0), 2)
+            st.markdown("**🧠 Utilización de Memoria RAM (promedio 5 min)**")
+            st.progress(mem_avg / 100, f"{mem_avg}%")
+        else:
+            st.info("No hay datos de memoria disponibles. Asegúrese de que CloudWatch Agent esté instalado.")
+        
+        # Disk Metrics
+        st.markdown("---")
+        st.markdown("**💾 Utilización de Discos**")
+        disk_metrics = get_disk_utilization(instance_id)
+        if disk_metrics:
+            for disk in disk_metrics:
+                device = disk['device']
+                usage = round(disk['usage'], 2)
+                
+                # Color code based on usage
+                if usage > 95:
+                    color = "🔴"
+                    st.markdown(f"<div style='background-color: rgba(255,0,110,0.2); padding: 8px; border-radius: 4px; margin-bottom: 8px;'>", unsafe_allow_html=True)
+                elif usage > 90:
+                    color = "🟡"
+                    st.markdown(f"<div style='background-color: rgba(255,183,0,0.2); padding: 8px; border-radius: 4px; margin-bottom: 8px;'>", unsafe_allow_html=True)
+                else:
+                    color = "🟢"
+                    st.markdown(f"<div style='padding: 8px; margin-bottom: 8px;'>", unsafe_allow_html=True)
+                
+                st.markdown(f"{color} **{device}**")
+                st.progress(usage / 100, f"{usage}%")
+                st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.info("No hay datos de disco disponibles. Asegúrese de que CloudWatch Agent esté instalado.")
 
 # =======================================================================
 # FUNCIONES DE LA VISTA DE DASHBOARD (Modificadas)
@@ -272,26 +398,76 @@ def get_state_color_and_status(state: str):
 
 def create_alert_bar_html(alerts_data: Counter) -> str:
     critical = alerts_data.get('ALARM', 0)
-    warning = alerts_data.get('INSUFFICIENT_DATA', 0)
+    warning = alerts_data.get('RECENTLY_RECOVERED', 0)
+    insufficient = alerts_data.get('INSUFFICIENT_DATA', 0)
     ok = alerts_data.get('OK', 0)
-    total = critical + warning + ok
-    crit_pct, warn_pct, ok_pct = (0, 0, 100) if total == 0 else ((critical/total)*100, (warning/total)*100, (ok/total)*100)
-    return f'''<div class='alert-bar-container'><div class='alert-bar'><div class='alert-bar-critical' style='width: {crit_pct}%;' title='Alarm: {critical}'></div><div class='alert-bar-warning' style='width: {warn_pct}%;' title='Insufficient Data: {warning}'></div><div class='alert-bar-ok' style='width: {ok_pct}%;' title='OK: {ok}'></div></div><div class='alert-bar-labels'><span style='color: #ff006e;'>A: {critical}</span> <span style='color: #ffb700;'>I: {warning}</span> <span style='color: #00ff88;'>O: {ok}</span></div></div>'''
+    total = critical + warning + insufficient + ok
+    
+    if total == 0:
+        crit_pct, warn_pct, insuf_pct, ok_pct = 0, 0, 0, 100
+    else:
+        crit_pct = (critical/total)*100
+        warn_pct = (warning/total)*100  
+        insuf_pct = (insufficient/total)*100
+        ok_pct = (ok/total)*100
+    
+    return f'''<div class='alert-bar-container'><div class='alert-bar'><div class='alert-bar-critical' style='width: {crit_pct}%;' title='Alarm: {critical}'></div><div class='alert-bar-warning' style='width: {warn_pct}%;' title='Recently Recovered: {warning}'></div><div class='alert-bar-insufficient' style='width: {insuf_pct}%;' title='Insufficient Data: {insufficient}'></div><div class='alert-bar-ok' style='width: {ok_pct}%;' title='OK: {ok}'></div></div><div class='alert-bar-labels'><span style='color: #ff006e;'>A: {critical}</span> <span style='color: #ffb700;'>R: {warning}</span> <span style='color: #808080;'>I: {insufficient}</span> <span style='color: #00ff88;'>O: {ok}</span></div></div>'''
 
 def create_server_card(instance: dict):
     vm_name = instance.get('Name', instance.get('ID', 'N/A'))
     instance_id = instance.get('ID', '')
+    private_ip = instance.get('PrivateIP', 'N/A')
     state = instance.get('State', 'unknown')
     alerts = instance.get('Alarms', Counter())
-    status_color, availability = get_state_color_and_status(state)
+    
+    # Determine card color based on alarms
+    if alerts.get('ALARM', 0) > 0:
+        card_status = 'red'
+    elif alerts.get('RECENTLY_RECOVERED', 0) > 0:
+        card_status = 'yellow'
+    elif alerts.get('INSUFFICIENT_DATA', 0) > 0:
+        card_status = 'gray'
+    else:
+        card_status = 'green'
+    
     alert_bar_html = create_alert_bar_html(alerts)
-    card_content = f'''<div class='server-card server-card-{status_color}'><div class='server-name'>{vm_name}</div><div style='display: flex; align-items: center; justify-content: space-between; margin-top: 8px; gap: 12px;'><div style='flex: 0 0 auto; text-align: center;'><div style='font-size: 0.7rem; color: rgba(255,255,255,0.8); margin-bottom: 4px;'>⚡ Uptime</div><div style='font-size: 1.1rem; color: white; font-weight: 700;'>{availability}</div></div><div style='flex: 1; min-width: 0;'><div style='font-size: 0.7rem; color: rgba(255,255,255,0.8); margin-bottom: 4px; text-align: center;'>🚨 Alertas CloudWatch</div>{alert_bar_html}</div></div></div>'''
+    card_content = f'''<div class='server-card server-card-{card_status}'>
+        <div class='server-name'>{vm_name}</div>
+        <div style='font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 2px;'>{private_ip}</div>
+        <div style='margin-top: 12px;'>
+            <div style='font-size: 0.7rem; color: rgba(255,255,255,0.8); margin-bottom: 4px; text-align: center;'>🚨 Alertas CloudWatch</div>
+            {alert_bar_html}
+        </div>
+    </div>'''
     st.markdown(f"<a href='?poc_vm_id={instance_id}' target='_self' class='card-link'>{' '.join(card_content.split())}</a>", unsafe_allow_html=True)
 
 def create_group_container(group_name: str, instances: list):
-    css_classes = ["group-isu", "group-erp", "group-solman", "group-bo", "group-bw", "group-crm", "group-dc", "group-mcf", "group-po", "group-sao", "group-otros"]
-    css_class = css_classes[hash(group_name) % len(css_classes)]
-    st.markdown(f"<div class='group-container {css_class}'><div class='group-title'>{group_name}</div></div>", unsafe_allow_html=True)
+    # Determine group status based on all instances' alarms
+    has_critical = False
+    has_warning = False
+    has_insufficient = False
+    
+    for instance in instances:
+        alerts = instance.get('Alarms', Counter())
+        if alerts.get('ALARM', 0) > 0:
+            has_critical = True
+            break
+        elif alerts.get('RECENTLY_RECOVERED', 0) > 0:
+            has_warning = True
+        elif alerts.get('INSUFFICIENT_DATA', 0) > 0:
+            has_insufficient = True
+    
+    # Set group color based on worst status
+    if has_critical:
+        group_status = 'red'
+    elif has_warning:
+        group_status = 'yellow'
+    elif has_insufficient:
+        group_status = 'gray'
+    else:
+        group_status = 'green'
+    
+    st.markdown(f"<div class='group-container group-status-{group_status}'><div class='group-title'>{group_name}</div></div>", unsafe_allow_html=True)
     cols = st.columns(3)
     for idx, instance in enumerate(instances):
         with cols[idx % 3]:
@@ -348,9 +524,6 @@ def build_and_display_dashboard(environment: str):
                 with col2:
                     create_group_container(group_name, instance_list)
     
-    if last_updated:
-        time_since_update = int(time.time() - last_updated)
-        st.sidebar.markdown(f"<div style='font-size: 0.9rem; text-align: center; color: grey;'>Última Act: {time_since_update}s atrás</div>", unsafe_allow_html=True)
 
 def display_dashboard_page():
     # Initialize st.session_state.data_cache if it doesn't exist

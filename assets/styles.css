@@ -194,6 +194,16 @@ h1 {
     border-color: rgba(255, 0, 110, 0.5);
 }
 
+.server-card-gray {
+    background: linear-gradient(135deg, rgba(128, 128, 128, 0.15) 0%, rgba(169, 169, 169, 0.1) 100%);
+    border-color: rgba(128, 128, 128, 0.3);
+}
+
+.server-card-gray:hover {
+    box-shadow: 0 8px 24px rgba(128, 128, 128, 0.3);
+    border-color: rgba(128, 128, 128, 0.5);
+}
+
 .server-name {
     color: #ffffff;
     font-size: 0.9rem;
@@ -236,6 +246,7 @@ h1 {
 
 .alert-bar-critical { background-color: #ff006e; }
 .alert-bar-warning { background-color: #ffb700; }
+.alert-bar-insufficient { background-color: #808080; }
 .alert-bar-ok { background-color: #00ff88; }
 
 .alert-bar-labels {
@@ -274,6 +285,55 @@ h1 {
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+/* Group status color variants based on alarms */
+.group-status-green {
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%) !important;
+    border: 1px solid rgba(0, 255, 136, 0.3) !important;
+}
+.group-status-green:before { 
+    background: linear-gradient(90deg, #00ff88 0%, #00d4ff 100%) !important; 
+}
+.group-status-green .group-title { 
+    color: #00ff88 !important; 
+    text-shadow: 0 0 15px rgba(0, 255, 136, 0.5) !important; 
+}
+
+.group-status-yellow {
+    background: linear-gradient(135deg, rgba(255, 183, 0, 0.1) 0%, rgba(255, 183, 0, 0.05) 100%) !important;
+    border: 1px solid rgba(255, 183, 0, 0.3) !important;
+}
+.group-status-yellow:before { 
+    background: linear-gradient(90deg, #ffb700 0%, #ffd700 100%) !important; 
+}
+.group-status-yellow .group-title { 
+    color: #ffb700 !important; 
+    text-shadow: 0 0 15px rgba(255, 183, 0, 0.5) !important; 
+}
+
+.group-status-red {
+    background: linear-gradient(135deg, rgba(255, 0, 110, 0.1) 0%, rgba(255, 0, 110, 0.05) 100%) !important;
+    border: 1px solid rgba(255, 0, 110, 0.3) !important;
+}
+.group-status-red:before { 
+    background: linear-gradient(90deg, #ff006e 0%, #ff4458 100%) !important; 
+}
+.group-status-red .group-title { 
+    color: #ff006e !important; 
+    text-shadow: 0 0 15px rgba(255, 0, 110, 0.5) !important; 
+}
+
+.group-status-gray {
+    background: linear-gradient(135deg, rgba(128, 128, 128, 0.1) 0%, rgba(128, 128, 128, 0.05) 100%) !important;
+    border: 1px solid rgba(128, 128, 128, 0.3) !important;
+}
+.group-status-gray:before { 
+    background: linear-gradient(90deg, #808080 0%, #a9a9a9 100%) !important; 
+}
+.group-status-gray .group-title { 
+    color: #a9a9a9 !important; 
+    text-shadow: 0 0 15px rgba(169, 169, 169, 0.5) !important; 
 }
 
 /* Group color variants */

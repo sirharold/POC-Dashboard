@@ -328,18 +328,39 @@ def create_group_container_html(group_name: str, css_class: str) -> str:
     </div>
     """
 
-def create_alarm_item_html(alarm_name: str, status: str) -> str:
+def create_alarm_item_html(alarm_name: str, status: str, alarm_arn: str = None) -> str:
     """
     Generate HTML for an alarm item.
     
     Args:
         alarm_name (str): Name of the alarm
         status (str): Status of the alarm
+        alarm_arn (str): ARN of the alarm for AWS console link
         
     Returns:
         str: HTML string for the alarm item
     """
     status_icon = "🔴" if status == "red" else "🟡" if status == "yellow" else "🟢"
+    
+    # Generate AWS console link if ARN is provided
+    if alarm_arn:
+        # Extract region from ARN (format: arn:aws:cloudwatch:region:account:alarm:name)
+        try:
+            arn_parts = alarm_arn.split(':')
+            region = arn_parts[3] if len(arn_parts) > 3 else 'us-east-1'
+            console_url = f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#alarmsV2:alarmFilter=ANY;name={quote(alarm_name)}"
+            
+            return f"""
+            <div class='alarm-item'>
+                <a href='{console_url}' target='_blank' style='color: white; text-decoration: none; font-weight: 500;'>
+                    {alarm_name} 🔗
+                </a>
+                <span style='font-size: 1.5rem;'>{status_icon}</span>
+            </div>
+            """
+        except:
+            pass
+    
     return f"""
     <div class='alarm-item'>
         <span style='color: white; font-weight: 500;'>{alarm_name}</span>
