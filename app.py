@@ -317,7 +317,7 @@ def build_and_display_dashboard(environment: str):
         if SHOW_AWS_ERRORS:
             display_debug_log()
 
-    if not instances and not last_updated:
+    if not instances:
         st.info("Cargando datos desde AWS... La primera actualización puede tardar hasta 30 segundos.")
         return
     

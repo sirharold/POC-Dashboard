@@ -4,7 +4,7 @@
 settings:
   show_aws_errors: false # Set to true to display AWS errors on the dashboard
   refresh_interval_seconds: 30 # Interval in seconds for dashboard auto-reload
-  version: "v0.1.50" # Current application version
+  version: "v0.1.51" # Current application version
 
 vm_status:
   # ISU
