@@ -16,6 +16,40 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 
 ## Registro de Desarrollo
 
+### 2025-09-12 - Continuous Deployment and Data Loading Fixes
+
+#### Objective
+Establish a robust CI/CD pipeline for deploying the Streamlit app to EC2 and resolve data loading issues.
+
+#### Problems Encountered & Solutions
+1.  **GitHub Actions Permission Denied (`fatal: failed to stat ... Permission Denied`)**:
+    *   **Problem:** The `ssm-user` running the SSM command in GitHub Actions could not access the application directory (`APP_PATH`), and the `ec2-user` (intended owner) also lacked permissions.
+    *   **Solution:** Modified `deploy.yml` to ensure the application directory (`/home/ec2-user/POC-Dashboard`) is created and owned by `ec2-user` *before* any `git` operations.
+2.  **GitHub Actions `fatal: not a git repository`**:
+    *   **Problem:** After fixing permissions, the `git pull` command failed because the newly created directory on EC2 was not a Git repository.
+    *   **Solution:** Modified `deploy.yml` to include `git init` and `git remote add origin` before `git pull`, ensuring the directory is a proper Git repository.
+3.  **GitHub Actions `remote origin already exists`**:
+    *   **Problem:** On subsequent deployments, `git remote add origin` failed because the remote was already configured.
+    *   **Solution:** Modified `deploy.yml` to conditionally add the remote origin, checking if it exists first.
+4.  **Streamlit App "No se puede acceder a este sitio web"**:
+    *   **Problem:** The Streamlit service was crashing on startup (`status=200/CHDIR`) because its `WorkingDirectory` in `/etc/systemd/system/streamlit.service` was pointing to the old path (`/home/ssm-user/POC-Dashboard/`).
+    *   **Solution:** Updated the `streamlit.service` file on EC2 to set `WorkingDirectory=/home/ec2-user/POC-Dashboard`, reloaded `systemd` daemon, and restarted the service.
+5.  **Streamlit App "Cargando datos desde AWS..." (Data Loading Issue)**:
+    *   **Problem:** The application was stuck on the loading message, and logs showed `botocore.client.EC2` objects were not pickle-serializable, causing `st.cache_data` to fail in `get_cross_account_boto3_client()`.
+    *   **Solution:** Changed `@st.cache_data` to `@st.cache_resource` for `get_cross_account_boto3_client()` in `app.py`, as recommended by Streamlit for non-serializable objects.
+6.  **Lack of Real-time Data Refresh & Debugging Visibility**:
+    *   **Problem:** The page was not auto-reloading, and debugging AWS data fetching issues was difficult without on-screen logs.
+    *   **Solution:**
+        *   Implemented a configurable auto-reload mechanism with a countdown timer in `app.py` (using `REFRESH_INTERVAL_SECONDS` from `config.yaml`).
+        *   Added a `show_aws_errors` flag to `config.yaml` to control on-screen display of AWS errors.
+        *   Enhanced `get_aws_data()` with more granular logging to `/tmp/streamlit_aws_debug.log`.
+        *   Implemented a feature to display the content of `/tmp/streamlit_aws_debug.log` directly on the Streamlit page when `show_aws_errors` is enabled.
+
+#### Files Modified:
+*   `.github/workflows/deploy.yml`
+*   `app.py`
+*   `config.yaml`
+
 ### 2025-09-12 - Versión 6.1: Simplificación de Navegación - Solo POC AWS Alive
 
 #### Resumen

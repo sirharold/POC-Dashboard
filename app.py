@@ -53,7 +53,7 @@ def get_cross_account_boto3_client(service_name: str):
             aws_session_token=credentials['SessionToken'],
         )
     except ClientError as e:
-        st.error(f"Error al asumir el rol de AWS: {e}. Asegúrate de que los permisos de IAM entre cuentas estén bien configurados.")
+        # Do not use st.error here as it's a cached function. Handle error in calling function.
         return None
 
 # =======================================================================
@@ -70,8 +70,11 @@ def get_aws_data():
         ec2 = get_cross_account_boto3_client('ec2')
         cloudwatch = get_cross_account_boto3_client('cloudwatch')
         if not ec2 or not cloudwatch:
+            error_message = "Error: No se pudieron obtener los clientes de AWS (EC2 o CloudWatch). Posiblemente falló la asunción de rol."
             with open("/tmp/streamlit_aws_debug.log", "a") as f:
-                f.write(f"[{time.ctime()}] Boto3 clients (ec2 or cloudwatch) are None. Returning empty list.\n")
+                f.write(f"[{time.ctime()}] {error_message}\n")
+            with _lock:
+                _data_cache["error_message"] = error_message
             return []
         with open("/tmp/streamlit_aws_debug.log", "a") as f:
             f.write(f"[{time.ctime()}] Boto3 clients successfully created.\n")
