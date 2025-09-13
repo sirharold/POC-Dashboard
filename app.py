@@ -55,10 +55,37 @@ def get_cross_account_boto3_client(service_name: str):
         # Do not use st.error here as it's a cached function. Handle error in calling function.
         return None
 
+def test_aws_connection():
+    """
+    Attempts to assume the role and create a simple STS client to test AWS connectivity.
+    Returns a tuple (status_message, error_details).
+    """
+    role_to_assume_arn = "arn:aws:iam::011528297340:role/RecolectorDeDashboard"
+    try:
+        sts_client = boto3.client('sts')
+        response = sts_client.assume_role(
+            RoleArn=role_to_assume_arn,
+            RoleSessionName='StreamlitConnectionTestSession'
+        )
+        # If assume_role succeeds, we can try to get a client
+        credentials = response['Credentials']
+        boto3.client(
+            'ec2',
+            region_name='us-east-1',
+            aws_access_key_id=credentials['AccessKeyId'],
+            aws_secret_access_key=credentials['SecretAccessKey'],
+            aws_session_token=credentials['SessionToken'],
+        )
+        return "Conexión AWS OK", None
+    except ClientError as e:
+        return "Error de Conexión AWS", str(e)
+    except Exception as e:
+        return "Error Inesperado de Conexión AWS", str(e)
+
 # =======================================================================
 # CACHE COMPARTIDO Y THREAD DE ACTUALIZACIÓN
 # =======================================================================
-_data_cache = {"instances": [], "last_updated": None}
+_data_cache = {"instances": [], "last_updated": None, "connection_status": "Desconocido", "connection_error": None}
 _lock = threading.Lock()
 
 def get_aws_data():
@@ -69,11 +96,7 @@ def get_aws_data():
         ec2 = get_cross_account_boto3_client('ec2')
         cloudwatch = get_cross_account_boto3_client('cloudwatch')
         if not ec2 or not cloudwatch:
-            error_message = "Error: No se pudieron obtener los clientes de AWS (EC2 o CloudWatch). Posiblemente falló la asunción de rol."
-            with open("/tmp/streamlit_aws_debug.log", "a") as f:
-                f.write(f"[{time.ctime()}] {error_message}\n")
-            with _lock:
-                _data_cache["error_message"] = error_message
+            # Error message is now handled by update_cache_in_background via test_aws_connection
             return []
         with open("/tmp/streamlit_aws_debug.log", "a") as f:
             f.write(f"[{time.ctime()}] Boto3 clients successfully created.\n")
@@ -120,10 +143,21 @@ def get_aws_data():
 def update_cache_in_background(interval_seconds: int):
     """Daemon thread to periodically fetch data and update the shared cache."""
     while True:
-        instances_data = get_aws_data()
+        # Test AWS connection first
+        status, err = test_aws_connection()
         with _lock:
-            _data_cache["instances"] = instances_data
-            _data_cache["last_updated"] = time.time()
+            _data_cache["connection_status"] = status
+            _data_cache["connection_error"] = err
+
+        if status == "Conexión AWS OK":
+            instances_data = get_aws_data()
+            with _lock:
+                _data_cache["instances"] = instances_data
+                _data_cache["last_updated"] = time.time()
+        else:
+            with _lock:
+                _data_cache["instances"] = [] # Clear instances if connection failed
+                _data_cache["last_updated"] = None
         time.sleep(interval_seconds)
 
 # ========================================================================
@@ -264,6 +298,18 @@ def build_and_display_dashboard(environment: str):
     if SHOW_AWS_ERRORS and error_message:
         st.error(f"Error de AWS: {error_message}")
         display_debug_log()
+
+    # Display AWS connection status
+    with _lock:
+        connection_status = _data_cache.get("connection_status", "Desconocido")
+        connection_error = _data_cache.get("connection_error")
+    
+    if connection_status == "Conexión AWS OK":
+        st.success(f"Estado de Conexión AWS: {connection_status}")
+    else:
+        st.error(f"Estado de Conexión AWS: {connection_status}. Detalles: {connection_error}")
+        if SHOW_AWS_ERRORS:
+            display_debug_log()
 
     if not instances and not last_updated:
         st.info("Cargando datos desde AWS... La primera actualización puede tardar hasta 30 segundos.")
