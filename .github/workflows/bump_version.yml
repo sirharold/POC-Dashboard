@@ -59,7 +59,8 @@ with open(config_path, 'w') as f:
 print(f'New version: {new_version}')
 
 with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
-    print(f'new_version={new_version}', file=fh)
+    fh.write(f'new_version={new_version}\n')
+
 "
     - name: Commit and push new version
       run: |
