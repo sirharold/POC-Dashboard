@@ -28,40 +28,39 @@ jobs:
     - name: Bump version in config.yaml
       id: bump_version_script
       run: |
-        python -c "
-import yaml
-import re
+        python - <<EOF
+        import yaml
+        import re
+        import os
 
-import os
+        config_path = 'config.yaml'
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
 
-config_path = 'config.yaml'
-with open(config_path, 'r') as f:
-    config = yaml.safe_load(f)
+        current_version = config['settings']['version']
+        print(f'Current version: {current_version}')
 
-current_version = config['settings']['version']
-print(f'Current version: {current_version}')
+        # Extract major, minor, patch
+        match = re.match(r'v(\d+)\.(\d+)\.(\d+)', current_version)
+        if match:
+            major, minor, patch = map(int, match.groups())
+            new_patch = patch + 1
+            new_version = f'v{major}.{minor}.{new_patch}'
+        else:
+            # Fallback if version format is unexpected
+            new_version = current_version + '.bump'
 
-# Extract major, minor, patch
-match = re.match(r'v(\d+)\.(\d+)\.(\d+)', current_version)
-if match:
-    major, minor, patch = map(int, match.groups())
-    new_patch = patch + 1
-    new_version = f'v{major}.{minor}.{new_patch}'
-else:
-    # Fallback if version format is unexpected
-    new_version = current_version + '.bump'
+        config['settings']['version'] = new_version
 
-config['settings']['version'] = new_version
+        with open(config_path, 'w') as f:
+            yaml.dump(config, f, default_flow_flow_style=False)
 
-with open(config_path, 'w') as f:
-    yaml.dump(config, f, default_flow_style=False)
+        print(f'New version: {new_version}')
 
-print(f'New version: {new_version}')
-
-with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
-    fh.write(f'new_version={new_version}\n')
-
-"
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+            fh.write(f'new_version={new_version}
+')
+        EOF
     - name: Commit and push new version
       run: |
         git config user.name "GitHub Actions Bot"
