@@ -143,11 +143,15 @@ def get_aws_data():
 def update_cache_in_background(interval_seconds: int):
     """Daemon thread to periodically fetch data and update the shared cache."""
     while True:
+        with open("/tmp/streamlit_aws_debug.log", "a") as f:
+            f.write(f"[{time.ctime()}] Background thread: Starting update cycle.\n")
         # Test AWS connection first
         status, err = test_aws_connection()
         with _lock:
             _data_cache["connection_status"] = status
             _data_cache["connection_error"] = err
+        with open("/tmp/streamlit_aws_debug.log", "a") as f:
+            f.write(f"[{time.ctime()}] Background thread: AWS Connection Status: {status}, Error: {err}\n")
 
         if status == "Conexión AWS OK":
             instances_data = get_aws_data()
