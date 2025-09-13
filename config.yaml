@@ -2,7 +2,8 @@
 
 # Global settings
 settings:
-  show_aws_errors: true # Set to true to display AWS errors on the dashboard
+  show_aws_errors: false # Set to true to display AWS errors on the dashboard
+  refresh_interval_seconds: 30 # Interval in seconds for dashboard auto-reload
 
 vm_status:
   # ISU

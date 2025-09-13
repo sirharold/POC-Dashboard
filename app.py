@@ -23,6 +23,7 @@ with open("config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 SHOW_AWS_ERRORS = config['settings']['show_aws_errors']
+REFRESH_INTERVAL_SECONDS = config['settings']['refresh_interval_seconds']
 
 # ========================================================================
 # LÓGICA DE ACCESO A MÚLTIPLES CUENTAS (CROSS-ACCOUNT)
@@ -308,9 +309,20 @@ def display_dashboard_page():
     # --- Renderizado del Dashboard ---
     build_and_display_dashboard(current_env)
 
-    # Auto-reload mechanism
-    time.sleep(30) # Wait for 30 seconds
-    st.rerun() # Rerun the script
+    # Auto-reload mechanism with countdown
+    if 'countdown' not in st.session_state:
+        st.session_state.countdown = REFRESH_INTERVAL_SECONDS
+
+    countdown_placeholder = st.empty()
+    if st.session_state.countdown > 0:
+        countdown_placeholder.markdown(f"<p style='text-align: center; font-size: 0.8em; color: grey;'>Esta página se autorecarga en {st.session_state.countdown} segundos...</p>", unsafe_allow_html=True)
+        st.session_state.countdown -= 1
+        time.sleep(1)
+        st.rerun()
+    else:
+        countdown_placeholder.markdown(f"<p style='text-align: center; font-size: 0.8em; color: grey;'>Cargando...</p>", unsafe_allow_html=True)
+        st.session_state.countdown = REFRESH_INTERVAL_SECONDS # Reset countdown
+        st.rerun() # Force a full refresh
 
 # ========================================================================
 # LÓGICA PRINCIPAL (ROUTER)
