@@ -55,7 +55,7 @@ with open(config_path, 'w') as f:
     yaml.dump(config, f, default_flow_style=False)
 
 print(f'New version: {new_version}')
-print(f'::set-output name=new_version::{new_version}')
+print(f'new_version={new_version}' >> "$GITHUB_OUTPUT")
 "
     - name: Commit and push new version
       run: |

@@ -161,12 +161,14 @@ def update_cache_in_background(interval_seconds: int):
         if status == "Conexión AWS OK":
             instances_data = get_aws_data()
             with _lock:
-                _data_cache["instances"] = instances_data
-                _data_cache["last_updated"] = time.time()
+                st.session_state.data_cache["instances"] = instances_data
+                st.session_state.data_cache["last_updated"] = time.time()
+            time.sleep(0.1) # Small delay to allow Streamlit to process the update
         else:
             with _lock:
-                _data_cache["instances"] = [] # Clear instances if connection failed
-                _data_cache["last_updated"] = None
+                st.session_state.data_cache["instances"] = [] # Clear instances if connection failed
+                st.session_state.data_cache["last_updated"] = None
+            time.sleep(0.1) # Small delay to allow Streamlit to process the update
         time.sleep(interval_seconds)
 
 
