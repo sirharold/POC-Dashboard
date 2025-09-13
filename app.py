@@ -7,7 +7,7 @@ import datetime
 from collections import defaultdict, Counter
 from copy import deepcopy
 from botocore.exceptions import ClientError
-from utils.helpers import load_css, create_alarm_item_html
+from utils.helpers import load_css, create_alarm_item_html, create_alarm_legend
 import yaml
 
 # ========================================================================
@@ -147,34 +147,13 @@ def get_aws_data():
                 if 'DashboardGroup' not in tags:
                     continue
                 
-                # Count alarms for this instance and check for recently recovered
+                # Count alarms for this instance
                 instance_alarms = Counter()
-                recently_recovered = 0
                 for alarm in all_alarms:
                     dimensions = alarm.get('Dimensions', [])
                     if any(d['Name'] == 'InstanceId' and d['Value'] == instance_id for d in dimensions):
                         alarm_state = alarm.get('StateValue', 'UNKNOWN')
-                        
-                        # Check if alarm recently transitioned from ALARM to OK
-                        state_transition_time = alarm.get('StateUpdatedTimestamp')
-                        if (alarm_state == 'OK' and 
-                            alarm.get('StateReasonData') and 
-                            state_transition_time and
-                            (datetime.datetime.now(datetime.timezone.utc) - state_transition_time).total_seconds() < 1800):  # 30 minutes
-                            # Check if previous state was ALARM
-                            try:
-                                state_reason = alarm.get('StateReason', '')
-                                if 'Threshold Crossed' in state_reason or alarm.get('StateReasonData', '').find('ALARM') != -1:
-                                    recently_recovered += 1
-                                    continue
-                            except:
-                                pass
-                        
                         instance_alarms[alarm_state] += 1
-                
-                # Add recently recovered count
-                if recently_recovered > 0:
-                    instance_alarms['RECENTLY_RECOVERED'] = recently_recovered
                 
                 # Create instance data structure
                 instance_data = {
@@ -330,6 +309,7 @@ def display_detail_page(instance_id: str):
         st.text(f"Zona: {details.get('Placement', {}).get('AvailabilityZone')}")
         st.text(f"IP Privada: {details.get('PrivateIpAddress')}")
         st.markdown("## 🚨 Alarmas")
+        st.markdown(create_alarm_legend(), unsafe_allow_html=True)
         alarms = get_alarms_for_instance(instance_id)
         if alarms:
             for alarm in alarms:
@@ -398,20 +378,18 @@ def get_state_color_and_status(state: str):
 
 def create_alert_bar_html(alerts_data: Counter) -> str:
     critical = alerts_data.get('ALARM', 0)
-    warning = alerts_data.get('RECENTLY_RECOVERED', 0)
     insufficient = alerts_data.get('INSUFFICIENT_DATA', 0)
     ok = alerts_data.get('OK', 0)
-    total = critical + warning + insufficient + ok
+    total = critical + insufficient + ok
     
     if total == 0:
-        crit_pct, warn_pct, insuf_pct, ok_pct = 0, 0, 0, 100
+        crit_pct, insuf_pct, ok_pct = 0, 0, 100
     else:
         crit_pct = (critical/total)*100
-        warn_pct = (warning/total)*100  
         insuf_pct = (insufficient/total)*100
         ok_pct = (ok/total)*100
     
-    return f'''<div class='alert-bar-container'><div class='alert-bar'><div class='alert-bar-critical' style='width: {crit_pct}%;' title='Alarm: {critical}'></div><div class='alert-bar-warning' style='width: {warn_pct}%;' title='Recently Recovered: {warning}'></div><div class='alert-bar-insufficient' style='width: {insuf_pct}%;' title='Insufficient Data: {insufficient}'></div><div class='alert-bar-ok' style='width: {ok_pct}%;' title='OK: {ok}'></div></div><div class='alert-bar-labels'><span style='color: #ff006e;'>A: {critical}</span> <span style='color: #ffb700;'>R: {warning}</span> <span style='color: #808080;'>I: {insufficient}</span> <span style='color: #00ff88;'>O: {ok}</span></div></div>'''
+    return f'''<div class='alert-bar-container'><div class='alert-bar'><div class='alert-bar-critical' style='width: {crit_pct}%;' title='Alarm: {critical}'></div><div class='alert-bar-insufficient' style='width: {insuf_pct}%;' title='Insufficient Data: {insufficient}'></div><div class='alert-bar-ok' style='width: {ok_pct}%;' title='OK: {ok}'></div></div><div class='alert-bar-labels'><span style='color: #ff006e;'>A: {critical}</span> <span style='color: #808080;'>I: {insufficient}</span> <span style='color: #00ff88;'>O: {ok}</span></div></div>'''
 
 def create_server_card(instance: dict):
     vm_name = instance.get('Name', instance.get('ID', 'N/A'))
@@ -423,8 +401,6 @@ def create_server_card(instance: dict):
     # Determine card color based on alarms
     if alerts.get('ALARM', 0) > 0:
         card_status = 'red'
-    elif alerts.get('RECENTLY_RECOVERED', 0) > 0:
-        card_status = 'yellow'
     elif alerts.get('INSUFFICIENT_DATA', 0) > 0:
         card_status = 'gray'
     else:
@@ -444,7 +420,6 @@ def create_server_card(instance: dict):
 def create_group_container(group_name: str, instances: list):
     # Determine group status based on all instances' alarms
     has_critical = False
-    has_warning = False
     has_insufficient = False
     
     for instance in instances:
@@ -452,16 +427,12 @@ def create_group_container(group_name: str, instances: list):
         if alerts.get('ALARM', 0) > 0:
             has_critical = True
             break
-        elif alerts.get('RECENTLY_RECOVERED', 0) > 0:
-            has_warning = True
         elif alerts.get('INSUFFICIENT_DATA', 0) > 0:
             has_insufficient = True
     
     # Set group color based on worst status
     if has_critical:
         group_status = 'red'
-    elif has_warning:
-        group_status = 'yellow'
     elif has_insufficient:
         group_status = 'gray'
     else:
@@ -548,17 +519,15 @@ def display_dashboard_page():
     current_env = ENVIRONMENTS[st.session_state.env_index]
     with nav_cols[1]:
         st.markdown(f"<h1 style='text-align: center;'>Dashboard {current_env}</h1>", unsafe_allow_html=True)
+        st.markdown(f"<p style='text-align: center; font-size: 0.8em; color: grey;'>Esta página se autorecarga cada {REFRESH_INTERVAL_SECONDS} segundos {APP_VERSION}</p>", unsafe_allow_html=True)
         
-        # Auto-reload countdown
-        if 'last_refresh' not in st.session_state:
-            st.session_state.last_refresh = time.time()
-        
-        time_elapsed = int(time.time() - st.session_state.last_refresh)
-        time_remaining = max(0, REFRESH_INTERVAL_SECONDS - time_elapsed)
-        
-        st.markdown(f"<p style='text-align: center; font-size: 0.8em; color: grey;'>Esta página se autorecarga cada {REFRESH_INTERVAL_SECONDS} segundos - Próxima actualización en: {time_remaining}s {APP_VERSION}</p>", unsafe_allow_html=True)
+        # Add meta refresh to auto-reload the page
+        st.markdown(f'<meta http-equiv="refresh" content="{REFRESH_INTERVAL_SECONDS}">', unsafe_allow_html=True)
     
     st.divider()
+
+    # Add alarm legend
+    st.markdown(create_alarm_legend(), unsafe_allow_html=True)
 
     # Fetch data directly in the main thread
     connection_status_msg, connection_error_details = test_aws_connection()
@@ -590,15 +559,3 @@ if 'poc_vm_id' in st.query_params:
     display_detail_page(st.query_params['poc_vm_id'])
 else:
     display_dashboard_page()
-    
-    # Auto-reload functionality with countdown
-    if REFRESH_INTERVAL_SECONDS > 0:
-        if 'last_refresh' in st.session_state:
-            time_elapsed = time.time() - st.session_state.last_refresh
-            if time_elapsed >= REFRESH_INTERVAL_SECONDS:
-                st.session_state.last_refresh = time.time()
-                st.rerun()
-            else:
-                # Small sleep to allow countdown updates
-                time.sleep(1)
-                st.rerun()
