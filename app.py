@@ -318,23 +318,9 @@ def build_and_display_dashboard(environment: str):
         display_debug_log()
 
     # Log _data_cache content for debugging
-    with open("/tmp/streamlit_aws_debug.log", "a") as f:
-        f.write(f"[{time.ctime()}] Main thread: _data_cache instances count: {len(instances)}, connection_status: {st.session_state.data_cache["connection_status"]}\n")
-
-    # Display AWS connection status
     connection_status = st.session_state.data_cache.get("connection_status", "Desconocido")
-    connection_error = st.session_state.data_cache.get("connection_error")
-
-    # Log _data_cache content for debugging
     with open("/tmp/streamlit_aws_debug.log", "a") as f:
         f.write(f"[{time.ctime()}] Main thread: _data_cache instances count: {len(instances)}, connection_status: {connection_status}\n")
-    
-    if connection_status == "Conexión AWS OK":
-        st.success(f"Estado de Conexión AWS: {connection_status}")
-    else:
-        st.error(f"Estado de Conexión AWS: {connection_status}. Detalles: {connection_error}")
-        if SHOW_AWS_ERRORS:
-            display_debug_log()
 
     if not instances:
         st.info("Cargando datos desde AWS... La primera actualización puede tardar hasta 30 segundos.")
@@ -349,8 +335,18 @@ def build_and_display_dashboard(environment: str):
         grouped_instances = defaultdict(list)
         for instance in filtered_instances:
             grouped_instances[instance.get('DashboardGroup') or 'Uncategorized'].append(instance)
-        for group_name, instance_list in sorted(grouped_instances.items()):
-            create_group_container(group_name, instance_list)
+        
+        # Arrange groups in 2 columns
+        group_items = sorted(grouped_instances.items())
+        col1, col2 = st.columns(2)
+        
+        for idx, (group_name, instance_list) in enumerate(group_items):
+            if idx % 2 == 0:
+                with col1:
+                    create_group_container(group_name, instance_list)
+            else:
+                with col2:
+                    create_group_container(group_name, instance_list)
     
     if last_updated:
         time_since_update = int(time.time() - last_updated)
@@ -379,7 +375,15 @@ def display_dashboard_page():
     current_env = ENVIRONMENTS[st.session_state.env_index]
     with nav_cols[1]:
         st.markdown(f"<h1 style='text-align: center;'>Dashboard {current_env}</h1>", unsafe_allow_html=True)
-        st.markdown(f"<p style='text-align: center; font-size: 0.8em; color: grey;'>Esta página se autorecarga cada {REFRESH_INTERVAL_SECONDS} segundos {APP_VERSION}</p>", unsafe_allow_html=True)
+        
+        # Auto-reload countdown
+        if 'last_refresh' not in st.session_state:
+            st.session_state.last_refresh = time.time()
+        
+        time_elapsed = int(time.time() - st.session_state.last_refresh)
+        time_remaining = max(0, REFRESH_INTERVAL_SECONDS - time_elapsed)
+        
+        st.markdown(f"<p style='text-align: center; font-size: 0.8em; color: grey;'>Esta página se autorecarga cada {REFRESH_INTERVAL_SECONDS} segundos - Próxima actualización en: {time_remaining}s {APP_VERSION}</p>", unsafe_allow_html=True)
     
     st.divider()
 
@@ -414,7 +418,14 @@ if 'poc_vm_id' in st.query_params:
 else:
     display_dashboard_page()
     
-    # Auto-reload functionality
+    # Auto-reload functionality with countdown
     if REFRESH_INTERVAL_SECONDS > 0:
-        time.sleep(REFRESH_INTERVAL_SECONDS)
-        st.rerun()
+        if 'last_refresh' in st.session_state:
+            time_elapsed = time.time() - st.session_state.last_refresh
+            if time_elapsed >= REFRESH_INTERVAL_SECONDS:
+                st.session_state.last_refresh = time.time()
+                st.rerun()
+            else:
+                # Small sleep to allow countdown updates
+                time.sleep(1)
+                st.rerun()
