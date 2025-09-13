@@ -1,88 +1,100 @@
-# Configuration file for the SAP Infrastructure Dashboard
-
-# Global settings
-settings:
-  show_aws_errors: false # Set to true to display AWS errors on the dashboard
-  refresh_interval_seconds: 30 # Interval in seconds for dashboard auto-reload
-  version: "v0.1.52" # Current application version
-
-vm_status:
-  # ISU
-  SRVISUASCS: "green"
-  SRVISUPRD: "red"
-  SRVISUPRDDB: "yellow"
-  # ERP
-  SRVERPPRD: "green"
-  SRVSAPERPBDD: "yellow"
-  # SOLMAN
-  SOLMANPRD: "green"
-  # BO
-  SRVBOPRD: "green"
-  # BW
-  SRVBWPRD: "yellow"
-  SRVSAPBWBDD: "green"
-  # CRM
-  SRVCRMASCS: "green"
-  SRVCRMPRD: "yellow"
-  SRVCRMPRDDB: "green"
-  # Domain Controller
-  "SRVDCON4-(AD-DNS)": "green"
-  # MCF
-  SRVGTWPRDCS: "green"
-  SRVGTWPRDPAS: "yellow"
-  SRVMOBPRD: "green"
-  SRVHANDBPRD: "red"
-  # PO
-  "SRVPOPRDCS - RESPALDO 2025-08-11": "yellow"
-  "SRVPOPRDDB - RESPALDO 2025-08-11": "green"
-  "SRVPOPRDPAS - RESPALDO 2025-08-11": "green"
-  # SAO
-  SRVSAOBDD: "green"
-  SRVSAOPRD: "yellow"
-  # Otros
-  "DMZ-SRVSAPROU": "green"
-  "DMZ-SRVWDPRD": "green"
-  SRVALMCS: "yellow"
-  SRVALMPRDN: "green"
-  "SRVSTG (SRVALMPRD)": "red"
-  # POC Real Server
-  "SRV-REAL-POC": "green"
-  "SRV-CRM-POC": "yellow"
-
 server_groups:
-  - name: "ISU"
-    servers: ["SRVISUASCS", "SRVISUPRD", "SRVISUPRDDB"]
-    css_class: "group-isu"
-  - name: "ERP"
-    servers: ["SRVERPPRD", "SRVSAPERPBDD"]
-    css_class: "group-erp"
-  - name: "SOLMAN"
-    servers: ["SOLMANPRD"]
-    css_class: "group-solman"
-  - name: "BO"
-    servers: ["SRVBOPRD"]
-    css_class: "group-bo"
-  - name: "BW"
-    servers: ["SRVBWPRD", "SRVSAPBWBDD"]
-    css_class: "group-bw"
-  - name: "CRM"
-    servers: ["SRVCRMASCS", "SRVCRMPRD", "SRVCRMPRDDB"]
-    css_class: "group-crm"
-  - name: "Domain Controller"
-    servers: ["SRVDCON4-(AD-DNS)"]
-    css_class: "group-dc"
-  - name: "MCF"
-    servers: ["SRVGTWPRDCS", "SRVGTWPRDPAS", "SRVMOBPRD", "SRVHANDBPRD"]
-    css_class: "group-mcf"
-  - name: "PO"
-    servers: ["SRVPOPRDCS - RESPALDO 2025-08-11", "SRVPOPRDDB - RESPALDO 2025-08-11", "SRVPOPRDPAS - RESPALDO 2025-08-11"]
-    css_class: "group-po"
-  - name: "SAO"
-    servers: ["SRVSAOBDD", "SRVSAOPRD"]
-    css_class: "group-sao"
-  - name: "Otros"
-    servers: ["DMZ-SRVSAPROU", "DMZ-SRVWDPRD", "SRVALMCS", "SRVALMPRDN", "SRVSTG (SRVALMPRD)"]
-    css_class: "group-otros"
-  - name: "POC - Real Server"
-    servers: ["SRV-REAL-POC", "SRV-CRM-POC"]
-    css_class: "group-bo" # Reusing a style for now
+- css_class: group-isu
+  name: ISU
+  servers:
+  - SRVISUASCS
+  - SRVISUPRD
+  - SRVISUPRDDB
+- css_class: group-erp
+  name: ERP
+  servers:
+  - SRVERPPRD
+  - SRVSAPERPBDD
+- css_class: group-solman
+  name: SOLMAN
+  servers:
+  - SOLMANPRD
+- css_class: group-bo
+  name: BO
+  servers:
+  - SRVBOPRD
+- css_class: group-bw
+  name: BW
+  servers:
+  - SRVBWPRD
+  - SRVSAPBWBDD
+- css_class: group-crm
+  name: CRM
+  servers:
+  - SRVCRMASCS
+  - SRVCRMPRD
+  - SRVCRMPRDDB
+- css_class: group-dc
+  name: Domain Controller
+  servers:
+  - SRVDCON4-(AD-DNS)
+- css_class: group-mcf
+  name: MCF
+  servers:
+  - SRVGTWPRDCS
+  - SRVGTWPRDPAS
+  - SRVMOBPRD
+  - SRVHANDBPRD
+- css_class: group-po
+  name: PO
+  servers:
+  - SRVPOPRDCS - RESPALDO 2025-08-11
+  - SRVPOPRDDB - RESPALDO 2025-08-11
+  - SRVPOPRDPAS - RESPALDO 2025-08-11
+- css_class: group-sao
+  name: SAO
+  servers:
+  - SRVSAOBDD
+  - SRVSAOPRD
+- css_class: group-otros
+  name: Otros
+  servers:
+  - DMZ-SRVSAPROU
+  - DMZ-SRVWDPRD
+  - SRVALMCS
+  - SRVALMPRDN
+  - SRVSTG (SRVALMPRD)
+- css_class: group-bo
+  name: POC - Real Server
+  servers:
+  - SRV-REAL-POC
+  - SRV-CRM-POC
+settings:
+  refresh_interval_seconds: 30
+  show_aws_errors: false
+  version: v0.1.53
+vm_status:
+  DMZ-SRVSAPROU: green
+  DMZ-SRVWDPRD: green
+  SOLMANPRD: green
+  SRV-CRM-POC: yellow
+  SRV-REAL-POC: green
+  SRVALMCS: yellow
+  SRVALMPRDN: green
+  SRVBOPRD: green
+  SRVBWPRD: yellow
+  SRVCRMASCS: green
+  SRVCRMPRD: yellow
+  SRVCRMPRDDB: green
+  SRVDCON4-(AD-DNS): green
+  SRVERPPRD: green
+  SRVGTWPRDCS: green
+  SRVGTWPRDPAS: yellow
+  SRVHANDBPRD: red
+  SRVISUASCS: green
+  SRVISUPRD: red
+  SRVISUPRDDB: yellow
+  SRVMOBPRD: green
+  SRVPOPRDCS - RESPALDO 2025-08-11: yellow
+  SRVPOPRDDB - RESPALDO 2025-08-11: green
+  SRVPOPRDPAS - RESPALDO 2025-08-11: green
+  SRVSAOBDD: green
+  SRVSAOPRD: yellow
+  SRVSAPBWBDD: green
+  SRVSAPERPBDD: yellow
+  SRVSTG (SRVALMPRD): red
