@@ -97,6 +97,89 @@ def test_aws_connection():
 
 
 # ========================================================================
+# FUNCIÓN PARA OBTENER DATOS DE AWS
+# ========================================================================
+def get_aws_data():
+    """
+    Fetch EC2 instances and their CloudWatch alarms from AWS.
+    Returns a list of instance dictionaries with their state and alarms.
+    """
+    instances_data = []
+    
+    try:
+        # Log the start of data fetching
+        with open("/tmp/streamlit_aws_debug.log", "a") as f:
+            f.write(f"[{time.ctime()}] Starting get_aws_data()\n")
+        
+        # Get EC2 client
+        ec2 = get_cross_account_boto3_client_cached('ec2')
+        if not ec2:
+            with open("/tmp/streamlit_aws_debug.log", "a") as f:
+                f.write(f"[{time.ctime()}] Failed to get EC2 client\n")
+            return []
+        
+        # Get CloudWatch client
+        cloudwatch = get_cross_account_boto3_client_cached('cloudwatch')
+        if not cloudwatch:
+            with open("/tmp/streamlit_aws_debug.log", "a") as f:
+                f.write(f"[{time.ctime()}] Failed to get CloudWatch client\n")
+            return []
+        
+        # Fetch all EC2 instances
+        response = ec2.describe_instances()
+        
+        # Get all CloudWatch alarms
+        alarm_paginator = cloudwatch.get_paginator('describe_alarms')
+        all_alarms = []
+        for page in alarm_paginator.paginate():
+            all_alarms.extend(page['MetricAlarms'])
+        
+        # Process each instance
+        for reservation in response['Reservations']:
+            for instance in reservation['Instances']:
+                instance_id = instance.get('InstanceId', '')
+                instance_state = instance.get('State', {}).get('Name', 'unknown')
+                
+                # Extract tags
+                tags = {tag['Key']: tag['Value'] for tag in instance.get('Tags', [])}
+                
+                # Only include instances with DashboardGroup tag
+                if 'DashboardGroup' not in tags:
+                    continue
+                
+                # Count alarms for this instance
+                instance_alarms = Counter()
+                for alarm in all_alarms:
+                    dimensions = alarm.get('Dimensions', [])
+                    if any(d['Name'] == 'InstanceId' and d['Value'] == instance_id for d in dimensions):
+                        alarm_state = alarm.get('StateValue', 'UNKNOWN')
+                        instance_alarms[alarm_state] += 1
+                
+                # Create instance data structure
+                instance_data = {
+                    'ID': instance_id,
+                    'Name': tags.get('Name', instance_id),
+                    'State': instance_state,
+                    'Environment': tags.get('Environment', 'Unknown'),
+                    'DashboardGroup': tags.get('DashboardGroup', 'Uncategorized'),
+                    'Alarms': instance_alarms
+                }
+                
+                instances_data.append(instance_data)
+        
+        # Log the results
+        with open("/tmp/streamlit_aws_debug.log", "a") as f:
+            f.write(f"[{time.ctime()}] Found {len(instances_data)} instances with DashboardGroup tag\n")
+            f.write(f"[{time.ctime()}] Total alarms processed: {len(all_alarms)}\n")
+        
+        return instances_data
+        
+    except Exception as e:
+        with open("/tmp/streamlit_aws_debug.log", "a") as f:
+            f.write(f"[{time.ctime()}] Error in get_aws_data(): {str(e)}\n")
+        return []
+
+# ========================================================================
 # FUNCIONES DE LA VISTA DE DETALLES (Sin cambios)
 # ========================================================================
 @st.cache_data(ttl=60)
@@ -330,3 +413,8 @@ if 'poc_vm_id' in st.query_params:
     display_detail_page(st.query_params['poc_vm_id'])
 else:
     display_dashboard_page()
+    
+    # Auto-reload functionality
+    if REFRESH_INTERVAL_SECONDS > 0:
+        time.sleep(REFRESH_INTERVAL_SECONDS)
+        st.rerun()
