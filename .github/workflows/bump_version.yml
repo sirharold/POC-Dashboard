@@ -32,6 +32,8 @@ jobs:
 import yaml
 import re
 
+import os
+
 config_path = 'config.yaml'
 with open(config_path, 'r') as f:
     config = yaml.safe_load(f)
@@ -55,7 +57,9 @@ with open(config_path, 'w') as f:
     yaml.dump(config, f, default_flow_style=False)
 
 print(f'New version: {new_version}')
-print(f'new_version={new_version}' >> "$GITHUB_OUTPUT")
+
+with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+    print(f'new_version={new_version}', file=fh)
 "
     - name: Commit and push new version
       run: |
