@@ -24,6 +24,7 @@ with open("config.yaml", "r") as f:
 
 SHOW_AWS_ERRORS = config['settings']['show_aws_errors']
 REFRESH_INTERVAL_SECONDS = config['settings']['refresh_interval_seconds']
+APP_VERSION = config['settings']['version']
 
 # ========================================================================
 # LÓGICA DE ACCESO A MÚLTIPLES CUENTAS (CROSS-ACCOUNT)
@@ -144,25 +145,9 @@ def update_cache_in_background(interval_seconds: int):
     """Daemon thread to periodically fetch data and update the shared cache."""
     while True:
         with open("/tmp/streamlit_aws_debug.log", "a") as f:
-            f.write(f"[{time.ctime()}] Background thread: Starting update cycle.\n")
-        # Test AWS connection first
-        status, err = test_aws_connection()
-        with _lock:
-            _data_cache["connection_status"] = status
-            _data_cache["connection_error"] = err
-        with open("/tmp/streamlit_aws_debug.log", "a") as f:
-            f.write(f"[{time.ctime()}] Background thread: AWS Connection Status: {status}, Error: {err}\n")
+            f.write(f"[{time.ctime()}] Background thread: Thread is alive and running!\n")
+        time.sleep(5) # Sleep for a short period to avoid flooding the log
 
-        if status == "Conexión AWS OK":
-            instances_data = get_aws_data()
-            with _lock:
-                _data_cache["instances"] = instances_data
-                _data_cache["last_updated"] = time.time()
-        else:
-            with _lock:
-                _data_cache["instances"] = [] # Clear instances if connection failed
-                _data_cache["last_updated"] = None
-        time.sleep(interval_seconds)
 
 # ========================================================================
 # FUNCIONES DE LA VISTA DE DETALLES (Sin cambios)
@@ -354,7 +339,7 @@ def display_dashboard_page():
     current_env = ENVIRONMENTS[st.session_state.env_index]
     with nav_cols[1]:
         st.markdown(f"<h1 style='text-align: center;'>Dashboard {current_env}</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; font-size: 0.8em; color: grey;'>Esta página se autorecarga cada 30 segundos</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='text-align: center; font-size: 0.8em; color: grey;'>Esta página se autorecarga cada {REFRESH_INTERVAL_SECONDS} segundos {APP_VERSION}</p>", unsafe_allow_html=True)
     
     st.divider()
 
