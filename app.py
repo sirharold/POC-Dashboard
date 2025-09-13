@@ -56,6 +56,10 @@ def get_cross_account_boto3_client(service_name: str):
         # Do not use st.error here as it's a cached function. Handle error in calling function.
         return None
 
+@st.cache_resource(ttl=900) # Cachea las credenciales temporales por 15 minutos
+def get_cross_account_boto3_client_cached(service_name: str):
+    return get_cross_account_boto3_client(service_name)
+
 def test_aws_connection():
     """
     Attempts to assume the role and create a simple STS client to test AWS connectivity.
@@ -83,93 +87,12 @@ def test_aws_connection():
     except Exception as e:
         return "Error Inesperado de Conexión AWS", str(e)
 
-# =======================================================================
-# CACHE COMPARTIDO Y THREAD DE ACTUALIZACIÓN
-# =======================================================================
 
-# Initialize st.session_state.data_cache if it doesn't exist
-if 'data_cache' not in st.session_state:
-    st.session_state.data_cache = {"instances": [], "last_updated": None, "connection_status": "Desconocido", "connection_error": None}
 
-_lock = threading.Lock()
 
-def get_aws_data():
-    """Fetches all necessary data from AWS and includes Environment tag."""
-    try:
-        with open("/tmp/streamlit_aws_debug.log", "a") as f:
-            f.write(f"[{time.ctime()}] Calling get_cross_account_boto3_client for ec2 and cloudwatch.\n")
-        ec2 = get_cross_account_boto3_client('ec2')
-        cloudwatch = get_cross_account_boto3_client('cloudwatch')
-        if not ec2 or not cloudwatch:
-            # Error message is now handled by update_cache_in_background via test_aws_connection
-            return []
-        with open("/tmp/streamlit_aws_debug.log", "a") as f:
-            f.write(f"[{time.ctime()}] Boto3 clients successfully created.\n")
 
-        paginator = ec2.get_paginator('describe_instances')
-        # Fetch instances that have a DashboardGroup tag
-        instance_pages = paginator.paginate(Filters=[{'Name': 'tag-key', 'Values': ['DashboardGroup']}])
-        instances_list = []
-        for page in instance_pages:
-            for reservation in page['Reservations']:
-                for instance in reservation['Instances']:
-                    tags = {tag['Key']: tag['Value'] for tag in instance.get('Tags', [])}
-                    instances_list.append({
-                        'ID': instance['InstanceId'],
-                        'Name': tags.get('Name', instance['InstanceId']),
-                        'State': instance['State']['Name'],
-                        'DashboardGroup': tags.get('DashboardGroup', 'Uncategorized'),
-                        'Environment': tags.get('Environment', 'Unknown') # <-- Captura el tag Environment
-                    })
-        with open("/tmp/streamlit_aws_debug.log", "a") as f:
-            f.write(f"[{time.ctime()}] Found {len(instances_list)} instances with DashboardGroup tag.\n")
-        
-        alarm_paginator = cloudwatch.get_paginator('describe_alarms')
-        alarm_pages = alarm_paginator.paginate()
-        instance_alarms = defaultdict(list)
-        for page in alarm_pages:
-            for alarm in page['MetricAlarms']:
-                for dimension in alarm['Dimensions']:
-                    if dimension['Name'] == 'InstanceId':
-                        instance_alarms[dimension['Value']].append(alarm['StateValue'])
-                        break
-        for instance in instances_list:
-            instance['Alarms'] = Counter(instance_alarms.get(instance['ID'], []))
-        
-        return instances_list
-    except Exception as e:
-        error_message = f"Error al obtener datos de AWS: {e}"
-        with open("/tmp/streamlit_aws_debug.log", "a") as f:
-            f.write(f"[{time.ctime()}] {error_message}\n")
-        with _lock:
-            _data_cache["error_message"] = error_message
-        return []
 
-def update_cache_in_background(interval_seconds: int):
-    """Daemon thread to periodically fetch data and update the shared cache."""
-    while True:
-        with open("/tmp/streamlit_aws_debug.log", "a") as f:
-            f.write(f"[{time.ctime()}] Background thread: Starting update cycle.\n")
-        # Test AWS connection first
-        status, err = test_aws_connection()
-        with _lock:
-            st.session_state.data_cache["connection_status"] = status
-            st.session_state.data_cache["connection_error"] = err
-        with open("/tmp/streamlit_aws_debug.log", "a") as f:
-            f.write(f"[{time.ctime()}] Background thread: AWS Connection Status: {status}, Error: {err}\n")
 
-        if status == "Conexión AWS OK":
-            instances_data = get_aws_data()
-            with _lock:
-                st.session_state.data_cache["instances"] = instances_data
-                st.session_state.data_cache["last_updated"] = time.time()
-            time.sleep(0.1) # Small delay to allow Streamlit to process the update
-        else:
-            with _lock:
-                st.session_state.data_cache["instances"] = [] # Clear instances if connection failed
-                st.session_state.data_cache["last_updated"] = None
-            time.sleep(0.1) # Small delay to allow Streamlit to process the update
-        time.sleep(interval_seconds)
 
 
 # ========================================================================
@@ -305,10 +228,14 @@ def build_and_display_dashboard(environment: str):
     instances = deepcopy(st.session_state.data_cache["instances"])
     last_updated = st.session_state.data_cache["last_updated"]
     error_message = st.session_state.data_cache.get("error_message")
-    
+
     if SHOW_AWS_ERRORS and error_message:
         st.error(f"Error de AWS: {error_message}")
         display_debug_log()
+
+    # Log _data_cache content for debugging
+    with open("/tmp/streamlit_aws_debug.log", "a") as f:
+        f.write(f"[{time.ctime()}] Main thread: _data_cache instances count: {len(instances)}, connection_status: {st.session_state.data_cache["connection_status"]}\n")
 
     # Display AWS connection status
     connection_status = st.session_state.data_cache.get("connection_status", "Desconocido")
@@ -346,6 +273,10 @@ def build_and_display_dashboard(environment: str):
         st.sidebar.markdown(f"<div style='font-size: 0.9rem; text-align: center; color: grey;'>Última Act: {time_since_update}s atrás</div>", unsafe_allow_html=True)
 
 def display_dashboard_page():
+    # Initialize st.session_state.data_cache if it doesn't exist
+    if 'data_cache' not in st.session_state:
+        st.session_state.data_cache = {"instances": [], "last_updated": None, "connection_status": "Desconocido", "connection_error": None, "error_message": None}
+
     # --- Lógica de Navegación de Entornos ---
     ENVIRONMENTS = ["Production", "QA", "DEV"]
     if 'env_index' not in st.session_state:
@@ -368,22 +299,27 @@ def display_dashboard_page():
     
     st.divider()
 
+    # Fetch data directly in the main thread
+    connection_status_msg, connection_error_details = test_aws_connection()
+    st.session_state.data_cache["connection_status"] = connection_status_msg
+    st.session_state.data_cache["connection_error"] = connection_error_details
+
+    if connection_status_msg == "Conexión AWS OK":
+        instances_data = get_aws_data()
+        st.session_state.data_cache["instances"] = instances_data
+        st.session_state.data_cache["last_updated"] = time.time()
+    else:
+        st.session_state.data_cache["instances"] = []
+        st.session_state.data_cache["last_updated"] = None
+
     # --- Renderizado del Dashboard ---
     build_and_display_dashboard(current_env)
-
-    # Auto-reload mechanism
-    time.sleep(REFRESH_INTERVAL_SECONDS) # Wait for the configured interval
-    st.rerun() # Rerun the script
 
 # ========================================================================
 # LÓGICA PRINCIPAL (ROUTER)
 # ========================================================================
 
-# 1. Iniciar el thread de actualización en segundo plano
-if "cache_thread_started" not in st.session_state:
-    thread = threading.Thread(target=update_cache_in_background, args=(30,), daemon=True)
-    thread.start()
-    st.session_state.cache_thread_started = True
+
 
 # 2. Cargar CSS
 load_css()
