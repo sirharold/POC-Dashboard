@@ -305,14 +305,14 @@ def build_and_display_dashboard(environment: str):
         st.error(f"Error de AWS: {error_message}")
         display_debug_log()
 
-    # Log _data_cache content for debugging
-    with open("/tmp/streamlit_aws_debug.log", "a") as f:
-        f.write(f"[{time.ctime()}] Main thread: _data_cache instances count: {len(instances)}, connection_status: {connection_status}\n")
-
     # Display AWS connection status
     with _lock:
         connection_status = _data_cache.get("connection_status", "Desconocido")
         connection_error = _data_cache.get("connection_error")
+
+    # Log _data_cache content for debugging
+    with open("/tmp/streamlit_aws_debug.log", "a") as f:
+        f.write(f"[{time.ctime()}] Main thread: _data_cache instances count: {len(instances)}, connection_status: {connection_status}\n")
     
     if connection_status == "Conexión AWS OK":
         st.success(f"Estado de Conexión AWS: {connection_status}")
