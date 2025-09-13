@@ -64,10 +64,16 @@ _lock = threading.Lock()
 def get_aws_data():
     """Fetches all necessary data from AWS and includes Environment tag."""
     try:
+        with open("/tmp/streamlit_aws_debug.log", "a") as f:
+            f.write(f"[{time.ctime()}] Calling get_cross_account_boto3_client for ec2 and cloudwatch.\n")
         ec2 = get_cross_account_boto3_client('ec2')
         cloudwatch = get_cross_account_boto3_client('cloudwatch')
         if not ec2 or not cloudwatch:
+            with open("/tmp/streamlit_aws_debug.log", "a") as f:
+                f.write(f"[{time.ctime()}] Boto3 clients (ec2 or cloudwatch) are None. Returning empty list.\n")
             return []
+        with open("/tmp/streamlit_aws_debug.log", "a") as f:
+            f.write(f"[{time.ctime()}] Boto3 clients successfully created.\n")
 
         paginator = ec2.get_paginator('describe_instances')
         # Fetch instances that have a DashboardGroup tag
@@ -84,6 +90,8 @@ def get_aws_data():
                         'DashboardGroup': tags.get('DashboardGroup', 'Uncategorized'),
                         'Environment': tags.get('Environment', 'Unknown') # <-- Captura el tag Environment
                     })
+        with open("/tmp/streamlit_aws_debug.log", "a") as f:
+            f.write(f"[{time.ctime()}] Found {len(instances_list)} instances with DashboardGroup tag.\n")
         
         alarm_paginator = cloudwatch.get_paginator('describe_alarms')
         alarm_pages = alarm_paginator.paginate()
@@ -233,6 +241,17 @@ def create_group_container(group_name: str, instances: list):
         with cols[idx % 3]:
             create_server_card(instance)
 
+def display_debug_log():
+    try:
+        with open("/tmp/streamlit_aws_debug.log", "r") as f:
+            log_content = f.read()
+        st.subheader("AWS Debug Log (/tmp/streamlit_aws_debug.log)")
+        st.code(log_content, language="text")
+    except FileNotFoundError:
+        st.warning("AWS Debug Log file not found.")
+    except Exception as e:
+        st.error(f"Error reading debug log: {e}")
+
 def build_and_display_dashboard(environment: str):
     with _lock:
         instances = deepcopy(_data_cache["instances"])
@@ -241,6 +260,7 @@ def build_and_display_dashboard(environment: str):
     
     if SHOW_AWS_ERRORS and error_message:
         st.error(f"Error de AWS: {error_message}")
+        display_debug_log()
 
     if not instances and not last_updated:
         st.info("Cargando datos desde AWS... La primera actualización puede tardar hasta 30 segundos.")
