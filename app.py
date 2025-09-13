@@ -86,7 +86,11 @@ def test_aws_connection():
 # =======================================================================
 # CACHE COMPARTIDO Y THREAD DE ACTUALIZACIÓN
 # =======================================================================
-_data_cache = {"instances": [], "last_updated": None, "connection_status": "Desconocido", "connection_error": None}
+
+# Initialize st.session_state.data_cache if it doesn't exist
+if 'data_cache' not in st.session_state:
+    st.session_state.data_cache = {"instances": [], "last_updated": None, "connection_status": "Desconocido", "connection_error": None}
+
 _lock = threading.Lock()
 
 def get_aws_data():
@@ -296,19 +300,17 @@ def display_debug_log():
         st.error(f"Error reading debug log: {e}")
 
 def build_and_display_dashboard(environment: str):
-    with _lock:
-        instances = deepcopy(_data_cache["instances"])
-        last_updated = _data_cache["last_updated"]
-        error_message = _data_cache.get("error_message")
+    instances = deepcopy(st.session_state.data_cache["instances"])
+    last_updated = st.session_state.data_cache["last_updated"]
+    error_message = st.session_state.data_cache.get("error_message")
     
     if SHOW_AWS_ERRORS and error_message:
         st.error(f"Error de AWS: {error_message}")
         display_debug_log()
 
     # Display AWS connection status
-    with _lock:
-        connection_status = _data_cache.get("connection_status", "Desconocido")
-        connection_error = _data_cache.get("connection_error")
+    connection_status = st.session_state.data_cache.get("connection_status", "Desconocido")
+    connection_error = st.session_state.data_cache.get("connection_error")
 
     # Log _data_cache content for debugging
     with open("/tmp/streamlit_aws_debug.log", "a") as f:
