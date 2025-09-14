@@ -162,7 +162,13 @@ def get_aws_data():
                     dimensions = alarm.get('Dimensions', [])
                     if any(d['Name'] == 'InstanceId' and d['Value'] == instance_id for d in dimensions):
                         alarm_state = alarm.get('StateValue', 'UNKNOWN')
-                        instance_alarms[alarm_state] += 1
+                        alarm_name = alarm.get('AlarmName', '')
+                        
+                        # Check if this is a preventive alarm
+                        if alarm_state == 'ALARM' and ('ALERTA' in alarm_name.upper() or 'PROACTIVA' in alarm_name.upper()):
+                            instance_alarms['PREVENTIVE'] += 1
+                        else:
+                            instance_alarms[alarm_state] += 1
                 
                 with open("/tmp/streamlit_aws_debug.log", "a") as f:
                     f.write(f"[{time.ctime()}] Instance {instance_id} has {len(instance_alarms)} alarm states: {dict(instance_alarms)}\n")
@@ -326,9 +332,16 @@ def display_detail_page(instance_id: str):
         if alarms:
             for alarm in alarms:
                 state = alarm.get('StateValue')
-                color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
+                alarm_name = alarm.get('AlarmName', '')
+                
+                # Check if this is a preventive alarm
+                if state == "ALARM" and ('ALERTA' in alarm_name.upper() or 'PROACTIVA' in alarm_name.upper()):
+                    color = "yellow"
+                else:
+                    color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
+                
                 alarm_arn = alarm.get('AlarmArn')
-                st.markdown(create_alarm_item_html(alarm.get('AlarmName'), color, alarm_arn), unsafe_allow_html=True)
+                st.markdown(create_alarm_item_html(alarm_name, color, alarm_arn), unsafe_allow_html=True)
         else:
             st.info("No se encontraron alarmas para esta instancia.")
     with col2:
@@ -390,18 +403,20 @@ def get_state_color_and_status(state: str):
 
 def create_alert_bar_html(alerts_data: Counter) -> str:
     critical = alerts_data.get('ALARM', 0)
+    preventive = alerts_data.get('PREVENTIVE', 0)
     insufficient = alerts_data.get('INSUFFICIENT_DATA', 0)
     ok = alerts_data.get('OK', 0)
-    total = critical + insufficient + ok
+    total = critical + preventive + insufficient + ok
     
     if total == 0:
-        crit_pct, insuf_pct, ok_pct = 0, 0, 100
+        crit_pct, prev_pct, insuf_pct, ok_pct = 0, 0, 0, 100
     else:
         crit_pct = (critical/total)*100
+        prev_pct = (preventive/total)*100
         insuf_pct = (insufficient/total)*100
         ok_pct = (ok/total)*100
     
-    return f'''<div class='alert-bar-container'><div class='alert-bar'><div class='alert-bar-critical' style='width: {crit_pct}%;' title='Alarm: {critical}'></div><div class='alert-bar-insufficient' style='width: {insuf_pct}%;' title='Insufficient Data: {insufficient}'></div><div class='alert-bar-ok' style='width: {ok_pct}%;' title='OK: {ok}'></div></div><div class='alert-bar-labels'><span style='color: #ff006e;'>A: {critical}</span> <span style='color: #808080;'>I: {insufficient}</span> <span style='color: #00ff88;'>O: {ok}</span></div></div>'''
+    return f'''<div class='alert-bar-container'><div class='alert-bar'><div class='alert-bar-critical' style='width: {crit_pct}%;' title='Alarm: {critical}'></div><div class='alert-bar-preventive' style='width: {prev_pct}%; background-color: #ffb700;' title='Preventive: {preventive}'></div><div class='alert-bar-insufficient' style='width: {insuf_pct}%;' title='Insufficient Data: {insufficient}'></div><div class='alert-bar-ok' style='width: {ok_pct}%;' title='OK: {ok}'></div></div><div class='alert-bar-labels'><span style='color: #ff006e;'>A: {critical}</span> <span style='color: #ffb700;'>P: {preventive}</span> <span style='color: #808080;'>I: {insufficient}</span> <span style='color: #00ff88;'>O: {ok}</span></div></div>'''
 
 def create_server_card(instance: dict):
     vm_name = instance.get('Name', instance.get('ID', 'N/A'))
@@ -413,6 +428,8 @@ def create_server_card(instance: dict):
     # Determine card color based on alarms
     if alerts.get('ALARM', 0) > 0:
         card_status = 'red'
+    elif alerts.get('PREVENTIVE', 0) > 0:
+        card_status = 'yellow'
     elif alerts.get('INSUFFICIENT_DATA', 0) > 0:
         card_status = 'gray'
     else:
@@ -432,6 +449,7 @@ def create_server_card(instance: dict):
 def create_group_container(group_name: str, instances: list):
     # Determine group status based on all instances' alarms
     has_critical = False
+    has_preventive = False
     has_insufficient = False
     
     for instance in instances:
@@ -439,12 +457,16 @@ def create_group_container(group_name: str, instances: list):
         if alerts.get('ALARM', 0) > 0:
             has_critical = True
             break
+        elif alerts.get('PREVENTIVE', 0) > 0:
+            has_preventive = True
         elif alerts.get('INSUFFICIENT_DATA', 0) > 0:
             has_insufficient = True
     
     # Set group color based on worst status
     if has_critical:
         group_status = 'red'
+    elif has_preventive:
+        group_status = 'yellow'
     elif has_insufficient:
         group_status = 'gray'
     else:

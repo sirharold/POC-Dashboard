@@ -384,6 +384,10 @@ def create_alarm_legend() -> str:
                 <span style='color: rgba(255, 255, 255, 0.9); font-size: 0.85rem;'>En Alarma</span>
             </div>
             <div style='display: flex; align-items: center; gap: 8px;'>
+                <div style='width: 12px; height: 12px; background-color: #ffb700; border-radius: 50%;'></div>
+                <span style='color: rgba(255, 255, 255, 0.9); font-size: 0.85rem;'>Alarmas Preventivas</span>
+            </div>
+            <div style='display: flex; align-items: center; gap: 8px;'>
                 <div style='width: 12px; height: 12px; background-color: #808080; border-radius: 50%;'></div>
                 <span style='color: rgba(255, 255, 255, 0.9); font-size: 0.85rem;'>Sin Datos</span>
             </div>
