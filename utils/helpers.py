@@ -352,35 +352,36 @@ def create_alarm_item_html(alarm_name: str, status: str, alarm_arn: str = None) 
             account_id = arn_parts[4] if len(arn_parts) > 4 else '011528297340'
             
             # Create the encoded search parameter for the URL
-            # Replace special characters for URL encoding
-            encoded_search = alarm_name.replace(' ', '*20').replace('-', '*20').replace('(', '*28').replace(')', '*29').replace('+', '*20')
+            # Replace special characters for URL encoding (more comprehensive)
+            encoded_search = alarm_name.replace(' ', '*20').replace('-', '*20').replace('(', '*28').replace(')', '*29').replace('+', '*20').replace('%', '*25').replace('>', '*3E').replace('<', '*3C').replace('&', '*26').replace('=', '*3D')
             
             # Generate the CloudWatch console URL in the correct format
-            console_url = f"https://{account_id}-pdl6i3zc.{region}.console.aws.amazon.com/cloudwatch/home?region={region}#alarmsV2:alarm/{quote(alarm_name)}?~(search~'{encoded_search}')"
+            # Use quote with safe='' to ensure all special characters are encoded
+            console_url = f"https://{account_id}-pdl6i3zc.{region}.console.aws.amazon.com/cloudwatch/home?region={region}#alarmsV2:alarm/{quote(alarm_name, safe='')}?~(search~'{encoded_search}')"
             
             # HTML escape the alarm name for safe display
             escaped_alarm_name = html.escape(alarm_name)
             
-            return f"""
-            <div class='alarm-item'>
-                <a href='{console_url}' target='_blank' style='color: white; text-decoration: none; font-weight: 500;'>
+            return f'''
+            <div class="alarm-item">
+                <a href="{console_url}" target="_blank" style="color: white; text-decoration: none; font-weight: 500;">
                     {escaped_alarm_name} 🔗
                 </a>
-                <span style='font-size: 1.5rem;'>{status_icon}</span>
+                <span style="font-size: 1.5rem;">{status_icon}</span>
             </div>
-            """
+            '''
         except:
             pass
     
     # HTML escape the alarm name for safe display (fallback case)
     escaped_alarm_name = html.escape(alarm_name)
     
-    return f"""
-    <div class='alarm-item'>
-        <span style='color: white; font-weight: 500;'>{escaped_alarm_name}</span>
-        <span style='font-size: 1.5rem;'>{status_icon}</span>
+    return f'''
+    <div class="alarm-item">
+        <span style="color: white; font-weight: 500;">{escaped_alarm_name}</span>
+        <span style="font-size: 1.5rem;">{status_icon}</span>
     </div>
-    """
+    '''
 
 def create_alarm_legend() -> str:
     """

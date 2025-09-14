@@ -433,4 +433,39 @@ Los nombres de alarmas como `"CPU % uso >70%"` contenían caracteres que tienen 
 
 #### Versión
 Se actualizó la versión de v0.1.59 a v0.1.60 para reflejar esta corrección de seguridad y funcionalidad.
+
+### 2025-09-14 - Corrección Avanzada de URLs de Alarmas con Caracteres Especiales
+
+#### Problema Persistente
+A pesar del escapado HTML implementado, persistían problemas con URLs malformadas cuando los nombres de alarmas contenían caracteres como `%`, `>`, causando enlaces rotos con patrones como:
+```
+80%')' target='_blank' style='color: white; text-decoration: none; font-weight: 500;'> EPMAPS PROD SRVCRMPRD ACTIVA RAM % uso >80% 🔗
+```
+
+#### Análisis Profundo del Problema
+1. **Codificación de URL insuficiente**: `quote()` no manejaba todos los caracteres especiales
+2. **Conflicto de comillas**: Uso de comillas simples en HTML con URLs que contenían comillas
+3. **Encodificación incompleta**: Faltaban mappings para caracteres como `%`, `>`, `<`, `&`, `=`
+
+#### Solución Implementada
+1. **Encodificación más robusta** del parámetro de búsqueda:
+   - `%` → `*25`
+   - `>` → `*3E`
+   - `<` → `*3C`
+   - `&` → `*26`
+   - `=` → `*3D`
+
+2. **URL encoding mejorado** usando `quote(alarm_name, safe='')`
+
+3. **Cambio de formato HTML**:
+   - Reemplazado comillas simples (`'`) por comillas dobles (`"`) en atributos HTML
+   - Uso de triple comillas simples (`'''`) para strings Python para evitar conflictos
+
+#### Cambios Técnicos
+- Encodificación expandida: `encoded_search = alarm_name.replace(...).replace('%', '*25').replace('>', '*3E')...`
+- URL encoding seguro: `quote(alarm_name, safe='')`
+- HTML con comillas dobles: `<a href="{console_url}" target="_blank">`
+
+#### Versión
+Se actualizó la versión de v0.1.60 a v0.1.61 para reflejar esta corrección avanzada.
 - Diseño responsive mantenido con mejoras visuales
