@@ -348,4 +348,7 @@ Se mantuvo únicamente el caché de los clientes boto3 (`@st.cache_resource(ttl=
 
 #### Justificación
 El sistema de monitoreo debe mostrar los problemas en tiempo real cuando se capturan. No debe haber información obsoleta o antigua que pueda causar confusión al momento de diagnosticar problemas.
+
+#### Versión
+Se actualizó la versión de la aplicación de v0.1.56 a v0.1.57 para reflejar los cambios realizados en el sistema de caché.
 - Diseño responsive mantenido con mejoras visuales
