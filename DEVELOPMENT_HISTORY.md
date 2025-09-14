@@ -351,4 +351,29 @@ El sistema de monitoreo debe mostrar los problemas en tiempo real cuando se capt
 
 #### Versión
 Se actualizó la versión de la aplicación de v0.1.56 a v0.1.57 para reflejar los cambios realizados en el sistema de caché.
+
+### 2025-09-14 - Corrección de Estados UNKNOWN en Alarmas
+
+#### Problema Identificado
+Después de eliminar el caché, persistía el problema de inconsistencia entre la página de resumen y la página de detalle. El servidor "SRVISUASCS" mostraba 6 alarmas todas verdes en la página de detalle, pero en el resumen aparecían 5 verdes y 1 gris.
+
+#### Análisis del Problema
+Se identificó que algunas alarmas tenían estado `UNKNOWN` en lugar de los estados estándar de CloudWatch:
+- La función `get_aws_data()` asignaba `'UNKNOWN'` como valor por defecto cuando `StateValue` no existía
+- La función `create_alert_bar_html()` no consideraba el estado `UNKNOWN` en el cálculo de totales
+- Esto causaba discrepancias en los conteos de alarmas
+
+#### Solución Implementada
+1. **Agregados logs detallados** para debuggear cada alarma individual y su estado
+2. **Modificada `create_alert_bar_html()`** para tratar estados `UNKNOWN` como `INSUFFICIENT_DATA`
+3. **Actualizada lógica de colores** en `create_server_card()` y `create_group_container()` para considerar estados `UNKNOWN`
+4. **Unificado el manejo** de estados desconocidos con estados de datos insuficientes
+
+#### Cambios Técnicos
+- Estados `UNKNOWN` ahora se suman a `INSUFFICIENT_DATA` en el conteo total
+- Las tarjetas de servidor muestran color gris si tienen estados `UNKNOWN` o `INSUFFICIENT_DATA`
+- Los grupos también consideran estados `UNKNOWN` para determinar su color
+
+#### Versión
+Se actualizó la versión de v0.1.57 a v0.1.58 para reflejar esta corrección.
 - Diseño responsive mantenido con mejoras visuales

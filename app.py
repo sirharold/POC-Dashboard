@@ -164,6 +164,10 @@ def get_aws_data():
                         alarm_state = alarm.get('StateValue', 'UNKNOWN')
                         alarm_name = alarm.get('AlarmName', '')
                         
+                        # Log each alarm for debugging
+                        with open("/tmp/streamlit_aws_debug.log", "a") as f:
+                            f.write(f"[{time.ctime()}] Alarm: {alarm_name}, State: {alarm_state}, Instance: {instance_id}\n")
+                        
                         # Check if this is a preventive alarm
                         if alarm_state == 'ALARM' and ('ALERTA' in alarm_name.upper() or 'PROACTIVA' in alarm_name.upper()):
                             instance_alarms['PREVENTIVE'] += 1
@@ -399,7 +403,7 @@ def get_state_color_and_status(state: str):
 def create_alert_bar_html(alerts_data: Counter) -> str:
     critical = alerts_data.get('ALARM', 0)
     preventive = alerts_data.get('PREVENTIVE', 0)
-    insufficient = alerts_data.get('INSUFFICIENT_DATA', 0)
+    insufficient = alerts_data.get('INSUFFICIENT_DATA', 0) + alerts_data.get('UNKNOWN', 0)  # Treat UNKNOWN as INSUFFICIENT_DATA
     ok = alerts_data.get('OK', 0)
     total = critical + preventive + insufficient + ok
     
@@ -425,7 +429,7 @@ def create_server_card(instance: dict):
         card_status = 'red'
     elif alerts.get('PREVENTIVE', 0) > 0:
         card_status = 'yellow'
-    elif alerts.get('INSUFFICIENT_DATA', 0) > 0:
+    elif alerts.get('INSUFFICIENT_DATA', 0) > 0 or alerts.get('UNKNOWN', 0) > 0:
         card_status = 'gray'
     else:
         card_status = 'green'
@@ -454,7 +458,7 @@ def create_group_container(group_name: str, instances: list):
             break
         elif alerts.get('PREVENTIVE', 0) > 0:
             has_preventive = True
-        elif alerts.get('INSUFFICIENT_DATA', 0) > 0:
+        elif alerts.get('INSUFFICIENT_DATA', 0) > 0 or alerts.get('UNKNOWN', 0) > 0:
             has_insufficient = True
     
     # Set group color based on worst status
