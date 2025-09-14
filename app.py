@@ -9,6 +9,7 @@ from copy import deepcopy
 from botocore.exceptions import ClientError
 from utils.helpers import load_css, create_alarm_item_html, create_alarm_legend
 import yaml
+import plotly.graph_objects as go
 
 # ========================================================================
 # CONFIGURACIÓN
@@ -286,6 +287,11 @@ def get_disk_utilization(instance_id: str):
                         path = dim['Value']
                 
                 if device or path:
+                    # Filter out tmpfs and other non-physical filesystems
+                    disk_name = device or path or 'Unknown'
+                    if any(exclude in disk_name.lower() for exclude in ['tmpfs', 'devtmpfs', 'udev', 'proc', 'sys', 'run']):
+                        continue
+                    
                     # Get the latest value
                     response = cloudwatch.get_metric_statistics(
                         Namespace='CWAgent',
@@ -300,13 +306,58 @@ def get_disk_utilization(instance_id: str):
                     if response['Datapoints']:
                         latest = sorted(response['Datapoints'], key=lambda x: x['Timestamp'], reverse=True)[0]
                         disk_metrics.append({
-                            'device': device or path or 'Unknown',
+                            'device': disk_name,
                             'usage': latest['Average']
                         })
         
         return disk_metrics
     except ClientError:
         return []
+
+def create_gauge(value, title, max_value=100):
+    """Create a gauge chart using plotly"""
+    # Determine color based on value
+    if value < 80:
+        color = "green"
+    elif value < 92:
+        color = "yellow"
+    else:
+        color = "red"
+    
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = value,
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        title = {'text': title, 'font': {'color': 'white', 'size': 16}},
+        number = {'font': {'color': 'white', 'size': 20}},
+        gauge = {
+            'axis': {'range': [None, max_value], 'tickcolor': 'white', 'tickfont': {'color': 'white'}},
+            'bar': {'color': color},
+            'bgcolor': "rgba(0,0,0,0)",
+            'borderwidth': 2,
+            'bordercolor': "white",
+            'steps': [
+                {'range': [0, 80], 'color': "rgba(0, 255, 136, 0.3)"},
+                {'range': [80, 92], 'color': "rgba(255, 183, 0, 0.3)"},
+                {'range': [92, 100], 'color': "rgba(255, 0, 110, 0.3)"}
+            ],
+            'threshold': {
+                'line': {'color': "white", 'width': 4},
+                'thickness': 0.75,
+                'value': value
+            }
+        }
+    ))
+    
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font_color="white",
+        height=250,
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
+    
+    return fig
 
 def display_detail_page(instance_id: str):
     details = get_instance_details(instance_id)
@@ -346,50 +397,45 @@ def display_detail_page(instance_id: str):
     with col2:
         st.markdown("## 📊 Métricas de Rendimiento")
         
+        # Create columns for gauges
+        gauge_col1, gauge_col2 = st.columns(2)
+        
         # CPU Metric
-        cpu_datapoint = get_cpu_utilization(instance_id)
-        if cpu_datapoint:
-            cpu_avg = round(cpu_datapoint.get('Average', 0), 2)
-            st.markdown("**🖥️ Utilización de CPU (promedio 5 min)**")
-            st.progress(cpu_avg / 100, f"{cpu_avg}%")
-        else:
-            st.info("No hay datos de CPU disponibles.")
+        with gauge_col1:
+            cpu_datapoint = get_cpu_utilization(instance_id)
+            if cpu_datapoint:
+                cpu_avg = round(cpu_datapoint.get('Average', 0), 2)
+                cpu_fig = create_gauge(cpu_avg, "🖥️ CPU %", 100)
+                st.plotly_chart(cpu_fig, use_container_width=True)
+            else:
+                st.info("No hay datos de CPU disponibles.")
         
         # Memory Metric
-        st.markdown("---")
-        memory_datapoint = get_memory_utilization(instance_id)
-        if memory_datapoint:
-            mem_avg = round(memory_datapoint.get('Average', 0), 2)
-            st.markdown("**🧠 Utilización de Memoria RAM (promedio 5 min)**")
-            st.progress(mem_avg / 100, f"{mem_avg}%")
-        else:
-            st.info("No hay datos de memoria disponibles. Asegúrese de que CloudWatch Agent esté instalado.")
+        with gauge_col2:
+            memory_datapoint = get_memory_utilization(instance_id)
+            if memory_datapoint:
+                mem_avg = round(memory_datapoint.get('Average', 0), 2)
+                mem_fig = create_gauge(mem_avg, "🧠 RAM %", 100)
+                st.plotly_chart(mem_fig, use_container_width=True)
+            else:
+                st.info("No hay datos de memoria disponibles.")
         
         # Disk Metrics
         st.markdown("---")
         st.markdown("**💾 Utilización de Discos**")
         disk_metrics = get_disk_utilization(instance_id)
         if disk_metrics:
-            for disk in disk_metrics:
+            # Create columns for disk gauges (2 per row)
+            disk_cols = st.columns(2)
+            for i, disk in enumerate(disk_metrics):
                 device = disk['device']
                 usage = round(disk['usage'], 2)
                 
-                # Color code based on usage
-                if usage > 95:
-                    color = "🔴"
-                    st.markdown(f"<div style='background-color: rgba(255,0,110,0.2); padding: 8px; border-radius: 4px; margin-bottom: 8px;'>", unsafe_allow_html=True)
-                elif usage > 90:
-                    color = "🟡"
-                    st.markdown(f"<div style='background-color: rgba(255,183,0,0.2); padding: 8px; border-radius: 4px; margin-bottom: 8px;'>", unsafe_allow_html=True)
-                else:
-                    color = "🟢"
-                    st.markdown(f"<div style='padding: 8px; margin-bottom: 8px;'>", unsafe_allow_html=True)
-                
-                st.markdown(f"{color} **{device}**")
-                st.progress(usage / 100, f"{usage}%")
-                st.markdown("</div>", unsafe_allow_html=True)
+                with disk_cols[i % 2]:
+                    disk_fig = create_gauge(usage, f"💾 {device}", 100)
+                    st.plotly_chart(disk_fig, use_container_width=True)
         else:
-            st.info("No hay datos de disco disponibles. Asegúrese de que CloudWatch Agent esté instalado.")
+            st.info("No hay datos de disco disponibles.")
 
 # =======================================================================
 # FUNCIONES DE LA VISTA DE DASHBOARD (Modificadas)

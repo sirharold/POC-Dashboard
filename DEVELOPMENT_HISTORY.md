@@ -515,4 +515,60 @@ El usuario aclaró que quería mantener el esquema de colores original con signi
 
 #### Versión
 Se actualizó la versión de v0.1.62 a v0.1.63 para reflejar esta restauración del esquema de colores.
+
+### 2025-09-14 - Mejoras en Métricas de Rendimiento: Gauges y Filtrado de Discos
+
+#### Problemas Identificados
+1. **Mensaje confuso de CloudWatch agent**: Aparecía mensaje de "agent no instalado" cuando sí estaba instalado
+2. **Discos tmpfs irrelevantes**: Se mostraban sistemas de archivos temporales (tmpfs, devtmpfs, etc.) que no son útiles para monitoreo
+3. **Barras de progreso poco visuales**: Las barras simples no proporcionaban suficiente información visual
+4. **Umbrales de color inconsistentes**: Los umbrales no seguían estándares de monitoreo
+
+#### Soluciones Implementadas
+
+**1. Filtrado de Sistemas de Archivos**
+- Filtrados sistemas de archivos no físicos: `tmpfs`, `devtmpfs`, `udev`, `proc`, `sys`, `run`
+- Solo se muestran discos físicos reales
+- Código: `if any(exclude in disk_name.lower() for exclude in ['tmpfs', 'devtmpfs', 'udev', 'proc', 'sys', 'run']): continue`
+
+**2. Implementación de Gauges**
+- Reemplazadas barras de progreso simples por gauges visuales usando Plotly
+- Gauges con escala de colores y umbrales claramente definidos
+- Layout adaptado: CPU y RAM en columnas superiores, discos en grid de 2 columnas
+
+**3. Estandarización de Umbrales de Color**
+- **Verde**: < 80% (normal)
+- **Amarillo**: 80-92% (advertencia)
+- **Rojo**: > 92% (crítico)
+
+**4. Mejora de Mensajes de Error**
+- Simplificado mensaje cuando no hay datos disponibles
+- Eliminada referencia confusa a "CloudWatch Agent no instalado"
+
+#### Cambios Técnicos
+
+**Imports agregados:**
+```python
+import plotly.graph_objects as go
+```
+
+**Nueva función create_gauge():**
+- Gauges con fondos transparentes para tema oscuro
+- Escalas de color por zonas
+- Indicador threshold para valor actual
+- Configuración responsive
+
+**Layout actualizado:**
+- CPU y RAM: 2 columnas superiores
+- Discos: Grid flexible de 2 columnas por fila
+- Eliminadas barras de progreso y contenedores de colores manuales
+
+#### Beneficios
+- **Visualización mejorada**: Gauges más intuitivos que barras
+- **Información relevante**: Solo discos físicos mostrados
+- **Umbrales estándar**: Consistentes con mejores prácticas de monitoreo
+- **Experiencia limpia**: Menos ruido visual, mensajes más claros
+
+#### Versión
+Se actualizó la versión de v0.1.63 a v0.1.64 para reflejar estas mejoras en la visualización de métricas.
 - Diseño responsive mantenido con mejoras visuales
