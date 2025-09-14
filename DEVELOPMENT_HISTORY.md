@@ -406,4 +406,31 @@ Modificada la función `create_alarm_item_html()` en `utils/helpers.py` para:
 
 #### Versión
 Se actualizó la versión de v0.1.58 a v0.1.59 para reflejar esta corrección.
+
+### 2025-09-14 - Corrección de Escapado HTML en Enlaces de Alarmas
+
+#### Problema Identificado
+Los enlaces de alarmas se generaban con HTML malformado cuando los nombres de alarmas contenían caracteres especiales como `%`, `>`, `<`, causando que el HTML se rompiera y los enlaces no funcionaran correctamente.
+
+**Ejemplo de HTML malformado:**
+```
+70%')' target='_blank' style='color: white; text-decoration: none; font-weight: 500;'> EPMAPS PRD SRVBOPRD PREVENTIVA CPU % uso >70% 🔗
+```
+
+#### Causa del Problema
+Los nombres de alarmas como `"CPU % uso >70%"` contenían caracteres que tienen significado especial en HTML y no se estaban escapando correctamente antes de insertarlos en el HTML.
+
+#### Solución Implementada
+1. **Agregado import de módulo html** para escapado de caracteres
+2. **Implementado escapado HTML** usando `html.escape()` en la función `create_alarm_item_html()`
+3. **Separación de contextos**: URL encoding para URLs y HTML escaping para contenido HTML
+4. **Aplicado tanto a enlaces como a texto sin enlace**
+
+#### Cambios Técnicos
+- Import agregado: `import html`
+- HTML escaping: `escaped_alarm_name = html.escape(alarm_name)`
+- Los caracteres `<`, `>`, `&`, `"`, `'` ahora se escapan correctamente a `&lt;`, `&gt;`, `&amp;`, `&quot;`, `&#x27;`
+
+#### Versión
+Se actualizó la versión de v0.1.59 a v0.1.60 para reflejar esta corrección de seguridad y funcionalidad.
 - Diseño responsive mantenido con mejoras visuales
