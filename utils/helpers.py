@@ -340,15 +340,22 @@ def create_alarm_item_html(alarm_name: str, status: str, alarm_arn: str = None) 
     Returns:
         str: HTML string for the alarm item
     """
-    status_icon = "🔴" if status == "red" else "🟡" if status == "yellow" else "🟢"
+    status_icon = "🔴" if status == "red" else "🟡" if status == "yellow" else "🔒" if status == "gray" else "🟢"
     
     # Generate AWS console link if ARN is provided
     if alarm_arn:
-        # Extract region from ARN (format: arn:aws:cloudwatch:region:account:alarm:name)
+        # Extract account ID and region from ARN (format: arn:aws:cloudwatch:region:account:alarm:name)
         try:
             arn_parts = alarm_arn.split(':')
             region = arn_parts[3] if len(arn_parts) > 3 else 'us-east-1'
-            console_url = f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#alarmsV2:alarmFilter=ANY;name={quote(alarm_name)}"
+            account_id = arn_parts[4] if len(arn_parts) > 4 else '011528297340'
+            
+            # Create the encoded search parameter for the URL
+            # Replace special characters for URL encoding
+            encoded_search = alarm_name.replace(' ', '*20').replace('-', '*20').replace('(', '*28').replace(')', '*29').replace('+', '*20')
+            
+            # Generate the CloudWatch console URL in the correct format
+            console_url = f"https://{account_id}-pdl6i3zc.{region}.console.aws.amazon.com/cloudwatch/home?region={region}#alarmsV2:alarm/{quote(alarm_name)}?~(search~'{encoded_search}')"
             
             return f"""
             <div class='alarm-item'>

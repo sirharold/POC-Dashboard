@@ -376,4 +376,34 @@ Se identificó que algunas alarmas tenían estado `UNKNOWN` en lugar de los esta
 
 #### Versión
 Se actualizó la versión de v0.1.57 a v0.1.58 para reflejar esta corrección.
+
+### 2025-09-14 - Corrección de Enlaces a AWS CloudWatch Console
+
+#### Problema Identificado
+Los enlaces de las alarmas en la página de detalle apuntaban incorrectamente a la propia aplicación en lugar de la consola de AWS CloudWatch.
+
+#### Enlaces Incorrectos
+```
+http://ec2-54-224-75-218.compute-1.amazonaws.com:8501/?poc_vm_id=i-05286b364879c6560#:~:text=EPMAPS%20%2D%20(DMZ%2DSRVSAPROU)%20%2D%20PING%20NOT%20REACHABLE%20%F0%9F%94%97
+```
+
+#### Formato Correcto Requerido
+```
+https://011528297340-pdl6i3zc.us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#alarmsV2:alarm/ALARM_NAME?~(search~'ENCODED_SEARCH')
+```
+
+#### Solución Implementada
+Modificada la función `create_alarm_item_html()` en `utils/helpers.py` para:
+1. **Extraer cuenta y región** del ARN de la alarma
+2. **Generar URL correcta** con el formato de la consola AWS
+3. **Codificar correctamente** el parámetro de búsqueda
+4. **Agregar icono diferente** para alarmas grises (🔒)
+
+#### Cambios Técnicos
+- Formato de URL: `https://{account_id}-pdl6i3zc.{region}.console.aws.amazon.com/cloudwatch/home?region={region}#alarmsV2:alarm/{alarm_name}?~(search~'{encoded_search}')`
+- Codificación de caracteres especiales: espacios = `*20`, paréntesis = `*28/*29`, etc.
+- Icono para estado gris cambiado a 🔒
+
+#### Versión
+Se actualizó la versión de v0.1.58 a v0.1.59 para reflejar esta corrección.
 - Diseño responsive mantenido con mejoras visuales
