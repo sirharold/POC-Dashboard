@@ -468,4 +468,51 @@ A pesar del escapado HTML implementado, persistían problemas con URLs malformad
 
 #### Versión
 Se actualizó la versión de v0.1.60 a v0.1.61 para reflejar esta corrección avanzada.
+
+### 2025-09-14 - Simplificación de Iconos de Estado de Alarmas
+
+#### Cambio Solicitado
+El usuario reportó que los enlaces funcionan correctamente pero prefiere simplificar los iconos de estado de las alarmas. Los iconos complejos (🔴, 🟡, 🔒) causaban confusión visual.
+
+#### Solución Implementada
+Simplificación de iconos a solo dos estados:
+- **🟢 (Verde)**: Para alarmas en estado normal (OK)
+- **⚫ (Gris/Negro)**: Para todos los demás estados (ALARM, INSUFFICIENT_DATA, UNKNOWN, etc.)
+
+#### Cambios Técnicos
+- Modificada función `create_alarm_item_html()` en `utils/helpers.py`
+- Lógica simplificada: `status_icon = "🟢" if status == "green" else "⚫"`
+- Eliminados iconos específicos por tipo de alarma
+
+#### Beneficios
+- **Claridad visual**: Solo dos estados simples de entender
+- **Consistencia**: Alineado con el diseño general del dashboard
+- **Menos confusión**: No hay necesidad de interpretar múltiples iconos
+
+#### Versión
+Se actualizó la versión de v0.1.61 a v0.1.62 para reflejar esta simplificación de UI.
+
+### 2025-09-14 - Restauración del Esquema de Colores Original
+
+#### Clarificación del Usuario
+El usuario aclaró que quería mantener el esquema de colores original con significado específico, pero sin iconos complejos como cadenas (🔗) o candados (🔒). Solo círculos de colores simples.
+
+#### Esquema de Colores Restaurado
+- **🟢 Verde**: Alarmas OK/normales
+- **🔴 Rojo**: Alarmas en estado de alarma (ALARM)
+- **🟡 Amarillo**: Alarmas preventivas/proactivas (PREVENTIVE/ALERTA)
+- **⚫ Gris**: Datos insuficientes (INSUFFICIENT_DATA/UNKNOWN)
+
+#### Cambios Técnicos
+- Restaurada lógica de iconos: `status_icon = "🔴" if status == "red" else "🟡" if status == "yellow" else "⚫" if status == "gray" else "🟢"`
+- Eliminados iconos complejos (🔗, 🔒)
+- Mantenidos solo círculos de colores para claridad visual
+
+#### Beneficios
+- **Significado claro**: Cada color representa un estado específico
+- **Simplicidad visual**: Solo círculos, sin iconos complejos
+- **Consistencia**: Alineado con el sistema de colores del dashboard
+
+#### Versión
+Se actualizó la versión de v0.1.62 a v0.1.63 para reflejar esta restauración del esquema de colores.
 - Diseño responsive mantenido con mejoras visuales

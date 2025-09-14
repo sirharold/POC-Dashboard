@@ -341,7 +341,7 @@ def create_alarm_item_html(alarm_name: str, status: str, alarm_arn: str = None) 
     Returns:
         str: HTML string for the alarm item
     """
-    status_icon = "🔴" if status == "red" else "🟡" if status == "yellow" else "🔒" if status == "gray" else "🟢"
+    status_icon = "🔴" if status == "red" else "🟡" if status == "yellow" else "⚫" if status == "gray" else "🟢"
     
     # Generate AWS console link if ARN is provided
     if alarm_arn:
