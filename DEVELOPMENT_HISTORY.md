@@ -322,4 +322,30 @@ El usuario solicitó estilizar la aplicación para hacerla más bonita e impacta
 - CSS personalizado extenso para control total del diseño
 - Uso de gradientes lineales para elementos destacados
 - Animaciones CSS puras para mejor rendimiento
+
+### 2025-09-14 - Eliminación de Caché en Funciones de Detalle
+
+#### Problema Identificado
+Los usuarios reportaron que las alarmas aparecían con estados diferentes entre la página de resumen y la página de detalle:
+- Página de resumen: Alarmas grises (INSUFFICIENT_DATA)
+- Página de detalle: Alarmas verdes (OK)
+
+#### Análisis del Problema
+Se identificó que el problema era causado por el sistema de caché:
+- La página de resumen no usaba caché y mostraba datos en tiempo real
+- La página de detalle usaba `@st.cache_data(ttl=60)` con un TTL de 60 segundos
+- Esto causaba que los datos pudieran tener hasta 60 segundos de antigüedad
+
+#### Solución Implementada
+Se eliminaron todos los decoradores `@st.cache_data` de las funciones de obtención de datos en la página de detalle:
+- `get_instance_details()`
+- `get_alarms_for_instance()`
+- `get_cpu_utilization()`
+- `get_memory_utilization()`
+- `get_disk_utilization()`
+
+Se mantuvo únicamente el caché de los clientes boto3 (`@st.cache_resource(ttl=900)`) para evitar recrear las conexiones constantemente.
+
+#### Justificación
+El sistema de monitoreo debe mostrar los problemas en tiempo real cuando se capturan. No debe haber información obsoleta o antigua que pueda causar confusión al momento de diagnosticar problemas.
 - Diseño responsive mantenido con mejoras visuales

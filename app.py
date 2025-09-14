@@ -201,7 +201,6 @@ def get_aws_data():
 # ========================================================================
 # FUNCIONES DE LA VISTA DE DETALLES (Sin cambios)
 # ========================================================================
-@st.cache_data(ttl=60)
 def get_instance_details(instance_id: str):
     try:
         ec2 = get_cross_account_boto3_client('ec2')
@@ -213,7 +212,6 @@ def get_instance_details(instance_id: str):
     except (ClientError, IndexError):
         return None
 
-@st.cache_data(ttl=60)
 def get_alarms_for_instance(instance_id: str):
     try:
         cloudwatch = get_cross_account_boto3_client('cloudwatch')
@@ -229,7 +227,6 @@ def get_alarms_for_instance(instance_id: str):
     except ClientError:
         return []
 
-@st.cache_data(ttl=60)
 def get_cpu_utilization(instance_id: str):
     try:
         cloudwatch = get_cross_account_boto3_client('cloudwatch')
@@ -244,7 +241,6 @@ def get_cpu_utilization(instance_id: str):
     except ClientError:
         return None
 
-@st.cache_data(ttl=60)
 def get_memory_utilization(instance_id: str):
     try:
         cloudwatch = get_cross_account_boto3_client('cloudwatch')
@@ -260,7 +256,6 @@ def get_memory_utilization(instance_id: str):
     except ClientError:
         return None
 
-@st.cache_data(ttl=60)
 def get_disk_utilization(instance_id: str):
     try:
         cloudwatch = get_cross_account_boto3_client('cloudwatch')
