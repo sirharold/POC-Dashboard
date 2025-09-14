@@ -67,7 +67,7 @@ server_groups:
 settings:
   refresh_interval_seconds: 30
   show_aws_errors: false
-  version: v0.1.64
+  version: v0.1.67
 vm_status:
   DMZ-SRVSAPROU: green
   DMZ-SRVWDPRD: green

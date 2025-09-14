@@ -2,3 +2,4 @@ streamlit
 plotly
 PyYAML
 boto3
+pandas
