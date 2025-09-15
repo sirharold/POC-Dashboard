@@ -16,6 +16,33 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 
 ## Registro de Desarrollo
 
+### 2025-09-15 - Removal of Unused vm_status Configuration
+
+#### Context
+The `vm_status` section in config.yaml contained hardcoded server colors that were no longer being used. The current implementation correctly determines server and group colors based on CloudWatch alarms.
+
+#### Changes Made
+- **Removed `vm_status` section from config.yaml**:
+  - This section contained hardcoded color mappings for each server
+  - The refactored code in `ui_components/dashboard_ui.py` already determines colors based on alarms
+  
+- **Cleaned up `utils/helpers.py`**:
+  - Removed the unused `get_vm_status()` function that relied on the vm_status configuration
+  
+- **Updated `components/server_card.py`**:
+  - Removed import of `get_vm_status`
+  - Added deprecation note indicating this component is replaced by `ui_components/dashboard_ui.py`
+  - Modified to use a default status since it's no longer actively used
+
+#### Technical Verification
+- Server card colors are determined by alarm states (dashboard_ui.py lines 51-59):
+  - Red: If any ALARM state
+  - Yellow: If any PREVENTIVE state
+  - Gray: If INSUFFICIENT_DATA or UNKNOWN
+  - Green: Otherwise (all OK)
+  
+- Group colors follow the same logic based on worst server status (lines 74-97)
+
 ### 2025-09-15 - Header Height Optimization
 
 #### User Feedback

@@ -67,34 +67,4 @@ server_groups:
 settings:
   refresh_interval_seconds: 30
   show_aws_errors: false
-  version: v0.1.68
-vm_status:
-  DMZ-SRVSAPROU: green
-  DMZ-SRVWDPRD: green
-  SOLMANPRD: green
-  SRV-CRM-POC: yellow
-  SRV-REAL-POC: green
-  SRVALMCS: yellow
-  SRVALMPRDN: green
-  SRVBOPRD: green
-  SRVBWPRD: yellow
-  SRVCRMASCS: green
-  SRVCRMPRD: yellow
-  SRVCRMPRDDB: green
-  SRVDCON4-(AD-DNS): green
-  SRVERPPRD: green
-  SRVGTWPRDCS: green
-  SRVGTWPRDPAS: yellow
-  SRVHANDBPRD: red
-  SRVISUASCS: green
-  SRVISUPRD: red
-  SRVISUPRDDB: yellow
-  SRVMOBPRD: green
-  SRVPOPRDCS - RESPALDO 2025-08-11: yellow
-  SRVPOPRDDB - RESPALDO 2025-08-11: green
-  SRVPOPRDPAS - RESPALDO 2025-08-11: green
-  SRVSAOBDD: green
-  SRVSAOPRD: yellow
-  SRVSAPBWBDD: green
-  SRVSAPERPBDD: yellow
-  SRVSTG (SRVALMPRD): red
+  version: v0.2.01

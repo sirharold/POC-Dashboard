@@ -48,32 +48,6 @@ STATUS_COLORS = {
 # UTILITY FUNCTIONS
 # ========================================================================
 
-@st.cache_data(ttl=60)
-def get_vm_status(vm_name: str, environment: str = "prod") -> str:
-    """
-    Get the status of a virtual machine.
-    
-    Args:
-        vm_name (str): Name of the virtual machine
-        environment (str): The environment ('prod', 'qa', 'dev')
-        
-    Returns:
-        str: Status of the VM ('green', 'yellow', 'red')
-    """
-    config = load_config()
-    vm_status_config = config.get("vm_status", {})
-    
-    base_status = vm_status_config.get(vm_name, "green")
-    
-    # Simulate different statuses for QA and DEV
-    if environment == "qa":
-        if base_status == "green":
-            return "yellow" # In QA, green servers might be under test
-        return base_status
-    elif environment == "dev":
-        # In DEV, status can be more volatile
-        return random.choice(["green", "yellow", "red"])
-    return base_status
 
 @st.cache_data(ttl=60)
 def get_vm_alerts(vm_name: str) -> dict:
