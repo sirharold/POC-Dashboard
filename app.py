@@ -360,6 +360,81 @@ def create_gauge(value, title, max_value=100):
     
     return fig
 
+def get_available_log_content(instance_id: str):
+    """
+    Get available.log content from CloudWatch Logs for SAP availability monitoring.
+    Returns the raw log content or None if not available.
+    """
+    try:
+        # Get CloudWatch Logs client
+        logs_client = get_cross_account_boto3_client_cached('logs')
+        if not logs_client:
+            return None
+        
+        # Get instance details to get the instance name
+        details = get_instance_details(instance_id)
+        if not details:
+            return None
+        
+        instance_name = next((tag['Value'] for tag in details.get('Tags', []) if tag['Key'] == 'Name'), '')
+        
+        # Determine environment based on instance name patterns
+        is_production = any(prod_pattern in instance_name.upper() 
+                          for prod_pattern in ['PRD', 'PROD', 'PRODUCTION'])
+        
+        # CloudWatch Log Groups for SAP availability monitoring
+        if is_production:
+            possible_log_groups = [
+                '/aws/lambda/sap-availability-heartbeat-prod',
+                '/aws/lambda/sap-availability-prod'
+            ]
+        else:
+            possible_log_groups = [
+                '/aws/lambda/sap-availability-heartbeat-qa',
+                '/aws/lambda/sap-availability-qa',
+                '/aws/lambda/sap-availability-heartbeat-dev',
+                '/aws/lambda/sap-availability-dev'
+            ]
+        
+        # Try each log group to find available.log content
+        for log_group_name in possible_log_groups:
+            try:
+                # Get recent log streams
+                streams_response = logs_client.describe_log_streams(
+                    logGroupName=log_group_name,
+                    orderBy='LastEventTime',
+                    descending=True,
+                    limit=10
+                )
+                
+                # Search through recent log streams for available.log content
+                for stream in streams_response.get('logStreams', []):
+                    events_response = logs_client.get_log_events(
+                        logGroupName=log_group_name,
+                        logStreamName=stream['logStreamName'],
+                        limit=100
+                    )
+                    
+                    # Look for available.log content in log events
+                    for event in events_response.get('events', []):
+                        message = event.get('message', '')
+                        
+                        # Check if this log event contains available.log content for our server
+                        if ('available.log' in message.lower() and 
+                            instance_name.lower() in message.lower()):
+                            return message
+                            
+            except Exception as e:
+                # Continue to next log group if this one fails
+                continue
+        
+        return None
+        
+    except Exception as e:
+        with open("/tmp/streamlit_aws_debug.log", "a") as f:
+            f.write(f"[{time.ctime()}] Error getting available.log content: {e}\n")
+        return None
+
 def get_sap_availability_data(instance_id: str):
     """
     Get SAP availability data from CloudWatch Logs.
@@ -680,6 +755,17 @@ def display_detail_page(instance_id: str):
             create_sap_availability_table(sap_data)
             st.markdown("---")
         
+        # Available.log Content Section
+        st.markdown("## 📋 Contenido de available.log")
+        log_content = get_available_log_content(instance_id)
+        if log_content:
+            # Display the log content in an expandable section
+            with st.expander("📄 Ver contenido completo del archivo available.log", expanded=False):
+                st.code(log_content, language="text")
+        else:
+            st.info("❌ NO existe available.log para este servidor.")
+        
+        st.markdown("---")
         st.markdown("## 📊 Métricas de Rendimiento")
         
         # Create columns for gauges
