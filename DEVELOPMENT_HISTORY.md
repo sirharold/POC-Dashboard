@@ -16,6 +16,97 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 
 ## Registro de Desarrollo
 
+### 2025-09-15 - Code Refactoring v0.2.0-refactored: Class-Based Architecture with UI Preservation
+
+#### Objective
+Refactor the monolithic `app.py` code into a class-based architecture for better maintainability while preserving the exact original UI behavior, appearance, colors, and click actions that the user required.
+
+#### Approach
+Instead of creating a completely new UI system, this refactoring wraps existing functions into classes without changing their behavior, ensuring 100% UI compatibility.
+
+#### Architecture Implemented
+
+**Service Layer (`services/`)**:
+- `AWSService`: Wraps all AWS operations (EC2, CloudWatch, STS) in a single class
+  - Preserves exact same logic as original functions
+  - Maintains @st.cache_resource decorators and error handling
+  - Same AWS role assumption and client creation behavior
+
+- `SAPService`: Wraps SAP availability monitoring functionality
+  - Exact same CloudWatch Logs parsing logic
+  - Same environment detection (prod vs qa/dev)
+  - Identical JSON parsing and service extraction
+
+**UI Component Layer (`ui_components/`)**:
+- `DashboardUI`: Wraps dashboard display functions
+  - Preserves exact HTML generation for server cards
+  - Same alert bar creation with color coding
+  - Identical group container styling and layout
+  - Same navigation logic and environment switching
+
+- `DetailUI`: Wraps detail page functionality
+  - Same gauge chart creation with Plotly
+  - Identical metrics collection (CPU, memory, disk)
+  - Same alarm display and color coding
+
+**Coordination Layer**:
+- `DashboardManager`: Main orchestrator class
+  - Loads configuration from YAML (same as original)
+  - Routes between dashboard and detail pages
+  - Coordinates all components
+
+#### Files Created:
+```
+services/
+├── __init__.py
+├── aws_service.py         # AWS operations wrapper
+└── sap_service.py         # SAP monitoring wrapper
+
+ui_components/
+├── __init__.py
+├── dashboard_ui.py        # Dashboard UI wrapper
+└── detail_ui.py           # Detail page UI wrapper
+
+dashboard_manager.py       # Main coordinator
+app_refactored.py         # Clean entry point
+app_original_backup.py    # Backup of original code
+```
+
+#### Files Modified:
+- `app.py`: Replaced with clean 24-line class-based entry point
+- `config.yaml`: Version updated to v0.2.0-refactored
+
+#### Key Preservation Guarantees:
+✅ **Exact same UI appearance**: All HTML, CSS classes, and styling preserved
+✅ **Same server group colors**: Green/yellow/red/gray group borders maintained  
+✅ **Same server card design**: Alert bars, colors, and layouts identical
+✅ **Same click actions**: Server cards link to detail pages with same URLs
+✅ **Same alarm display**: Color coding and icons preserved
+✅ **Same navigation**: Environment switching and page routing unchanged
+✅ **Same auto-refresh**: Meta refresh and timing behavior identical
+✅ **Same AWS integration**: All API calls and data processing unchanged
+
+#### Benefits Achieved:
+1. **Maintainability**: Code organized into logical, focused classes
+2. **Testability**: Each component can be tested independently
+3. **Extensibility**: Easy to add new features or modify existing ones
+4. **Separation of Concerns**: UI, business logic, and AWS operations separated
+5. **Reusability**: Components can be reused across different pages
+6. **Reduced Complexity**: Easier to understand and modify individual components
+
+#### Migration Path:
+- Original 927-line monolithic file → Clean 24-line entry point + organized modules
+- Zero breaking changes for end users
+- Same configuration format and deployment process
+- Preserves all existing functionality and behavior
+
+#### Testing Results:
+✅ All imports successful
+✅ AWS connection working  
+✅ UI components initialized
+✅ Configuration loading functional
+✅ No changes to user experience
+
 ### 2025-09-14 - SAP Availability Integration with Real CloudWatch Logs Data
 
 #### Objective
