@@ -385,30 +385,30 @@ def create_alarm_item_html(alarm_name: str, status: str, alarm_arn: str = None) 
 
 def create_alarm_legend() -> str:
     """
-    Generate HTML for the alarm color legend.
+    Generate HTML for the alarm color legend in a single line.
     
     Returns:
         str: HTML string for the alarm legend
     """
     return """
-    <div style='background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 12px; margin: 16px 0; backdrop-filter: blur(10px);'>
-        <div style='color: white; font-weight: 600; margin-bottom: 8px; text-align: center;'>Alarmas</div>
-        <div style='display: flex; flex-direction: column; gap: 4px;'>
-            <div style='display: flex; align-items: center; gap: 8px;'>
-                <div style='width: 12px; height: 12px; background-color: #ff006e; border-radius: 50%;'></div>
-                <span style='color: rgba(255, 255, 255, 0.9); font-size: 0.85rem;'>En Alarma</span>
+    <div style='background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 8px 16px; margin: 12px 0; backdrop-filter: blur(10px);'>
+        <div style='display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;'>
+            <span style='color: white; font-weight: 600; font-size: 0.9rem;'>Alarmas:</span>
+            <div style='display: flex; align-items: center; gap: 6px;'>
+                <div style='width: 10px; height: 10px; background-color: #ff006e; border-radius: 50%;'></div>
+                <span style='color: rgba(255, 255, 255, 0.9); font-size: 0.8rem;'>En Alarma</span>
             </div>
-            <div style='display: flex; align-items: center; gap: 8px;'>
-                <div style='width: 12px; height: 12px; background-color: #ffb700; border-radius: 50%;'></div>
-                <span style='color: rgba(255, 255, 255, 0.9); font-size: 0.85rem;'>Alarmas Preventivas</span>
+            <div style='display: flex; align-items: center; gap: 6px;'>
+                <div style='width: 10px; height: 10px; background-color: #ffb700; border-radius: 50%;'></div>
+                <span style='color: rgba(255, 255, 255, 0.9); font-size: 0.8rem;'>Preventivas</span>
             </div>
-            <div style='display: flex; align-items: center; gap: 8px;'>
-                <div style='width: 12px; height: 12px; background-color: #808080; border-radius: 50%;'></div>
-                <span style='color: rgba(255, 255, 255, 0.9); font-size: 0.85rem;'>Sin Datos</span>
+            <div style='display: flex; align-items: center; gap: 6px;'>
+                <div style='width: 10px; height: 10px; background-color: #808080; border-radius: 50%;'></div>
+                <span style='color: rgba(255, 255, 255, 0.9); font-size: 0.8rem;'>Sin Datos</span>
             </div>
-            <div style='display: flex; align-items: center; gap: 8px;'>
-                <div style='width: 12px; height: 12px; background-color: #00ff88; border-radius: 50%;'></div>
-                <span style='color: rgba(255, 255, 255, 0.9); font-size: 0.85rem;'>Normal</span>
+            <div style='display: flex; align-items: center; gap: 6px;'>
+                <div style='width: 10px; height: 10px; background-color: #00ff88; border-radius: 50%;'></div>
+                <span style='color: rgba(255, 255, 255, 0.9); font-size: 0.8rem;'>Normal</span>
             </div>
         </div>
     </div>
