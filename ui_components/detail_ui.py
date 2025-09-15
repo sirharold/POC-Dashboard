@@ -190,6 +190,17 @@ class DetailUI:
                 sap_service.create_sap_availability_table(sap_data)
                 st.markdown("---")
             
+            # Available.log Content Section
+            st.markdown("## 📋 Contenido de available.log")
+            log_content = sap_service.get_available_log_content(instance_id)
+            if log_content:
+                # Display the log content in an expandable section
+                with st.expander("📄 Ver contenido completo del archivo available.log", expanded=False):
+                    st.code(log_content, language="text")
+            else:
+                st.info("❌ NO existe available.log para este servidor.")
+            
+            st.markdown("---")
             st.markdown("## 📊 Métricas de Rendimiento")
             
             # Create columns for gauges

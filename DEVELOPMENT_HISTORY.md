@@ -16,6 +16,24 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 
 ## Registro de Desarrollo
 
+### 2025-09-15 - Completion of SAPService Class Integration
+
+#### Changes Made
+- **Added `get_available_log_content` method to SAPService class**:
+  - Migrated the standalone function from `app.py` to maintain proper separation of concerns
+  - Method retrieves raw available.log content from CloudWatch Logs for SAP monitoring
+  - Preserves exact same logic including environment detection and log group selection
+  
+- **Updated DetailUI to use the new SAPService method**:
+  - Added the "Available.log Content Section" that was missing in the refactored version
+  - Now calls `sap_service.get_available_log_content(instance_id)` instead of the standalone function
+  - Maintains the same UI display with expandable section for log content
+
+#### Technical Details
+- The `get_available_log_content` method searches through CloudWatch log groups based on environment (production vs qa/dev)
+- Returns raw log content or None if not available
+- Maintains backward compatibility with existing functionality
+
 ### 2025-09-15 - Code Refactoring v0.2.0-refactored: Class-Based Architecture with UI Preservation
 
 #### Objective
