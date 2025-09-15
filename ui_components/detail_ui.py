@@ -153,7 +153,7 @@ class DetailUI:
             st.error(f"No se pudieron obtener los detalles para la instancia con ID: {instance_id}")
             return
         instance_name = next((tag['Value'] for tag in details.get('Tags', []) if tag['Key'] == 'Name'), instance_id)
-        st.markdown(f"<h1>Detalles de <span style='color: #00d4ff;'>{instance_name}</span></h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='margin-bottom: 0.5rem;'>Detalles de <span style='color: #00d4ff;'>{instance_name}</span></h1>", unsafe_allow_html=True)
         st.divider()
         col1, col2 = st.columns([1, 2])
         with col1:

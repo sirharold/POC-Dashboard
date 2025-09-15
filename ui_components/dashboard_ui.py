@@ -184,8 +184,8 @@ class DashboardUI:
         
         current_env = ENVIRONMENTS[st.session_state.env_index]
         with nav_cols[1]:
-            st.markdown(f"<h1 style='text-align: center;'>Dashboard {current_env}</h1>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align: center; font-size: 0.8em; color: grey;'>Esta página se autorecarga cada {refresh_interval} segundos {app_version}</p>", unsafe_allow_html=True)
+            st.markdown(f"<h1 style='text-align: center; margin-bottom: 0.2rem;'>Dashboard {current_env}</h1>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align: center; font-size: 0.75em; color: grey; margin-top: 0; margin-bottom: 0.5rem;'>Esta página se autorecarga cada {refresh_interval} segundos {app_version}</p>", unsafe_allow_html=True)
             
             # Add meta refresh to auto-reload the page
             st.markdown(f'<meta http-equiv="refresh" content="{refresh_interval}">', unsafe_allow_html=True)

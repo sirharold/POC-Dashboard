@@ -16,6 +16,35 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 
 ## Registro de Desarrollo
 
+### 2025-09-15 - Header Height Optimization
+
+#### User Feedback
+Users reported that the headers (titles) in both the summary and detail pages were taking up too much vertical space.
+
+#### Changes Made
+- **Reduced main title (h1) size and spacing**:
+  - Font size reduced from 2.5rem to 1.8rem
+  - Bottom margin reduced from 1rem to 0.5rem
+  - Added top margin of 0.5rem and line-height of 1.2 for compact display
+  
+- **Optimized h2 headings for detail page sections**:
+  - Added specific styling for h2 elements
+  - Font size set to 1.3rem with reduced margins (0.5rem)
+  
+- **Adjusted global spacing**:
+  - Reduced top padding for main content area to 2rem
+  - Reduced spacing around dividers to 0.5rem
+  
+- **Updated inline styles in UI components**:
+  - Dashboard page: Added inline margin styles to reduce spacing between title and subtitle
+  - Detail page: Added margin-bottom style to main title
+  - Subtitle font size reduced from 0.8em to 0.75em
+
+#### Technical Notes
+- All changes preserve the original functionality including environment rotation
+- No text content or navigation logic was modified
+- Changes focus solely on visual spacing optimization
+
 ### 2025-09-15 - Completion of SAPService Class Integration
 
 #### Changes Made
