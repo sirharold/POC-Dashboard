@@ -16,6 +16,37 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 
 ## Registro de Desarrollo
 
+### 2025-09-15 - Further Header Space Optimization
+
+#### User Feedback
+Users reported there was still too much wasted space before and after headers, while wanting to keep the same font sizes.
+
+#### Changes Made
+- **Reduced main content padding**:
+  - Main content area padding reduced from 2rem to 1rem
+  - Block container padding set to 1rem top/bottom
+  
+- **Optimized h1 and h2 margins**:
+  - h1: margin-bottom 0.2rem, margin-top 0, padding 0, line-height 1.1
+  - h2: margins reduced to 0.3rem, line-height 1.2
+  
+- **Added specific CSS rules to minimize spacing**:
+  - Element containers with h1: zero margins
+  - Paragraph elements: zero top margin, 0.3rem bottom
+  - Columns with navigation buttons: zero padding
+  - Horizontal blocks with buttons: minimal margins and gap
+  
+- **Updated inline styles**:
+  - Dashboard page: h1 and p elements set to margin: 0, padding: 0
+  - Detail page: h1 set to margin: 0, padding: 0
+  
+- **Navigation button optimization**:
+  - Reduced button padding from 0.5rem to 0.4rem
+  - Zero margins on buttons
+
+#### Result
+Significantly reduced vertical space usage while maintaining all font sizes and readability.
+
 ### 2025-09-15 - Removal of Unused vm_status Configuration
 
 #### Context

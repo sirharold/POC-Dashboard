@@ -12,13 +12,38 @@
 
 /* Reduce top padding for the main content area */
 .main > div {
-    padding-top: 2rem !important;
+    padding-top: 1rem !important;
+}
+
+/* Reduce spacing in the main block container */
+.block-container {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+
+/* Reduce spacing around all elements in the header area */
+.element-container:has(h1) {
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
 }
 
 /* Reduce spacing around dividers */
 [data-testid="stHorizontalBlock"] > [data-testid="element-container"]:has(hr) {
-    margin-top: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
+    margin-top: 0.3rem !important;
+    margin-bottom: 0.3rem !important;
+}
+
+/* Reduce spacing around paragraph elements in header */
+.element-container:has(p) {
+    margin-top: 0 !important;
+    margin-bottom: 0.3rem !important;
+}
+
+/* Reduce spacing for columns container in header area */
+[data-testid="stHorizontalBlock"]:has([data-testid="column"]:has(.stButton)) {
+    margin-top: 0 !important;
+    margin-bottom: 0.2rem !important;
+    gap: 0.5rem !important;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -44,18 +69,20 @@ h1 {
     font-size: 1.8rem !important;
     font-weight: 700 !important;
     text-align: center;
-    margin-bottom: 0.5rem !important;
-    margin-top: 0.5rem !important;
+    margin-bottom: 0.2rem !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
     letter-spacing: -1px;
-    line-height: 1.2 !important;
+    line-height: 1.1 !important;
 }
 
 /* Reduce h2 sizes for detail page sections */
 h2 {
     font-size: 1.3rem !important;
-    margin-bottom: 0.5rem !important;
-    margin-top: 0.5rem !important;
-    line-height: 1.3 !important;
+    margin-bottom: 0.3rem !important;
+    margin-top: 0.3rem !important;
+    line-height: 1.2 !important;
 }
 
 /* ==========================================================================
@@ -101,11 +128,17 @@ h2 {
    BUTTONS
    ========================================================================== */
 
+/* Navigation buttons container - reduce spacing */
+[data-testid="column"]:has(.stButton) {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
 .stButton > button {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    padding: 0.5rem 1rem;
+    padding: 0.4rem 0.8rem;
     font-weight: 600;
     border-radius: 6px;
     transition: all 0.3s ease;
@@ -113,6 +146,8 @@ h2 {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-size: 0.75rem;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 .stButton > button:hover {
