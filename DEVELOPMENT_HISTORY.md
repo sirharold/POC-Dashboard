@@ -16,7 +16,7 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 
 ## Registro de Desarrollo
 
-### 2025-09-15 - Back Link Position and Column Control Feature
+### 2025-09-15 - Back Link Position and Column Control Feature (v0.2.02)
 
 #### Changes Made
 
@@ -41,10 +41,16 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 - Matches dark theme with semi-transparent background
 - Hover effects for better interactivity
 
+**5. Switched app.py to Use Refactored Code**
+- **IMPORTANT**: The main app.py now uses the refactored class-based architecture
+- Original monolithic code backed up to `app_monolithic_backup.py`
+- This was necessary because the column control was added to the refactored version
+
 #### Technical Implementation
 - Session state key: `num_columns` (persists during session)
 - Column options: [1, 2, 3, 4]
 - Layout: Uses `st.columns()` with dynamic count
+- Version updated to v0.2.02
 
 ### 2025-09-15 - Fix Header Visibility Issues
 
