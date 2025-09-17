@@ -16,6 +16,28 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 
 ## Registro de Desarrollo
 
+### 2025-09-15 - Fix Column Selection Persistence in Navigation (v0.2.04)
+
+#### Issue Fixed
+**Column Selection Lost During Navigation**
+- **Problem**: When navigating to detail page and returning to dashboard, the column selection was reset to default
+- **Root Cause**: Navigation links didn't preserve the columns query parameter
+
+#### Solution Implemented
+1. **Server Card Links**: Modified to include columns parameter
+   - Changed: `?poc_vm_id={instance_id}` 
+   - To: `?poc_vm_id={instance_id}&columns={columns_param}`
+   
+2. **Back to Dashboard Link**: Modified to preserve columns parameter
+   - Changed: `href='/'`
+   - To: `href='/?columns={columns_param}'`
+
+#### Technical Details
+- Both navigation links now read the current columns value from query params
+- Default value of '2' is used if parameter is missing
+- Ensures consistent column layout throughout navigation flow
+- Version updated to v0.2.04
+
 ### 2025-09-15 - Fix Column Control Persistence and Alignment (v0.2.03)
 
 #### Issues Fixed

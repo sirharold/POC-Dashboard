@@ -67,7 +67,9 @@ class DashboardUI:
                 {alert_bar_html}
             </div>
         </div>'''
-        st.markdown(f"<a href='?poc_vm_id={instance_id}' target='_self' class='card-link'>{' '.join(card_content.split())}</a>", unsafe_allow_html=True)
+        # Preserve columns parameter when navigating to detail page
+        columns_param = st.query_params.get('columns', '2')
+        st.markdown(f"<a href='?poc_vm_id={instance_id}&columns={columns_param}' target='_self' class='card-link'>{' '.join(card_content.split())}</a>", unsafe_allow_html=True)
 
     def create_group_container(self, group_name: str, instances: list):
         """Create group container. Exact same logic as original function."""
