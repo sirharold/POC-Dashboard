@@ -145,7 +145,9 @@ class DashboardUI:
             
             # Arrange groups in selected number of columns
             group_items = sorted(grouped_instances.items())
-            num_columns = st.session_state.get('num_columns', 2)
+            num_columns = int(st.query_params.get('columns', 2))
+            if num_columns not in [1, 2, 3, 4]:
+                num_columns = 2
             
             if num_columns == 1:
                 # Single column layout
@@ -197,17 +199,29 @@ class DashboardUI:
 
         # Add column control and alarm legend
         control_cols = st.columns([1, 3])
+        
+        # Get column count from query params or default
+        current_columns = int(st.query_params.get('columns', 2))
+        if current_columns not in [1, 2, 3, 4]:
+            current_columns = 2
+        
         with control_cols[0]:
-            # Initialize column count in session state
-            if 'num_columns' not in st.session_state:
-                st.session_state.num_columns = 2
-            
-            st.session_state.num_columns = st.selectbox(
-                "Columnas:",
-                options=[1, 2, 3, 4],
-                index=[1, 2, 3, 4].index(st.session_state.num_columns),
-                key="column_selector"
-            )
+            # Create columns for label and selectbox
+            label_col, select_col = st.columns([1, 2])
+            with label_col:
+                st.markdown("<div style='padding-top: 0.3rem; font-weight: 600;'>Columnas:</div>", unsafe_allow_html=True)
+            with select_col:
+                selected_columns = st.selectbox(
+                    label="",  # Empty label since we're showing it separately
+                    options=[1, 2, 3, 4],
+                    index=[1, 2, 3, 4].index(current_columns),
+                    key="column_selector",
+                    label_visibility="collapsed"
+                )
+                # Update query params when selection changes
+                if selected_columns != current_columns:
+                    st.query_params['columns'] = str(selected_columns)
+                    st.rerun()
         
         with control_cols[1]:
             st.markdown(create_alarm_legend(), unsafe_allow_html=True)

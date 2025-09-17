@@ -16,6 +16,33 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 
 ## Registro de Desarrollo
 
+### 2025-09-15 - Fix Column Control Persistence and Alignment (v0.2.03)
+
+#### Issues Fixed
+
+**1. Column Selection Persistence on Page Refresh**
+- **Problem**: Column selection was lost after the 30-second auto-refresh
+- **Solution**: Switched from session state to URL query parameters
+- **Implementation**: 
+  - Column selection now stored in `st.query_params['columns']`
+  - Value persists through page refreshes and reloads
+  - Default value: 2 columns
+
+**2. Improved Column Control Layout**
+- **Problem**: "Columnas:" label was above the dropdown, not aligned
+- **Solution**: Created sub-columns to align label horizontally
+- **Implementation**:
+  - Used 2 sub-columns within the control column
+  - Label displayed in first sub-column with custom styling
+  - Selectbox in second sub-column with collapsed label
+  - Added padding to align with alarm legend
+
+#### Technical Details
+- Query parameter: `?columns=X` where X is 1, 2, 3, or 4
+- Validation ensures only valid column counts are used
+- Page reruns when selection changes to update URL
+- Version updated to v0.2.03
+
 ### 2025-09-15 - Back Link Position and Column Control Feature (v0.2.02)
 
 #### Changes Made
