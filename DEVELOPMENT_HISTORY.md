@@ -16,6 +16,168 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 
 ## Registro de Desarrollo
 
+### 2025-09-15 - Fix Duplicate Groups Issue (v0.2.08)
+
+#### Problem Identified and Solved
+**"Almacenamiento" Showing as Two Separate Groups**
+- **Root Cause**: Extra whitespace in DashboardGroup tag values
+- **Example**: "Almacenamiento" vs "Almacenamiento " (with trailing space)
+- **Result**: AWS treated them as different group names
+
+#### Solution Applied
+**1. Automatic Tag Cleaning**
+- Added `.strip()` to DashboardGroup values in AWS service
+- Removes leading/trailing whitespace automatically
+- File: `services/aws_service.py:159`
+
+**2. Debug Process Used**
+- Added temporary debug logging to identify the issue
+- Found invisible characters in tag values
+- Confirmed the fix worked correctly
+- Removed debug code after verification
+
+**3. Removed Unnecessary UI Elements**
+- Removed the manual refresh button (user didn't request it)
+- Restored original control layout
+
+#### Technical Fix
+```python
+# Clean DashboardGroup value to remove extra whitespace
+dashboard_group = tags.get('DashboardGroup', 'Uncategorized').strip()
+```
+
+#### Result
+- ✅ All three "Almacenamiento" servers now appear in single group
+- ✅ Future tag changes will automatically be cleaned
+- ✅ No more duplicate groups due to whitespace
+- ✅ 1-minute cache for good performance/freshness balance
+
+#### Version: v0.2.08
+
+### 2025-09-15 - Fix AWS Cache for Tag Changes (v0.2.07)
+
+#### Problem Reported
+**DashboardGroup Tag Changes Not Reflecting in UI**
+- **Issue**: User modified DashboardGroup tags in EC2 console
+- **Expected**: Servers should be regrouped according to new tags
+- **Actual**: Dashboard showed old grouping, splitting "Almacenamiento" into two groups
+- **Root Cause**: AWS client cache TTL was 15 minutes, preventing tag updates
+
+#### Solution Implemented
+**1. Reduced Cache TTL**
+- Changed AWS client cache from 900 seconds (15 min) to 60 seconds (1 min)
+- Tag changes now visible within 1 minute instead of 15 minutes
+- File: `services/aws_service.py:18`
+
+**2. Added Manual Cache Clear**
+- Added `clear_cache()` method to AWSService class
+- Allows immediate cache invalidation when needed
+- Useful for testing and immediate updates
+
+**3. Added Refresh Button in UI**
+- Added "🔄 Actualizar" button next to column selector
+- Button clears cache and forces immediate data refresh
+- Tooltip explains functionality
+- Layout: `[Columnas] [Actualizar] [Alarm Legend]`
+
+#### How to Use
+**For Immediate Updates After Tag Changes:**
+1. Modify tags in EC2 console
+2. Click "🔄 Actualizar" button in dashboard
+3. Groups will update immediately
+
+**For Automatic Updates:**
+- Changes now appear within 1 minute automatically
+- No user action required
+
+#### Technical Details
+```python
+@st.cache_resource(ttl=60)  # Reduced from 900 seconds
+def get_cross_account_boto3_client(...):
+
+def clear_cache(self):
+    self.get_cross_account_boto3_client.clear()
+```
+
+#### Version: v0.2.07
+
+### 2025-09-15 - Fix Auto-Refresh with st.fragment (v0.2.06)
+
+#### Problem Found
+**Auto-Refresh Not Working Properly**
+- **Issue**: Previous implementation only checked time when page loaded manually
+- **Result**: Groups were not actually refreshing every 30 seconds
+- **User Report**: "probé modificando algunos grupos y la página no refresca"
+
+#### Solution: Use st.fragment with run_every
+**1. Replaced Time-Based Checking**
+- Removed manual time checking approach
+- Eliminated threading-based solution
+
+**2. Implemented st.fragment Auto-Refresh**
+- Used `@st.fragment(run_every=30)` decorator
+- This is the official Streamlit way for auto-refresh
+- Automatically runs every 30 seconds without user interaction
+
+**3. Technical Implementation**
+```python
+@st.fragment(run_every=30)  # Auto-refresh every 30 seconds
+def _render_dashboard_content(self, current_env, show_aws_errors, refresh_interval):
+    # Only refresh on dashboard (not detail pages)
+    # Fetch fresh AWS data
+    # Re-render groups
+```
+
+#### Benefits
+- ✅ **Actually refreshes every 30 seconds** (fixed!)
+- ✅ **No threading warnings**
+- ✅ **Smooth visual updates** (no black screen)
+- ✅ **Official Streamlit approach**
+- ✅ **Respects page context** (doesn't refresh detail pages)
+
+#### Version: v0.2.06
+
+### 2025-09-15 - Implement Smooth Auto-Refresh (v0.2.05)
+
+#### Problem Solved
+**Annoying Full Page Refresh Every 30 Seconds**
+- **Issue**: Page was using `<meta http-equiv="refresh">` causing complete page reload
+- **User Experience**: Black screen flash and complete redraw every 30 seconds
+- **Impact**: Poor visual experience, lost scroll position, momentary disruption
+
+#### Solution Implemented: Smooth Auto-Refresh
+**1. Removed Meta Refresh Tag**
+- Eliminated `<meta http-equiv="refresh" content="{refresh_interval}">` 
+- Changed subtitle text from "se autorecarga" to "se actualiza"
+
+**2. Implemented Threading-Based Auto-Refresh**
+- Created `_setup_auto_refresh()` method in DashboardUI class
+- Uses background thread with `threading.Thread` 
+- Triggers `st.rerun()` instead of full page reload
+- Only refreshes when on dashboard page (not detail page)
+
+**3. Session State Management**
+- Tracks refresh state with `auto_refresh_active` flag
+- Prevents multiple concurrent refresh timers
+- Maintains refresh timing accuracy
+
+#### Technical Implementation Details
+```python
+def _setup_auto_refresh(self, refresh_interval: int):
+    # Background thread sleeps for refresh_interval seconds
+    # Then calls st.rerun() to update content
+    # Only if still on dashboard (not detail page)
+```
+
+#### Benefits Achieved
+- ✅ **No more black screen flash**
+- ✅ **Smooth content updates** 
+- ✅ **Preserved user interaction state**
+- ✅ **Column selection maintained**
+- ✅ **Better user experience**
+
+#### Version: v0.2.05
+
 ### 2025-09-15 - Fix Column Selection Persistence in Navigation (v0.2.04)
 
 #### Issue Fixed

@@ -15,7 +15,7 @@ class AWSService:
         """Initialize AWS Service."""
         self.role_arn = "arn:aws:iam::011528297340:role/RecolectorDeDashboard"
     
-    @st.cache_resource(ttl=900)
+    @st.cache_resource(ttl=60)  # 1 minute cache for good balance between performance and freshness
     def get_cross_account_boto3_client(_self, service_name: str):
         """
         Asume el rol de la cuenta cliente y retorna un cliente de boto3 para el servicio especificado.
@@ -43,6 +43,10 @@ class AWSService:
     def get_cross_account_boto3_client_cached(self, service_name: str):
         """Cached version of the client getter."""
         return self.get_cross_account_boto3_client(service_name)
+    
+    def clear_cache(self):
+        """Clear the AWS client cache to force fresh data fetch."""
+        self.get_cross_account_boto3_client.clear()
 
     def test_aws_connection(self):
         """
@@ -151,15 +155,19 @@ class AWSService:
                         f.write(f"[{time.ctime()}] Instance {instance_id} has {len(instance_alarms)} alarm states: {dict(instance_alarms)}\n")
                     
                     # Create instance data structure
+                    # Clean DashboardGroup value to remove extra whitespace
+                    dashboard_group = tags.get('DashboardGroup', 'Uncategorized').strip()
+                    
                     instance_data = {
                         'ID': instance_id,
                         'Name': tags.get('Name', instance_id),
                         'State': instance_state,
                         'Environment': tags.get('Environment', 'Unknown'),
-                        'DashboardGroup': tags.get('DashboardGroup', 'Uncategorized'),
+                        'DashboardGroup': dashboard_group,
                         'Alarms': instance_alarms,
                         'PrivateIP': instance.get('PrivateIpAddress', 'N/A')
                     }
+                    
                     
                     instances_data.append(instance_data)
             

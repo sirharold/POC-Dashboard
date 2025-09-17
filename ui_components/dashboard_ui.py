@@ -147,6 +147,8 @@ class DashboardUI:
             
             # Arrange groups in selected number of columns
             group_items = sorted(grouped_instances.items())
+            
+            
             num_columns = int(st.query_params.get('columns', 2))
             if num_columns not in [1, 2, 3, 4]:
                 num_columns = 2
@@ -192,10 +194,7 @@ class DashboardUI:
         current_env = ENVIRONMENTS[st.session_state.env_index]
         with nav_cols[1]:
             st.markdown(f"<h1 style='text-align: center; margin: 0; padding: 0;'>Dashboard {current_env}</h1>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align: center; font-size: 0.75em; color: grey; margin: 0; padding: 0;'>Esta página se autorecarga cada {refresh_interval} segundos {app_version}</p>", unsafe_allow_html=True)
-            
-            # Add meta refresh to auto-reload the page
-            st.markdown(f'<meta http-equiv="refresh" content="{refresh_interval}">', unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align: center; font-size: 0.75em; color: grey; margin: 0; padding: 0;'>Esta página se actualiza cada {refresh_interval} segundos {app_version}</p>", unsafe_allow_html=True)
         
         st.divider()
 
@@ -214,11 +213,11 @@ class DashboardUI:
                 st.markdown("<div style='padding-top: 0.3rem; font-weight: 600;'>Columnas:</div>", unsafe_allow_html=True)
             with select_col:
                 selected_columns = st.selectbox(
-                    label="",  # Empty label since we're showing it separately
+                    label="Columnas",  # Proper label for accessibility
                     options=[1, 2, 3, 4],
                     index=[1, 2, 3, 4].index(current_columns),
                     key="column_selector",
-                    label_visibility="collapsed"
+                    label_visibility="hidden"
                 )
                 # Update query params when selection changes
                 if selected_columns != current_columns:
@@ -228,7 +227,17 @@ class DashboardUI:
         with control_cols[1]:
             st.markdown(create_alarm_legend(), unsafe_allow_html=True)
 
-        # Fetch data directly in the main thread
+        # Use fragment with auto-refresh for smooth updates
+        self._render_dashboard_content(current_env, show_aws_errors, refresh_interval)
+
+    @st.fragment(run_every=30)  # Auto-refresh every 30 seconds
+    def _render_dashboard_content(self, current_env: str, show_aws_errors: bool, refresh_interval: int):
+        """Render dashboard content with auto-refresh using st.fragment"""
+        # Only refresh if we're still on the dashboard (not detail page)
+        if 'poc_vm_id' in st.query_params:
+            return  # Don't refresh on detail pages
+        
+        # Fetch data
         connection_status_msg, connection_error_details = self.aws_service.test_aws_connection()
         st.session_state.data_cache["connection_status"] = connection_status_msg
         st.session_state.data_cache["connection_error"] = connection_error_details
