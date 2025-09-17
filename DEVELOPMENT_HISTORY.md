@@ -16,6 +16,36 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 
 ## Registro de Desarrollo
 
+### 2025-09-15 - Back Link Position and Column Control Feature
+
+#### Changes Made
+
+**1. Adjusted Back to Dashboard Link Position**
+- Added `margin-top: 1rem` to the back link in detail_ui.py
+- Provides better visual spacing from the top of the page
+
+**2. Added Column Control Feature**
+- **New selectbox control**: Allows users to choose between 1-4 columns for group distribution
+- **Session persistence**: Column selection stored in `st.session_state.num_columns`
+- **Location**: Placed next to alarm legend for easy access
+- **Default**: 2 columns (maintains backward compatibility)
+
+**3. Updated Group Distribution Logic**
+- Modified `build_and_display_dashboard` method to support dynamic column counts
+- Single column: Groups displayed vertically
+- Multi-column: Groups distributed evenly across selected number of columns
+- Uses modulo operator for even distribution
+
+**4. Added Selectbox Styling**
+- Custom CSS for selectbox appearance
+- Matches dark theme with semi-transparent background
+- Hover effects for better interactivity
+
+#### Technical Implementation
+- Session state key: `num_columns` (persists during session)
+- Column options: [1, 2, 3, 4]
+- Layout: Uses `st.columns()` with dynamic count
+
 ### 2025-09-15 - Fix Header Visibility Issues
 
 #### Problem

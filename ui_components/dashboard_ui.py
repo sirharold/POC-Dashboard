@@ -143,16 +143,19 @@ class DashboardUI:
             for instance in filtered_instances:
                 grouped_instances[instance.get('DashboardGroup') or 'Uncategorized'].append(instance)
             
-            # Arrange groups in 2 columns
+            # Arrange groups in selected number of columns
             group_items = sorted(grouped_instances.items())
-            col1, col2 = st.columns(2)
+            num_columns = st.session_state.get('num_columns', 2)
             
-            for idx, (group_name, instance_list) in enumerate(group_items):
-                if idx % 2 == 0:
-                    with col1:
-                        self.create_group_container(group_name, instance_list)
-                else:
-                    with col2:
+            if num_columns == 1:
+                # Single column layout
+                for group_name, instance_list in group_items:
+                    self.create_group_container(group_name, instance_list)
+            else:
+                # Multi-column layout
+                columns = st.columns(num_columns)
+                for idx, (group_name, instance_list) in enumerate(group_items):
+                    with columns[idx % num_columns]:
                         self.create_group_container(group_name, instance_list)
 
     def display_dashboard_page(self, refresh_interval: int, app_version: str, show_aws_errors: bool):
@@ -192,8 +195,22 @@ class DashboardUI:
         
         st.divider()
 
-        # Add alarm legend
-        st.markdown(create_alarm_legend(), unsafe_allow_html=True)
+        # Add column control and alarm legend
+        control_cols = st.columns([1, 3])
+        with control_cols[0]:
+            # Initialize column count in session state
+            if 'num_columns' not in st.session_state:
+                st.session_state.num_columns = 2
+            
+            st.session_state.num_columns = st.selectbox(
+                "Columnas:",
+                options=[1, 2, 3, 4],
+                index=[1, 2, 3, 4].index(st.session_state.num_columns),
+                key="column_selector"
+            )
+        
+        with control_cols[1]:
+            st.markdown(create_alarm_legend(), unsafe_allow_html=True)
 
         # Fetch data directly in the main thread
         connection_status_msg, connection_error_details = self.aws_service.test_aws_connection()
