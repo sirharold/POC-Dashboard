@@ -12,12 +12,12 @@
 
 /* Reduce top padding for the main content area */
 .main > div {
-    padding-top: 1rem !important;
+    padding-top: 2.5rem !important;
 }
 
 /* Reduce spacing in the main block container */
 .block-container {
-    padding-top: 1rem !important;
+    padding-top: 2rem !important;
     padding-bottom: 1rem !important;
 }
 
@@ -41,8 +41,8 @@
 
 /* Reduce spacing for columns container in header area */
 [data-testid="stHorizontalBlock"]:has([data-testid="column"]:has(.stButton)) {
-    margin-top: 0 !important;
-    margin-bottom: 0.2rem !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
     gap: 0.5rem !important;
 }
 
@@ -69,12 +69,12 @@ h1 {
     font-size: 1.8rem !important;
     font-weight: 700 !important;
     text-align: center;
-    margin-bottom: 0.2rem !important;
-    margin-top: 0 !important;
+    margin-bottom: 0.3rem !important;
+    margin-top: 0.5rem !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
     letter-spacing: -1px;
-    line-height: 1.1 !important;
+    line-height: 1.2 !important;
 }
 
 /* Reduce h2 sizes for detail page sections */

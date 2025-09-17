@@ -16,6 +16,28 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 
 ## Registro de Desarrollo
 
+### 2025-09-15 - Fix Header Visibility Issues
+
+#### Problem
+After aggressive space reduction, headers and navigation elements were getting cut off at the top of the page.
+
+#### Solution
+- **Adjusted top padding**:
+  - Main content area: increased to 2.5rem
+  - Block container: increased to 2rem
+  
+- **Restored h1 margins**:
+  - Top margin: 0.5rem (to ensure visibility)
+  - Bottom margin: 0.3rem
+  - Line height: 1.2
+  
+- **Navigation elements spacing**:
+  - Columns container: 0.5rem top/bottom margins
+  - Back link: added margin-bottom: 0.5rem
+  
+#### Result
+All header elements are now visible while still maintaining reduced spacing compared to the original design.
+
 ### 2025-09-15 - Further Header Space Optimization
 
 #### User Feedback

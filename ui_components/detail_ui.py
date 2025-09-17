@@ -148,7 +148,7 @@ class DetailUI:
     def display_detail_page(self, instance_id: str):
         """Display detail page. Exact same logic as original function."""
         details = self.aws_service.get_instance_details(instance_id)
-        st.markdown("<a href='/' target='_self' style='text-decoration: none;'>← Volver al Dashboard</a>", unsafe_allow_html=True)
+        st.markdown("<a href='/' target='_self' style='text-decoration: none; display: inline-block; margin-bottom: 0.5rem;'>← Volver al Dashboard</a>", unsafe_allow_html=True)
         if not details:
             st.error(f"No se pudieron obtener los detalles para la instancia con ID: {instance_id}")
             return
