@@ -146,7 +146,7 @@ class AWSService:
                                 f.write(f"[{time.ctime()}] Alarm: {alarm_name}, State: {alarm_state}, Instance: {instance_id}\n")
                             
                             # Check if this is a preventive alarm
-                            if alarm_state == 'ALARM' and ('ALERTA' in alarm_name.upper() or 'PROACTIVA' in alarm_name.upper()):
+                            if alarm_state == 'ALARM' and ('ALERTA' in alarm_name.upper() or 'PROACTIVA' in alarm_name.upper() or 'PREVENTIVA' in alarm_name.upper()):
                                 instance_alarms['PREVENTIVE'] += 1
                             else:
                                 instance_alarms[alarm_state] += 1

@@ -174,7 +174,7 @@ class DetailUI:
                     alarm_name = alarm.get('AlarmName', '')
                     
                     # Check if this is a preventive alarm
-                    if state == "ALARM" and ('ALERTA' in alarm_name.upper() or 'PROACTIVA' in alarm_name.upper()):
+                    if state == "ALARM" and ('ALERTA' in alarm_name.upper() or 'PROACTIVA' in alarm_name.upper() or 'PREVENTIVA' in alarm_name.upper()):
                         color = "yellow"
                     else:
                         color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"

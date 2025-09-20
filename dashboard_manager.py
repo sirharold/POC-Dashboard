@@ -32,12 +32,27 @@ class DashboardManager:
     
     def run(self):
         """Main entry point that routes to appropriate page."""
-        # Set page config (same as original)
+        # Set page config with CloudFront compatibility headers
         st.set_page_config(
             page_title="Dashboard EPMAPS",
             page_icon="☁️",
             layout="wide",
         )
+        
+        # Add CloudFront compatibility headers
+        if 'cloudfront_headers_set' not in st.session_state:
+            # Force disable XSRF protection for CloudFront
+            st.markdown("""
+                <script>
+                    window.streamlitConfig = {
+                        server: {
+                            enableXsrfProtection: false,
+                            enableCORS: false
+                        }
+                    };
+                </script>
+            """, unsafe_allow_html=True)
+            st.session_state.cloudfront_headers_set = True
         
         # Load CSS (same as original)
         load_css()

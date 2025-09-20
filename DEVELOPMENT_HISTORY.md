@@ -16,6 +16,72 @@ Este archivo documenta todas las instrucciones, cambios y evolución del proyect
 
 ## Registro de Desarrollo
 
+### 2025-09-17 - Conversation Archive Summary
+
+#### Major Accomplishments in This Session
+This conversation session successfully addressed multiple critical issues and implemented significant improvements:
+
+1. **Completed SAPService Integration** (v0.2.02-v0.2.03)
+   - Added missing `get_available_log_content` method
+   - Fixed header visibility issues
+   - Implemented smooth auto-refresh mechanism
+
+2. **Column Control Feature** (v0.2.04-v0.2.05) 
+   - Added dynamic column selection (1-4 columns)
+   - Implemented session persistence via query parameters
+   - Fixed navigation persistence issues
+
+3. **Auto-Refresh Optimization** (v0.2.06)
+   - Replaced problematic threading approach with `st.fragment`
+   - Eliminated black screen refresh experience
+   - Achieved smooth 30-second updates
+
+4. **Cache and Grouping Issues Resolution** (v0.2.07-v0.2.08)
+   - Fixed AWS tag change visibility problems
+   - Resolved duplicate group issue (whitespace in tags)
+   - Implemented automatic tag cleaning with `.strip()`
+
+#### Next Potential Enhancements Discussed
+- Additional server card indicators for technical diagnostics
+- Performance metrics display (CPU, Memory, Disk)
+- Uptime and connectivity status indicators
+
+#### Current Status: v0.2.10
+All major issues resolved, smooth auto-refresh working, column control functional, and tag grouping fixed.
+
+### 2025-09-18 - Add PREVENTIVA to Yellow Alarms and CloudFront Support (v0.2.10)
+
+#### Changes Made
+**1. Extended Yellow Alarm Detection**
+- Added "PREVENTIVA" to the list of keywords that trigger yellow alarms
+- Now alarms are yellow when state is ALARM and name contains:
+  - "ALERTA"
+  - "PROACTIVA" 
+  - "PREVENTIVA" (new)
+- Updated in:
+  - `services/aws_service.py:149`
+  - `ui_components/detail_ui.py:177`
+
+**2. CloudFront Deployment Support (v0.2.09)**
+- Created `ScriptsUtil/create_cloudfront_distribution.sh` for easy CloudFront deployment
+- Added CloudFront compatibility headers in `dashboard_manager.py`
+- Documented deployment process in `docs/cloudfront_deployment.md`
+- Application now works correctly behind CloudFront with WebSocket fallbacks
+
+#### Technical Details
+```python
+# Yellow alarm detection now includes PREVENTIVA
+if alarm_state == 'ALARM' and ('ALERTA' in alarm_name.upper() or 
+                               'PROACTIVA' in alarm_name.upper() or 
+                               'PREVENTIVA' in alarm_name.upper()):
+    instance_alarms['PREVENTIVE'] += 1
+```
+
+#### Result
+- ✅ Alarms with "PREVENTIVA" in name now show as yellow
+- ✅ Application ready for CloudFront deployment
+- ✅ Port 80 support confirmed via Fargate ALB
+
 ### 2025-09-15 - Fix Duplicate Groups Issue (v0.2.08)
 
 #### Problem Identified and Solved
