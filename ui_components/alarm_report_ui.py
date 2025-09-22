@@ -61,7 +61,7 @@ class AlarmReportUI:
         if report_data:
             df = pd.DataFrame(report_data)
 
-            # --- NEW: Add Theoretical Alarms Column ---
+            # Add Theoretical Alarms Column
             df['total_alarms_theoretical'] = 2 + 1 + (df['disk_count'] * 3) + 1
             
             # Define column order and names
@@ -70,7 +70,7 @@ class AlarmReportUI:
                 'cpu_alarms', 'ram_alarms', 'disk_alarms', 'disk_count',
                 'ping_alarms', 'other_alarms',
                 'insufficient_data', 'yellow_alarms', 'red_alarms',
-                'total_alarms_theoretical', 'total_alarms' # New and renamed columns
+                'total_alarms_theoretical', 'total_alarms'
             ]
             
             # Rename columns to Spanish
@@ -87,13 +87,16 @@ class AlarmReportUI:
                 'insufficient_data': 'Datos Insuficientes',
                 'yellow_alarms': 'Alarmas Amarillas',
                 'red_alarms': 'Alarmas Rojas',
-                'total_alarms_theoretical': 'Total Alarmas Teóricas',
-                'total_alarms': 'Total Alarmas Actuales' # Renamed
+                'total_alarms_theoretical': 'T. A. Teóricas',
+                'total_alarms': 'T. A. Actuales'
             }
             
             # Reorder and rename columns
             df = df[column_order]
             df.columns = [column_names[col] for col in column_order]
+
+            # Sort by instance name by default
+            df = df.sort_values(by='Nombre Instancia').reset_index(drop=True)
             
             # Display summary stats
             st.markdown("### 📈 Resumen")
@@ -105,7 +108,7 @@ class AlarmReportUI:
             with col3:
                 st.metric("Total Alarmas Amarillas", df['Alarmas Amarillas'].sum())
             with col4:
-                st.metric("Total Alarmas Actuales", df['Total Alarmas Actuales'].sum())
+                st.metric("T. A. Actuales", df['T. A. Actuales'].sum())
 
             st.info("Se consideran alarmas amarillas las alarmas proactivas y de alerta. Las alarmas de disco deben ser 3x la cantidad de discos. La cantidad de alertas de CPU debieran ser dos")
             
@@ -226,7 +229,7 @@ class AlarmReportUI:
                 return -1
 
         # 2. Cell-specific validation highlighting
-        border_style = ' outline: 2px solid red;'
+        border_style = ' box-shadow: inset 0 0 0 2px red;'
 
         # CPU validation
         cpu_idx = get_col_index('Alarmas CPU')

@@ -5,6 +5,54 @@ This document tracks the complete development history of the Dashboard EPMAPS PO
 
 ## Detailed Development Log
 
+### 2025-09-22 - Add Sorting, New Validations, and UI Refinements (v0.2.18)
+
+#### Problem Identified
+User requested final refinements for the alarm report:
+1.  **Sorting**: The table should be sorted by instance name by default.
+2.  **Highlighting**: The red border highlight for validation errors was still not visible.
+3.  **Column Width**: "Total" columns were too wide and needed shorter titles.
+
+#### Solution Applied
+**1. Default Sorting**
+- The DataFrame is now explicitly sorted by "Nombre Instancia" before being displayed, ensuring a consistent default order.
+
+**2. Robust Highlighting**
+- The CSS property for highlighting was changed from `outline` to `box-shadow: inset 0 0 0 2px red;`. This is a more robust technique that is less likely to be overridden by other styles, ensuring the red highlight for validation errors is always visible.
+
+**3. Abbreviated Column Titles**
+- As requested, the wide column titles were abbreviated to save space:
+  - `Total Alarmas Teóricas` is now `T. A. Teóricas`.
+  - `Total Alarmas Actuales` is now `T. A. Actuales`.
+
+#### Technical Fix
+```python
+# ui_components/alarm_report_ui.py
+
+# Sorting
+df = df.sort_values(by='Nombre Instancia').reset_index(drop=True)
+
+# New Column Names
+column_names = {
+    # ...
+    'total_alarms_theoretical': 'T. A. Teóricas',
+    'total_alarms': 'T. A. Actuales'
+}
+
+# New Styling Logic
+def _apply_validation_styles(self, row):
+    # ...
+    border_style = ' box-shadow: inset 0 0 0 2px red;'
+    # ...
+```
+
+#### Result
+- ✅ The report table now loads pre-sorted by instance name.
+- ✅ Validation errors are now reliably highlighted with a red inner border.
+- ✅ Column widths are more compact due to the abbreviated titles.
+
+#### Version: v0.2.18
+
 ### 2025-09-22 - Add New Validation Rules and Theoretical Alarms Column (v0.2.17)
 
 #### Problem Identified
@@ -27,7 +75,7 @@ User required more extensive validation rules for the alarm report and a new col
 - The CSS `outline` property is now used for highlighting to ensure visibility over other styles.
 
 #### Technical Fix
-```python
+'''python
 # ui_components/alarm_report_ui.py
 
 # Add new column to DataFrame
@@ -49,7 +97,7 @@ def _apply_validation_styles(self, row):
 
     # ... (and so on for Disk and Ping)
     return styles
-```
+'''
 
 #### Result
 - ✅ The report now includes a "Total Alarmas Teóricas" column for easy comparison.
