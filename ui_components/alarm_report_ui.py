@@ -65,7 +65,7 @@ class AlarmReportUI:
             column_order = [
                 'instance_name', 'private_ip', 'instance_id',
                 'cpu_alarms', 'ram_alarms', 'disk_alarms', 'disk_count',
-                'ping_alarms', 'availability_alarms', 'other_alarms',
+                'ping_alarms', 'other_alarms',
                 'insufficient_data', 'yellow_alarms', 'red_alarms', 'total_alarms'
             ]
             
@@ -79,7 +79,6 @@ class AlarmReportUI:
                 'disk_alarms': 'Alarmas Disco',
                 'disk_count': 'Cant. Discos',
                 'ping_alarms': 'Alarmas Ping',
-                'availability_alarms': 'Alarmas Disponibilidad',
                 'other_alarms': 'Otras Alarmas',
                 'insufficient_data': 'Datos Insuficientes',
                 'yellow_alarms': 'Alarmas Amarillas',
@@ -102,6 +101,8 @@ class AlarmReportUI:
                 st.metric("Total Alarmas Amarillas", df['Alarmas Amarillas'].sum())
             with col4:
                 st.metric("Total Alarmas", df['Total Alarmas'].sum())
+
+            st.info("Se consideran alarmas amarillas las alarmas proactivas y de alerta.")
             
             st.markdown("---")
             
@@ -146,7 +147,6 @@ class AlarmReportUI:
                 'ram_alarms': 0,
                 'disk_alarms': 0,
                 'ping_alarms': 0,
-                'availability_alarms': 0,
                 'other_alarms': 0,
                 'insufficient_data': 0,
                 'yellow_alarms': 0,
@@ -168,8 +168,6 @@ class AlarmReportUI:
                     alarm_counts['disk_alarms'] += 1
                 elif any(kw in alarm_name for kw in ['PING', 'ICMP']):
                     alarm_counts['ping_alarms'] += 1
-                elif any(kw in alarm_name for kw in ['AVAILABILITY', 'DISPONIBILIDAD', 'AVAILABLE']):
-                    alarm_counts['availability_alarms'] += 1
                 else:
                     alarm_counts['other_alarms'] += 1
                 
@@ -202,15 +200,15 @@ class AlarmReportUI:
         return any(kw in alarm_name.upper() for kw in disk_keywords)
     
     def _highlight_rows(self, row):
-        """Apply highlighting to rows based on alarm counts."""
-        styles = [''] * len(row)
+        """Apply highlighting to rows based on alarm counts for both light and dark themes."""
+        style = ''
         
         # Highlight based on red alarms
         if row['Alarmas Rojas'] > 0:
-            return ['background-color: #ffcccc'] * len(row)
+            style = 'background-color: #ffcccc; color: black;'
         elif row['Alarmas Amarillas'] > 0:
-            return ['background-color: #fff4cc'] * len(row)
+            style = 'background-color: #fff4cc; color: black;'
         elif row['Datos Insuficientes'] > 0:
-            return ['background-color: #e6e6e6'] * len(row)
+            style = 'background-color: #e6e6e6; color: black;'
         
-        return styles
+        return [style] * len(row)

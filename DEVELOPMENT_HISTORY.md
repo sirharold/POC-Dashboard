@@ -5,6 +5,56 @@ This document tracks the complete development history of the Dashboard EPMAPS PO
 
 ## Detailed Development Log
 
+### 2025-09-22 - Alarm Report UI & Categorization Update (v0.2.13)
+
+#### Problem Identified
+User reported several issues with the Alarm Report page:
+1.  **Miscategorization**: Certain alarms (e.g., `SAP Process Running`) were not appearing in the "Otras Alarmas" category as expected.
+2.  **Theme Incompatibility**: The table's row highlighting used light backgrounds, which made the default white text of dark themes unreadable.
+3.  **Unnecessary Column**: The "Alarmas Disponibilidad" column was not needed.
+4.  **Lack of Clarity**: The definition of a "yellow alarm" was not explicit on the page.
+
+#### Solution Applied
+**1. Simplified Alarm Categorization**
+- Removed the "Alarmas Disponibilidad" category entirely from the report logic in `ui_components/alarm_report_ui.py`.
+- This simplifies the classification and ensures that any alarm not matching CPU, RAM, Disk, or Ping keywords correctly falls into "Otras Alarmas".
+
+**2. Theme-Aware Table Styling**
+- Modified the `_highlight_rows` function to be compatible with both light and dark themes.
+- The style now explicitly sets `color: black;` on highlighted rows, ensuring readability regardless of the user's theme.
+
+**3. Added Informational Note**
+- An `st.info` box was added below the summary metrics to clearly state: "Se consideran alarmas amarillas las alarmas proactivas y de alerta."
+
+#### Technical Fix
+```python
+# ui_components/alarm_report_ui.py
+
+# Removed 'availability_alarms' from column_order and column_names
+# Removed the elif block for 'AVAILABILITY' in _process_alarm_data
+
+# Added info box
+st.info("Se consideran alarmas amarillas las alarmas proactivas y de alerta.")
+
+# Updated styling function for theme compatibility
+def _highlight_rows(self, row):
+    style = ''
+    if row['Alarmas Rojas'] > 0:
+        style = 'background-color: #ffcccc; color: black;'
+    elif row['Alarmas Amarillas'] > 0:
+        style = 'background-color: #fff4cc; color: black;'
+    # ...
+    return [style] * len(row)
+```
+
+#### Result
+- ✅ Alarms are now categorized more accurately, with non-specific ones correctly placed in "Otras".
+- ✅ The report table is now clearly readable on both light and dark themes.
+- ✅ The UI is cleaner after removing the unnecessary column.
+- ✅ The page provides better context with the new informational note.
+
+#### Version: v0.2.13
+
 ### 2025-09-22 - Use Real Data for Disk Count in Alarm Report (v0.2.12)
 
 #### Problem Identified
@@ -25,7 +75,7 @@ This document tracks the complete development history of the Dashboard EPMAPS PO
 - The report now reads the `DiskCount` value directly from the data provided by `AWSService`.
 
 #### Technical Fix
-```python
+'''python
 # services/aws_service.py - In get_aws_data()
 # Get the actual number of attached block devices (disks)
 disk_count = len(instance.get('BlockDeviceMappings', []))
@@ -34,7 +84,7 @@ instance_data['DiskCount'] = disk_count
 # ui_components/alarm_report_ui.py - In _process_alarm_data()
 # Get the real disk count from the instance data
 disk_count = instance.get('DiskCount', 0)
-```
+'''
 
 #### Result
 - ✅ The "Cant. Discos" column in the alarm report now shows the correct number of disks as reported by the EC2 API.
