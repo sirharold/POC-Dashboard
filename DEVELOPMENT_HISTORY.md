@@ -5,7 +5,45 @@ This document tracks the complete development history of the Dashboard EPMAPS PO
 
 ## Detailed Development Log
 
-### 2025-09-22 - Add New Summary Metrics to Report (v0.2.20)
+### 2025-09-22 - Add Icon and Tooltip for Validation Errors (v0.2.21)
+
+#### Problem Identified
+Previous attempts to highlight validation errors using CSS borders or outlines were unreliable. User suggested a better approach.
+
+#### Solution Applied
+- Implemented the user's suggestion to use an icon (`⚠️`) next to the number in cells that fail validation.
+- The implementation in `ui_components/alarm_report_ui.py` now transforms the data before display:
+  1. A `display_df` is created where failing values are converted to strings like `"3 ⚠️"`.
+  2. A separate `tooltips_df` is created to hold the error messages.
+  3. When a validation rule fails for a cell (e.g., CPU alarms != 2), the display value is updated with the icon, and a descriptive tooltip (e.g., "Se esperaban 2 alarmas de CPU, pero se encontraron 1.") is added for that cell.
+- This approach is more robust than CSS styling and provides more context to the user.
+
+#### Technical Fix
+```python
+# ui_components/alarm_report_ui.py
+
+# Create a display copy and a tooltip dataframe
+display_df = df.copy().astype(str)
+tooltips_df = pd.DataFrame('', index=df.index, columns=df.columns)
+
+# Iterate and apply rules
+for i, row in df.iterrows():
+    if row['Alarmas CPU'] != 2:
+        display_df.at[i, 'Alarmas CPU'] = f"{row['Alarmas CPU']} ⚠️"
+        tooltips_df.at[i, 'Alarmas CPU'] = f"Se esperaban 2 alarmas de CPU, pero se encontraron {row['Alarmas CPU']}."
+    # ... other rules
+
+# Apply tooltips to the styled dataframe
+styled_df = display_df.style.apply(...).set_tooltips(tooltips_df)
+```
+
+#### Result
+- ✅ Cells with validation errors now reliably show a `⚠️` icon.
+- ✅ Hovering over a cell with an error icon displays a tooltip explaining the specific error.
+
+#### Version: v0.2.21
+
+### 2025-09-22 - Add New Summary Metrics to Report (v0.2.21)
 
 #### Problem Identified
 User requested to add more metrics to the summary section of the alarm report page for a better overview.
@@ -18,7 +56,7 @@ User requested to add more metrics to the summary section of the alarm report pa
 - The metrics were reordered for better logical flow.
 
 #### Technical Fix
-```python
+'''python
 # ui_components/alarm_report_ui.py
 
 col1, col2, col3, col4, col5, col6 = st.columns(6)
@@ -34,7 +72,7 @@ with col5:
     st.metric("Alarmas Amarillas", f"{df['Alarmas Amarillas'].sum():.0f}")
 with col6:
     st.metric("Datos Insuficientes", f"{df['Datos Insuficientes'].sum():.0f}")
-```
+'''
 
 #### Result
 - ✅ The summary section now provides a more comprehensive overview with 6 key metrics.

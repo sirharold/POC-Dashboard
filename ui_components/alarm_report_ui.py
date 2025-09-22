@@ -97,7 +97,34 @@ class AlarmReportUI:
 
             # Sort by instance name by default
             df = df.sort_values(by='Nombre Instancia').reset_index(drop=True)
-            
+
+            # --- Data Transformation for Display --- #
+            # Create a copy for display purposes and another for tooltips
+            display_df = df.copy().astype(str)
+            tooltips_df = pd.DataFrame('', index=df.index, columns=df.columns)
+
+            # Apply validation rules and generate tooltips/icons
+            for i, row in df.iterrows():
+                # CPU
+                if row['Alarmas CPU'] != 2:
+                    display_df.at[i, 'Alarmas CPU'] = f"{row['Alarmas CPU']} ⚠️"
+                    tooltips_df.at[i, 'Alarmas CPU'] = f"Se esperaban 2 alarmas de CPU, pero se encontraron {row['Alarmas CPU']}."
+                # RAM
+                if row['Alarmas RAM'] == 0:
+                    display_df.at[i, 'Alarmas RAM'] = f"{row['Alarmas RAM']} ⚠️"
+                    tooltips_df.at[i, 'Alarmas RAM'] = "Se esperaba 1 alarma de RAM, pero se encontraron 0."
+                # Disk
+                expected_disk_alarms = row['Cant. Discos'] * 3
+                if row['Cant. Discos'] > 0 and row['Alarmas Disco'] != expected_disk_alarms:
+                    display_df.at[i, 'Alarmas Disco'] = f"{row['Alarmas Disco']} ⚠️"
+                    tooltips_df.at[i, 'Alarmas Disco'] = f"Se esperaban {expected_disk_alarms} alarmas de disco ({row['Cant. Discos']} * 3), pero se encontraron {row['Alarmas Disco']}."
+                # Ping
+                if row['Alarmas Ping'] == 0:
+                    display_df.at[i, 'Alarmas Ping'] = f"{row['Alarmas Ping']} ⚠️"
+                    tooltips_df.at[i, 'Alarmas Ping'] = "Se esperaba 1 alarma de Ping, pero se encontraron 0."
+
+            # --- End of Data Transformation ---
+
             # Display summary stats
             st.markdown("### 📈 Resumen")
             col1, col2, col3, col4, col5, col6 = st.columns(6)
@@ -122,7 +149,7 @@ class AlarmReportUI:
             st.markdown("### 📋 Detalle por Instancia")
             
             # Apply custom styling to the dataframe
-            styled_df = df.style.apply(self._apply_validation_styles, axis=1)
+            styled_df = display_df.style.apply(self._apply_row_highlight_styles, axis=1).set_tooltips(tooltips_df)
             st.dataframe(
                 styled_df,
                 use_container_width=True,
@@ -211,48 +238,15 @@ class AlarmReportUI:
         disk_keywords = ['DISK', 'DISCO', 'STORAGE', 'FILESYSTEM', 'VOLUME']
         return any(kw in alarm_name.upper() for kw in disk_keywords)
     
-    def _apply_validation_styles(self, row):
-        """Applies all conditional styles to the report row for validation."""
+    def _apply_row_highlight_styles(self, row):
+        """Applies row highlighting based on alarm status."""
         
-        # 1. Set base style for row highlighting
-        base_style = ''
+        style = ''
         if row['Alarmas Rojas'] > 0:
-            base_style = 'background-color: #ffcccc; color: black;'
+            style = 'background-color: #ffcccc; color: black;'
         elif row['Alarmas Amarillas'] > 0:
-            base_style = 'background-color: #fff4cc; color: black;'
+            style = 'background-color: #fff4cc; color: black;'
         elif row['Datos Insuficientes'] > 0:
-            base_style = 'background-color: #e6e6e6; color: black;'
+            style = 'background-color: #e6e6e6; color: black;'
         
-        styles = [base_style] * len(row)
-        
-        # Helper to find index safely
-        def get_col_index(col_name):
-            try:
-                return list(row.index).index(col_name)
-            except ValueError:
-                return -1
-
-        # 2. Cell-specific validation highlighting
-        border_style = ' box-shadow: inset 0 0 0 2px red;'
-
-        # CPU validation
-        cpu_idx = get_col_index('Alarmas CPU')
-        if cpu_idx != -1 and row['Alarmas CPU'] != 2:
-            styles[cpu_idx] += border_style
-
-        # RAM validation
-        ram_idx = get_col_index('Alarmas RAM')
-        if ram_idx != -1 and row['Alarmas RAM'] == 0:
-            styles[ram_idx] += border_style
-
-        # Disk validation
-        disk_idx = get_col_index('Alarmas Disco')
-        if disk_idx != -1 and row['Cant. Discos'] > 0 and row['Alarmas Disco'] != (row['Cant. Discos'] * 3):
-            styles[disk_idx] += border_style
-
-        # Ping validation
-        ping_idx = get_col_index('Alarmas Ping')
-        if ping_idx != -1 and row['Alarmas Ping'] == 0:
-            styles[ping_idx] += border_style
-            
-        return styles
+        return [style] * len(row)
