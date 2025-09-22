@@ -137,15 +137,8 @@ class AlarmReportUI:
             instance_id = instance['ID']
             alarms = self.aws_service.get_alarms_for_instance(instance_id)
             
-            # Count disks from alarms
-            disk_alarms = [a for a in alarms if self._is_disk_alarm(a['AlarmName'])]
-            disk_numbers = set()
-            for alarm in disk_alarms:
-                # Extract disk number from alarm name (e.g., "DISK_0_USAGE" -> 0)
-                match = re.search(r'(?:DISK|DISCO)[\s_]*(\d+)', alarm['AlarmName'], re.IGNORECASE)
-                if match:
-                    disk_numbers.add(match.group(1))
-            disk_count = len(disk_numbers) if disk_numbers else 1  # At least 1 disk
+            # Get the real disk count from the instance data
+            disk_count = instance.get('DiskCount', 0)  # Default to 0 if not found
             
             # Initialize counters
             alarm_counts = {

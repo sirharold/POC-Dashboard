@@ -5,6 +5,44 @@ This document tracks the complete development history of the Dashboard EPMAPS PO
 
 ## Detailed Development Log
 
+### 2025-09-22 - Use Real Data for Disk Count in Alarm Report (v0.2.12)
+
+#### Problem Identified
+**Alarm Report Showing Incorrect Disk Count**
+- **Issue**: The "Cant. Discos" column in the alarm report showed an inaccurate number of disks for each instance.
+- **Root Cause**: The disk count was not a real data point from AWS. It was being "inferred" by parsing alarm names and looking for numbered patterns like `DISK_0`, which is unreliable.
+- **User Request**: Display real data from AWS, not inferred or "guessed" data.
+
+#### Solution Applied
+**1. Fetch Real Disk Count from AWS**
+- Modified `services/aws_service.py` to get the actual number of attached block devices for each EC2 instance.
+- The `get_aws_data` method now inspects the `BlockDeviceMappings` attribute from the `describe_instances` API call.
+- The true disk count is now stored in a new `DiskCount` field in the instance data structure.
+
+**2. Update Alarm Report to Use Real Data**
+- Modified `ui_components/alarm_report_ui.py`.
+- The logic for inferring disk count from alarm names was completely removed.
+- The report now reads the `DiskCount` value directly from the data provided by `AWSService`.
+
+#### Technical Fix
+```python
+# services/aws_service.py - In get_aws_data()
+# Get the actual number of attached block devices (disks)
+disk_count = len(instance.get('BlockDeviceMappings', []))
+instance_data['DiskCount'] = disk_count
+
+# ui_components/alarm_report_ui.py - In _process_alarm_data()
+# Get the real disk count from the instance data
+disk_count = instance.get('DiskCount', 0)
+```
+
+#### Result
+- ✅ The "Cant. Discos" column in the alarm report now shows the correct number of disks as reported by the EC2 API.
+- ✅ The application no longer relies on fragile name-based inference for this metric.
+- ✅ Alarm categorization (CPU, RAM, etc.) still relies on keyword matching in alarm names, which is a standard practice for this kind of classification.
+
+#### Version: v0.2.12
+
 ### 2025-09-03 - Initial POC Dashboard Creation
 - Created basic Streamlit dashboard for monitoring VMs
 - Integrated with AWS CloudWatch for real-time metrics
@@ -62,10 +100,10 @@ This document tracks the complete development history of the Dashboard EPMAPS PO
 - Now tag changes reflect within 1 minute
 
 #### Technical Change
-```python
+'''python
 @st.cache_resource(ttl=60)  # Reduced from 900 to 60 seconds
 def get_cross_account_boto3_client_cached(service, role_arn=None):
-```
+'''
 
 #### Result
 - ✅ Tag changes now visible within 1 minute
@@ -97,10 +135,10 @@ def get_cross_account_boto3_client_cached(service, role_arn=None):
 - Restored original control layout
 
 #### Technical Fix
-```python
+'''python
 # Clean DashboardGroup value to remove extra whitespace
 dashboard_group = tags.get('DashboardGroup', 'Uncategorized').strip()
-```
+'''
 
 #### Result
 - ✅ All three "Almacenamiento" servers now appear in single group
@@ -155,13 +193,13 @@ All major issues resolved, smooth auto-refresh working, column control functiona
 - Application now works correctly behind CloudFront with WebSocket fallbacks
 
 #### Technical Details
-```python
+'''python
 # Yellow alarm detection now includes PREVENTIVA
 if alarm_state == 'ALARM' and ('ALERTA' in alarm_name.upper() or 
                                'PROACTIVA' in alarm_name.upper() or 
                                'PREVENTIVA' in alarm_name.upper()):
     instance_alarms['PREVENTIVE'] += 1
-```
+'''
 
 #### Result
 - ✅ Alarms with "PREVENTIVA" in name now show as yellow
@@ -220,7 +258,7 @@ if alarm_state == 'ALARM' and ('ALERTA' in alarm_name.upper() or
 ## Technical Architecture
 
 ### Current Structure
-```
+'''
 .
 ├── app.py                    # Main entry point (uses DashboardManager)
 ├── dashboard_manager.py      # Central coordinator
@@ -234,7 +272,7 @@ if alarm_state == 'ALARM' and ('ALERTA' in alarm_name.upper() or
 ├── utils/
 │   └── helpers.py           # Shared utilities
 └── components/              # Legacy components (preserved)
-```
+'''
 
 ### Key Design Decisions
 1. **Modular Architecture**: Separated concerns into service and UI layers

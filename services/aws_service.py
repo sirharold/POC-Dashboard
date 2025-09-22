@@ -158,6 +158,9 @@ class AWSService:
                     # Clean DashboardGroup value to remove extra whitespace
                     dashboard_group = tags.get('DashboardGroup', 'Uncategorized').strip()
                     
+                    # Get the actual number of attached block devices (disks)
+                    disk_count = len(instance.get('BlockDeviceMappings', []))
+
                     instance_data = {
                         'ID': instance_id,
                         'Name': tags.get('Name', instance_id),
@@ -165,7 +168,8 @@ class AWSService:
                         'Environment': tags.get('Environment', 'Unknown'),
                         'DashboardGroup': dashboard_group,
                         'Alarms': instance_alarms,
-                        'PrivateIP': instance.get('PrivateIpAddress', 'N/A')
+                        'PrivateIP': instance.get('PrivateIpAddress', 'N/A'),
+                        'DiskCount': disk_count
                     }
                     
                     
