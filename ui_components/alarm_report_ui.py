@@ -110,7 +110,7 @@ class AlarmReportUI:
             st.markdown("### 📋 Detalle por Instancia")
             
             # Apply custom styling to the dataframe
-            styled_df = df.style.apply(self._highlight_rows, axis=1)
+            styled_df = df.style.apply(self._highlight_rows, axis=1).apply(self._apply_disk_alarm_validation_style, axis=1)
             st.dataframe(
                 styled_df,
                 use_container_width=True,
@@ -130,7 +130,7 @@ class AlarmReportUI:
             st.info(f"No se encontraron instancias con alarmas en el entorno {current_env}")
     
     def _process_alarm_data(self, instances_data: List[Dict], environment: str) -> List[Dict]:
-        """Process instance and alarm data to create report rows."""
+        """Process instance and alarm data to create report rows."""        
         report_rows = []
         
         for instance in instances_data:
@@ -212,3 +212,16 @@ class AlarmReportUI:
             style = 'background-color: #e6e6e6; color: black;'
         
         return [style] * len(row)
+
+    def _apply_disk_alarm_validation_style(self, row):
+        """Apply a border to the disk alarm cell if validation fails."""
+        styles = [''] * len(row)
+        # Condition for the validation error
+        if row['Cant. Discos'] > 0 and row['Alarmas Disco'] != (row['Cant. Discos'] * 3):
+            try:
+                disk_alarm_col_index = list(row.index).index('Alarmas Disco')
+                styles[disk_alarm_col_index] = 'border: 2px solid red;'
+            except ValueError:
+                # Column not found, do nothing
+                pass
+        return styles

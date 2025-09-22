@@ -5,6 +5,49 @@ This document tracks the complete development history of the Dashboard EPMAPS PO
 
 ## Detailed Development Log
 
+### 2025-09-22 - Add Disk Alarm Validation and Highlighting (v0.2.14)
+
+#### Problem Identified
+User requested a way to validate the number of disk alarms and highlight inconsistencies.
+1.  **Validation Rule**: The number of alarms in the "Alarmas Disco" column should be exactly 3 times the number in the "Cant. Discos" column.
+2.  **Error Highlighting**: A visual indicator was needed for rows where this validation fails.
+
+#### Solution Applied
+**1. New Validation and Styling Logic**
+- A new method, `_apply_disk_alarm_validation_style`, was added to `ui_components/alarm_report_ui.py`.
+- This function is applied to each row of the report table.
+- It checks if `row['Alarmas Disco']` is not equal to `row['Cant. Discos'] * 3`.
+- If the validation fails, it applies a `border: 2px solid red;` style specifically to the "Alarmas Disco" cell for that row.
+
+**2. Chained Styling**
+- The new cell-specific styling is chained with the existing row-level highlighting, so both styles can be applied simultaneously.
+
+#### Technical Fix
+```python
+# ui_components/alarm_report_ui.py
+
+def _apply_disk_alarm_validation_style(self, row):
+    """Apply a border to the disk alarm cell if validation fails."""
+    styles = [''] * len(row)
+    # Condition for the validation error
+    if row['Cant. Discos'] > 0 and row['Alarmas Disco'] != (row['Cant. Discos'] * 3):
+        try:
+            disk_alarm_col_index = list(row.index).index('Alarmas Disco')
+            styles[disk_alarm_col_index] = 'border: 2px solid red;'
+        except ValueError:
+            pass
+    return styles
+
+# Chained the new style in the display_alarm_report method
+styled_df = df.style.apply(self._highlight_rows, axis=1).apply(self._apply_disk_alarm_validation_style, axis=1)
+```
+
+#### Result
+- ✅ The report now automatically highlights inconsistencies in the disk alarm count with a red border.
+- ✅ This provides a clear and immediate visual cue for specific data validation errors without cluttering the UI.
+
+#### Version: v0.2.14
+
 ### 2025-09-22 - Alarm Report UI & Categorization Update (v0.2.13)
 
 #### Problem Identified
@@ -27,7 +70,7 @@ User reported several issues with the Alarm Report page:
 - An `st.info` box was added below the summary metrics to clearly state: "Se consideran alarmas amarillas las alarmas proactivas y de alerta."
 
 #### Technical Fix
-```python
+'''python
 # ui_components/alarm_report_ui.py
 
 # Removed 'availability_alarms' from column_order and column_names
@@ -45,7 +88,7 @@ def _highlight_rows(self, row):
         style = 'background-color: #fff4cc; color: black;'
     # ...
     return [style] * len(row)
-```
+'''
 
 #### Result
 - ✅ Alarms are now categorized more accurately, with non-specific ones correctly placed in "Otras".

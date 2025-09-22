@@ -67,4 +67,4 @@ server_groups:
 settings:
   refresh_interval_seconds: 30
   show_aws_errors: false
-  version: v0.2.11
+  version: v0.2.15
