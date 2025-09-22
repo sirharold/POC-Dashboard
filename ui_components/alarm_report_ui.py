@@ -49,11 +49,13 @@ class AlarmReportUI:
             st.markdown(f"<h3 style='text-align: center; margin: 0;'>Entorno: {current_env}</h3>", unsafe_allow_html=True)
         
         # Get all instance data with alarms
-        # Use the environment name directly (Production, QA, DEV)
-        instances_data = self.aws_service.get_aws_data(current_env)
+        instances_data = self.aws_service.get_aws_data()
+        
+        # Filter instances by the selected environment
+        filtered_instances = [inst for inst in instances_data if inst.get('Environment') == current_env]
         
         # Process alarm data for report
-        report_data = self._process_alarm_data(instances_data, current_env)
+        report_data = self._process_alarm_data(filtered_instances, current_env)
         
         # Create and display the report table
         if report_data:
