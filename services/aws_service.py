@@ -158,8 +158,12 @@ class AWSService:
                     # Clean DashboardGroup value to remove extra whitespace
                     dashboard_group = tags.get('DashboardGroup', 'Uncategorized').strip()
                     
-                    # Get the actual number of attached block devices (disks)
-                    disk_count = len(instance.get('BlockDeviceMappings', []))
+                    # Get the actual number of attached EBS volumes, ignoring other block devices.
+                    ebs_volumes = [
+                        mapping for mapping in instance.get('BlockDeviceMappings', [])
+                        if 'Ebs' in mapping
+                    ]
+                    disk_count = len(ebs_volumes)
 
                     instance_data = {
                         'ID': instance_id,

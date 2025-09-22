@@ -5,6 +5,72 @@ This document tracks the complete development history of the Dashboard EPMAPS PO
 
 ## Detailed Development Log
 
+### 2025-09-22 - Add New Summary Metrics to Report (v0.2.20)
+
+#### Problem Identified
+User requested to add more metrics to the summary section of the alarm report page for a better overview.
+
+#### Solution Applied
+- The summary section in `ui_components/alarm_report_ui.py` was updated to use 6 columns instead of 4.
+- Added two new metrics to the summary display:
+  - **T. A. Teóricas**: The sum of all theoretical alarms.
+  - **Datos Insuficientes**: The sum of all alarms with insufficient data.
+- The metrics were reordered for better logical flow.
+
+#### Technical Fix
+```python
+# ui_components/alarm_report_ui.py
+
+col1, col2, col3, col4, col5, col6 = st.columns(6)
+with col1:
+    st.metric("Total Instancias", len(df))
+with col2:
+    st.metric("T. A. Teóricas", f"{df['T. A. Teóricas'].sum():.0f}")
+with col3:
+    st.metric("T. A. Actuales", f"{df['T. A. Actuales'].sum():.0f}")
+with col4:
+    st.metric("Alarmas Rojas", f"{df['Alarmas Rojas'].sum():.0f}")
+with col5:
+    st.metric("Alarmas Amarillas", f"{df['Alarmas Amarillas'].sum():.0f}")
+with col6:
+    st.metric("Datos Insuficientes", f"{df['Datos Insuficientes'].sum():.0f}")
+```
+
+#### Result
+- ✅ The summary section now provides a more comprehensive overview with 6 key metrics.
+
+#### Version: v0.2.20
+
+### 2025-09-22 - Fix Disk Count Logic for Linux Instances (v0.2.19)
+
+#### Problem Identified
+User reported a discrepancy in the disk count for Linux servers. The report showed 24 disks, while the EC2 console only showed 10 EBS volumes.
+
+#### Root Cause
+- The existing logic counted all entries in the `BlockDeviceMappings` array for an instance.
+- This includes not only persistent EBS volumes but also temporary (ephemeral) instance store volumes, leading to an inflated count on certain Linux AMIs.
+
+#### Solution Applied
+- The disk counting logic in `services/aws_service.py` was refined.
+- It now iterates through the `BlockDeviceMappings` and counts only the mappings that contain an `Ebs` key, ensuring that only true EBS volumes are included in the total.
+
+#### Technical Fix
+'''python
+# services/aws_service.py
+
+# Get the actual number of attached EBS volumes, ignoring other block devices.
+ebs_volumes = [
+    mapping for mapping in instance.get('BlockDeviceMappings', [])
+    if 'Ebs' in mapping
+]
+disk_count = len(ebs_volumes)
+'''
+
+#### Result
+- ✅ The "Cant. Discos" column now accurately reflects the number of persistent EBS volumes for all instances, matching the AWS console.
+
+#### Version: v0.2.19
+
 ### 2025-09-22 - Add Sorting, New Validations, and UI Refinements (v0.2.18)
 
 #### Problem Identified
@@ -26,7 +92,7 @@ User requested final refinements for the alarm report:
   - `Total Alarmas Actuales` is now `T. A. Actuales`.
 
 #### Technical Fix
-```python
+'''python
 # ui_components/alarm_report_ui.py
 
 # Sorting
@@ -44,7 +110,7 @@ def _apply_validation_styles(self, row):
     # ...
     border_style = ' box-shadow: inset 0 0 0 2px red;'
     # ...
-```
+'''
 
 #### Result
 - ✅ The report table now loads pre-sorted by instance name.

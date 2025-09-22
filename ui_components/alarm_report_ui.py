@@ -100,15 +100,19 @@ class AlarmReportUI:
             
             # Display summary stats
             st.markdown("### 📈 Resumen")
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4, col5, col6 = st.columns(6)
             with col1:
                 st.metric("Total Instancias", len(df))
             with col2:
-                st.metric("Total Alarmas Rojas", df['Alarmas Rojas'].sum())
+                st.metric("T. A. Teóricas", f"{df['T. A. Teóricas'].sum():.0f}")
             with col3:
-                st.metric("Total Alarmas Amarillas", df['Alarmas Amarillas'].sum())
+                st.metric("T. A. Actuales", f"{df['T. A. Actuales'].sum():.0f}")
             with col4:
-                st.metric("T. A. Actuales", df['T. A. Actuales'].sum())
+                st.metric("Alarmas Rojas", f"{df['Alarmas Rojas'].sum():.0f}")
+            with col5:
+                st.metric("Alarmas Amarillas", f"{df['Alarmas Amarillas'].sum():.0f}")
+            with col6:
+                st.metric("Datos Insuficientes", f"{df['Datos Insuficientes'].sum():.0f}")
 
             st.info("Se consideran alarmas amarillas las alarmas proactivas y de alerta. Las alarmas de disco deben ser 3x la cantidad de discos. La cantidad de alertas de CPU debieran ser dos")
             
