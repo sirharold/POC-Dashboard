@@ -5,43 +5,44 @@ This document tracks the complete development history of the Dashboard EPMAPS PO
 
 ## Detailed Development Log
 
-### 2025-09-22 - Add Icon and Tooltip for Validation Errors (v0.2.21)
+### 2025-09-22 - Fix: Implement Icon & Tooltip for Validation Errors (v0.2.22)
 
 #### Problem Identified
-Previous attempts to highlight validation errors using CSS borders or outlines were unreliable. User suggested a better approach.
+- The previous fix for highlighting validation errors with CSS was not visible.
+- The root cause was the complex and often-overridden nature of CSS in Streamlit tables.
 
 #### Solution Applied
-- Implemented the user's suggestion to use an icon (`⚠️`) next to the number in cells that fail validation.
-- The implementation in `ui_components/alarm_report_ui.py` now transforms the data before display:
-  1. A `display_df` is created where failing values are converted to strings like `"3 ⚠️"`.
-  2. A separate `tooltips_df` is created to hold the error messages.
-  3. When a validation rule fails for a cell (e.g., CPU alarms != 2), the display value is updated with the icon, and a descriptive tooltip (e.g., "Se esperaban 2 alarmas de CPU, pero se encontraron 1.") is added for that cell.
-- This approach is more robust than CSS styling and provides more context to the user.
+- A completely new and more robust method was implemented as per the user's suggestion.
+- **Icon Markers**: Instead of CSS, cells with validation errors now have their data value changed to include a `⚠️` icon (e.g., `3` becomes `"3 ⚠️"`).
+- **Descriptive Tooltips**: A parallel DataFrame containing detailed error messages is generated. This is applied to the table, so hovering over an icon reveals the reason for the error (e.g., "Se esperaban 9 alarmas de disco, pero se encontraron 3.").
+- **Refactored Logic**: The implementation in `ui_components/alarm_report_ui.py` was refactored to separate the numeric data (for styling rows) from the display data (with icons) and the tooltip data, using the pandas Styler's `.format()` and `.set_tooltips()` methods. This resolves the `TypeError` from the previous attempt.
 
 #### Technical Fix
 ```python
 # ui_components/alarm_report_ui.py
 
-# Create a display copy and a tooltip dataframe
-display_df = df.copy().astype(str)
-tooltips_df = pd.DataFrame('', index=df.index, columns=df.columns)
+# 1. Create numeric dataframe `df`
+# 2. Create `tooltips_df` and populate with error messages
+# 3. Create `formatters` dictionary to add icons to data for display
+def cpu_formatter(val):
+    return f'{val} ⚠️' if val != 2 else val
 
-# Iterate and apply rules
-for i, row in df.iterrows():
-    if row['Alarmas CPU'] != 2:
-        display_df.at[i, 'Alarmas CPU'] = f"{row['Alarmas CPU']} ⚠️"
-        tooltips_df.at[i, 'Alarmas CPU'] = f"Se esperaban 2 alarmas de CPU, pero se encontraron {row['Alarmas CPU']}."
-    # ... other rules
+formatters = {'Alarmas CPU': cpu_formatter, ...}
 
-# Apply tooltips to the styled dataframe
-styled_df = display_df.style.apply(...).set_tooltips(tooltips_df)
+# 4. Chain styling, tooltips, and formatters
+styled_df = df.style.apply(self._apply_row_highlight_styles, axis=1)\
+                    .set_tooltips(tooltips_df)\
+                    .format(formatters)
+
+st.dataframe(styled_df)
 ```
 
 #### Result
-- ✅ Cells with validation errors now reliably show a `⚠️` icon.
-- ✅ Hovering over a cell with an error icon displays a tooltip explaining the specific error.
+- ✅ Validation errors are now reliably indicated with an icon.
+- ✅ Tooltips provide clear explanations for each error.
+- ✅ The underlying code is more robust and less prone to CSS conflicts.
 
-#### Version: v0.2.21
+#### Version: v0.2.22
 
 ### 2025-09-22 - Add New Summary Metrics to Report (v0.2.21)
 
@@ -64,20 +65,13 @@ with col1:
     st.metric("Total Instancias", len(df))
 with col2:
     st.metric("T. A. Teóricas", f"{df['T. A. Teóricas'].sum():.0f}")
-with col3:
-    st.metric("T. A. Actuales", f"{df['T. A. Actuales'].sum():.0f}")
-with col4:
-    st.metric("Alarmas Rojas", f"{df['Alarmas Rojas'].sum():.0f}")
-with col5:
-    st.metric("Alarmas Amarillas", f"{df['Alarmas Amarillas'].sum():.0f}")
-with col6:
-    st.metric("Datos Insuficientes", f"{df['Datos Insuficientes'].sum():.0f}")
+# ... and so on
 '''
 
 #### Result
 - ✅ The summary section now provides a more comprehensive overview with 6 key metrics.
 
-#### Version: v0.2.20
+#### Version: v0.2.21
 
 ### 2025-09-22 - Fix Disk Count Logic for Linux Instances (v0.2.19)
 

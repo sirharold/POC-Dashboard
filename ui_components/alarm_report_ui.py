@@ -1,4 +1,4 @@
-"""
+
 Alarm Report UI component for displaying global alarm statistics.
 """
 import streamlit as st
@@ -98,32 +98,31 @@ class AlarmReportUI:
             # Sort by instance name by default
             df = df.sort_values(by='Nombre Instancia').reset_index(drop=True)
 
-            # --- Data Transformation for Display --- #
-            # Create a copy for display purposes and another for tooltips
-            display_df = df.copy().astype(str)
+            # --- Tooltip and Formatter Setup ---
             tooltips_df = pd.DataFrame('', index=df.index, columns=df.columns)
+            formatters = {}
 
-            # Apply validation rules and generate tooltips/icons
+            # Generate tooltips and formatters based on validation rules
             for i, row in df.iterrows():
                 # CPU
                 if row['Alarmas CPU'] != 2:
-                    display_df.at[i, 'Alarmas CPU'] = f"{row['Alarmas CPU']} ⚠️"
                     tooltips_df.at[i, 'Alarmas CPU'] = f"Se esperaban 2 alarmas de CPU, pero se encontraron {row['Alarmas CPU']}."
+                    formatters['Alarmas CPU'] = lambda val: f"{val} ⚠️"
                 # RAM
                 if row['Alarmas RAM'] == 0:
-                    display_df.at[i, 'Alarmas RAM'] = f"{row['Alarmas RAM']} ⚠️"
                     tooltips_df.at[i, 'Alarmas RAM'] = "Se esperaba 1 alarma de RAM, pero se encontraron 0."
+                    formatters['Alarmas RAM'] = lambda val: f"{val} ⚠️"
                 # Disk
                 expected_disk_alarms = row['Cant. Discos'] * 3
                 if row['Cant. Discos'] > 0 and row['Alarmas Disco'] != expected_disk_alarms:
-                    display_df.at[i, 'Alarmas Disco'] = f"{row['Alarmas Disco']} ⚠️"
                     tooltips_df.at[i, 'Alarmas Disco'] = f"Se esperaban {expected_disk_alarms} alarmas de disco ({row['Cant. Discos']} * 3), pero se encontraron {row['Alarmas Disco']}."
+                    formatters['Alarmas Disco'] = lambda val: f"{val} ⚠️"
                 # Ping
                 if row['Alarmas Ping'] == 0:
-                    display_df.at[i, 'Alarmas Ping'] = f"{row['Alarmas Ping']} ⚠️"
                     tooltips_df.at[i, 'Alarmas Ping'] = "Se esperaba 1 alarma de Ping, pero se encontraron 0."
+                    formatters['Alarmas Ping'] = lambda val: f"{val} ⚠️"
 
-            # --- End of Data Transformation ---
+            # --- End of Setup ---
 
             # Display summary stats
             st.markdown("### 📈 Resumen")
@@ -148,8 +147,11 @@ class AlarmReportUI:
             # Display the table
             st.markdown("### 📋 Detalle por Instancia")
             
-            # Apply custom styling to the dataframe
-            styled_df = display_df.style.apply(self._apply_row_highlight_styles, axis=1).set_tooltips(tooltips_df)
+            # Apply all styles and tooltips
+            styled_df = df.style.apply(self._apply_row_highlight_styles, axis=1)\
+                                .set_tooltips(tooltips_df)\
+                                .format(formatters)
+            
             st.dataframe(
                 styled_df,
                 use_container_width=True,
@@ -157,7 +159,7 @@ class AlarmReportUI:
                 height=600
             )
             
-            # Export button
+            # Export button (using the original numeric df)
             csv = df.to_csv(index=False)
             st.download_button(
                 label="📥 Descargar CSV",
