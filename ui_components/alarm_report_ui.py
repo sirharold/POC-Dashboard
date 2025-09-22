@@ -60,13 +60,17 @@ class AlarmReportUI:
         # Create and display the report table
         if report_data:
             df = pd.DataFrame(report_data)
+
+            # --- NEW: Add Theoretical Alarms Column ---
+            df['total_alarms_theoretical'] = 2 + 1 + (df['disk_count'] * 3) + 1
             
             # Define column order and names
             column_order = [
                 'instance_name', 'private_ip', 'instance_id',
                 'cpu_alarms', 'ram_alarms', 'disk_alarms', 'disk_count',
                 'ping_alarms', 'other_alarms',
-                'insufficient_data', 'yellow_alarms', 'red_alarms', 'total_alarms'
+                'insufficient_data', 'yellow_alarms', 'red_alarms',
+                'total_alarms_theoretical', 'total_alarms' # New and renamed columns
             ]
             
             # Rename columns to Spanish
@@ -83,7 +87,8 @@ class AlarmReportUI:
                 'insufficient_data': 'Datos Insuficientes',
                 'yellow_alarms': 'Alarmas Amarillas',
                 'red_alarms': 'Alarmas Rojas',
-                'total_alarms': 'Total Alarmas'
+                'total_alarms_theoretical': 'Total Alarmas Teóricas',
+                'total_alarms': 'Total Alarmas Actuales' # Renamed
             }
             
             # Reorder and rename columns
@@ -100,7 +105,7 @@ class AlarmReportUI:
             with col3:
                 st.metric("Total Alarmas Amarillas", df['Alarmas Amarillas'].sum())
             with col4:
-                st.metric("Total Alarmas", df['Total Alarmas'].sum())
+                st.metric("Total Alarmas Actuales", df['Total Alarmas Actuales'].sum())
 
             st.info("Se consideran alarmas amarillas las alarmas proactivas y de alerta. Las alarmas de disco deben ser 3x la cantidad de discos. La cantidad de alertas de CPU debieran ser dos")
             
@@ -110,7 +115,7 @@ class AlarmReportUI:
             st.markdown("### 📋 Detalle por Instancia")
             
             # Apply custom styling to the dataframe
-            styled_df = df.style.apply(self._apply_report_styles, axis=1)
+            styled_df = df.style.apply(self._apply_validation_styles, axis=1)
             st.dataframe(
                 styled_df,
                 use_container_width=True,
@@ -199,8 +204,8 @@ class AlarmReportUI:
         disk_keywords = ['DISK', 'DISCO', 'STORAGE', 'FILESYSTEM', 'VOLUME']
         return any(kw in alarm_name.upper() for kw in disk_keywords)
     
-    def _apply_report_styles(self, row):
-        """Applies all conditional styles to the report row."""
+    def _apply_validation_styles(self, row):
+        """Applies all conditional styles to the report row for validation."""
         
         # 1. Set base style for row highlighting
         base_style = ''
@@ -213,13 +218,34 @@ class AlarmReportUI:
         
         styles = [base_style] * len(row)
         
-        # 2. Apply disk alarm validation border
-        if row['Cant. Discos'] > 0 and row['Alarmas Disco'] != (row['Cant. Discos'] * 3):
+        # Helper to find index safely
+        def get_col_index(col_name):
             try:
-                disk_alarm_col_index = list(row.index).index('Alarmas Disco')
-                # Append border style to existing style
-                styles[disk_alarm_col_index] += ' border: 2px solid red;'
+                return list(row.index).index(col_name)
             except ValueError:
-                pass # Column not found
+                return -1
 
+        # 2. Cell-specific validation highlighting
+        border_style = ' outline: 2px solid red;'
+
+        # CPU validation
+        cpu_idx = get_col_index('Alarmas CPU')
+        if cpu_idx != -1 and row['Alarmas CPU'] != 2:
+            styles[cpu_idx] += border_style
+
+        # RAM validation
+        ram_idx = get_col_index('Alarmas RAM')
+        if ram_idx != -1 and row['Alarmas RAM'] == 0:
+            styles[ram_idx] += border_style
+
+        # Disk validation
+        disk_idx = get_col_index('Alarmas Disco')
+        if disk_idx != -1 and row['Cant. Discos'] > 0 and row['Alarmas Disco'] != (row['Cant. Discos'] * 3):
+            styles[disk_idx] += border_style
+
+        # Ping validation
+        ping_idx = get_col_index('Alarmas Ping')
+        if ping_idx != -1 and row['Alarmas Ping'] == 0:
+            styles[ping_idx] += border_style
+            
         return styles

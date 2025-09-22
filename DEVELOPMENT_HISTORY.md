@@ -5,6 +5,58 @@ This document tracks the complete development history of the Dashboard EPMAPS PO
 
 ## Detailed Development Log
 
+### 2025-09-22 - Add New Validation Rules and Theoretical Alarms Column (v0.2.17)
+
+#### Problem Identified
+User required more extensive validation rules for the alarm report and a new column to show the expected number of alarms.
+
+#### Solution Applied
+**1. Added "Total Alarmas Teóricas" Column**
+- A new column was added to the report in `ui_components/alarm_report_ui.py`.
+- The value is calculated based on the formula: `2 (CPU) + 1 (RAM) + (3 * Cant. Discos) + 1 (Ping)`.
+
+**2. Renamed "Total Alarmas" Column**
+- The existing "Total Alarmas" column was renamed to "Total Alarmas Actuales" for clarity.
+
+**3. Implemented Extensive Validation Highlighting**
+- The styling function `_apply_validation_styles` was enhanced to highlight cells with a red outline if they fail specific rules:
+  - **Alarmas CPU**: Highlights if the value is not equal to 2.
+  - **Alarmas RAM**: Highlights if the value is 0.
+  - **Alarmas Disco**: Highlights if the value is not `3 * Cant. Discos`.
+  - **Alarmas Ping**: Highlights if the value is 0.
+- The CSS `outline` property is now used for highlighting to ensure visibility over other styles.
+
+#### Technical Fix
+```python
+# ui_components/alarm_report_ui.py
+
+# Add new column to DataFrame
+df['total_alarms_theoretical'] = 2 + 1 + (df['disk_count'] * 3) + 1
+
+# New styling function with multiple validation rules
+def _apply_validation_styles(self, row):
+    # ... (row highlight logic)
+    styles = [base_style] * len(row)
+    border_style = ' outline: 2px solid red;'
+
+    # CPU validation
+    if row['Alarmas CPU'] != 2:
+        styles[cpu_idx] += border_style
+
+    # RAM validation
+    if row['Alarmas RAM'] == 0:
+        styles[ram_idx] += border_style
+
+    # ... (and so on for Disk and Ping)
+    return styles
+```
+
+#### Result
+- ✅ The report now includes a "Total Alarmas Teóricas" column for easy comparison.
+- ✅ Cells with data inconsistencies according to the new rules are now clearly marked with a red outline.
+
+#### Version: v0.2.17
+
 ### 2025-09-22 - Fix Report Styling and Update Info Text (v0.2.16)
 
 #### Problem Identified
@@ -20,7 +72,7 @@ User reported that the disk alarm validation highlighting (red border) was not a
 - The text in the `st.info` box on the report page was updated to include the new validation rules, as requested.
 
 #### Technical Fix
-```python
+'''python
 # ui_components/alarm_report_ui.py
 
 def _apply_report_styles(self, row):
@@ -40,7 +92,7 @@ def _apply_report_styles(self, row):
 
 # Updated st.info text
 st.info("Se consideran alarmas amarillas las alarmas proactivas y de alerta. Las alarmas de disco deben ser 3x la cantidad de discos. La cantidad de alertas de CPU debieran ser dos")
-```
+'''
 
 #### Result
 - ✅ The red border for disk alarm validation failures now appears correctly.
