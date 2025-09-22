@@ -1,0 +1,224 @@
+"""
+Alarm Report UI component for displaying global alarm statistics.
+"""
+import streamlit as st
+import pandas as pd
+from typing import Dict, List
+from collections import Counter
+import re
+
+
+class AlarmReportUI:
+    """UI component for the global alarm report page."""
+    
+    def __init__(self, aws_service):
+        """Initialize the alarm report UI with AWS service."""
+        self.aws_service = aws_service
+    
+    def display_alarm_report(self):
+        """Display the alarm report page."""
+        # Add back to dashboard link
+        col1, col2 = st.columns([6, 1])
+        with col1:
+            st.markdown(
+                f"<a href='/' style='text-decoration: none; color: #0066cc; font-size: 0.9rem; margin-top: 1rem; display: inline-block;'>← Volver al Dashboard</a>",
+                unsafe_allow_html=True
+            )
+        
+        # Page title
+        st.markdown("# 📊 Reporte Global de Alarmas")
+        
+        # Environment selector - use same as dashboard
+        ENVIRONMENTS = ["Production", "QA", "DEV"]
+        if 'env_index' not in st.session_state:
+            st.session_state.env_index = 0
+        
+        # Create columns for env selector and navigation
+        col1, col2, col3 = st.columns([1, 6, 1])
+        with col1:
+            if st.button("←", use_container_width=True):
+                st.session_state.env_index = (st.session_state.env_index - 1) % len(ENVIRONMENTS)
+                st.rerun()
+        with col3:
+            if st.button("→", use_container_width=True):
+                st.session_state.env_index = (st.session_state.env_index + 1) % len(ENVIRONMENTS)
+                st.rerun()
+        
+        current_env = ENVIRONMENTS[st.session_state.env_index]
+        with col2:
+            st.markdown(f"<h3 style='text-align: center; margin: 0;'>Entorno: {current_env}</h3>", unsafe_allow_html=True)
+        
+        # Get alarm data for the selected environment
+        env_map = {"Production": "PROD", "QA": "QA", "DEV": "DEV"}
+        selected_env = env_map.get(current_env, "PROD")
+        
+        # Get all instance data with alarms
+        instances_data = self.aws_service.get_aws_data(selected_env)
+        
+        # Process alarm data for report
+        report_data = self._process_alarm_data(instances_data, selected_env)
+        
+        # Create and display the report table
+        if report_data:
+            df = pd.DataFrame(report_data)
+            
+            # Define column order and names
+            column_order = [
+                'instance_name', 'private_ip', 'instance_id',
+                'cpu_alarms', 'ram_alarms', 'disk_alarms', 'disk_count',
+                'ping_alarms', 'availability_alarms', 'other_alarms',
+                'insufficient_data', 'yellow_alarms', 'red_alarms', 'total_alarms'
+            ]
+            
+            # Rename columns to Spanish
+            column_names = {
+                'instance_name': 'Nombre Instancia',
+                'private_ip': 'IP Privada',
+                'instance_id': 'Instance ID',
+                'cpu_alarms': 'Alarmas CPU',
+                'ram_alarms': 'Alarmas RAM',
+                'disk_alarms': 'Alarmas Disco',
+                'disk_count': 'Cant. Discos',
+                'ping_alarms': 'Alarmas Ping',
+                'availability_alarms': 'Alarmas Disponibilidad',
+                'other_alarms': 'Otras Alarmas',
+                'insufficient_data': 'Datos Insuficientes',
+                'yellow_alarms': 'Alarmas Amarillas',
+                'red_alarms': 'Alarmas Rojas',
+                'total_alarms': 'Total Alarmas'
+            }
+            
+            # Reorder and rename columns
+            df = df[column_order]
+            df.columns = [column_names[col] for col in column_order]
+            
+            # Display summary stats
+            st.markdown("### 📈 Resumen")
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Total Instancias", len(df))
+            with col2:
+                st.metric("Total Alarmas Rojas", df['Alarmas Rojas'].sum())
+            with col3:
+                st.metric("Total Alarmas Amarillas", df['Alarmas Amarillas'].sum())
+            with col4:
+                st.metric("Total Alarmas", df['Total Alarmas'].sum())
+            
+            st.markdown("---")
+            
+            # Display the table
+            st.markdown("### 📋 Detalle por Instancia")
+            
+            # Apply custom styling to the dataframe
+            styled_df = df.style.apply(self._highlight_rows, axis=1)
+            st.dataframe(
+                styled_df,
+                use_container_width=True,
+                hide_index=True,
+                height=600
+            )
+            
+            # Export button
+            csv = df.to_csv(index=False)
+            st.download_button(
+                label="📥 Descargar CSV",
+                data=csv,
+                file_name=f"reporte_alarmas_{selected_env}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv"
+            )
+        else:
+            st.info(f"No se encontraron instancias con alarmas en el entorno {current_env}")
+    
+    def _process_alarm_data(self, instances_data: List[Dict], environment: str) -> List[Dict]:
+        """Process instance and alarm data to create report rows."""
+        report_rows = []
+        
+        for instance in instances_data:
+            # Get all alarms for this instance
+            instance_id = instance['ID']
+            alarms = self.aws_service.get_alarms_for_instance(instance_id)
+            
+            # Count disks from alarms
+            disk_alarms = [a for a in alarms if self._is_disk_alarm(a['AlarmName'])]
+            disk_numbers = set()
+            for alarm in disk_alarms:
+                # Extract disk number from alarm name (e.g., "DISK_0_USAGE" -> 0)
+                match = re.search(r'(?:DISK|DISCO)[\s_]*(\d+)', alarm['AlarmName'], re.IGNORECASE)
+                if match:
+                    disk_numbers.add(match.group(1))
+            disk_count = len(disk_numbers) if disk_numbers else 1  # At least 1 disk
+            
+            # Initialize counters
+            alarm_counts = {
+                'cpu_alarms': 0,
+                'ram_alarms': 0,
+                'disk_alarms': 0,
+                'ping_alarms': 0,
+                'availability_alarms': 0,
+                'other_alarms': 0,
+                'insufficient_data': 0,
+                'yellow_alarms': 0,
+                'red_alarms': 0,
+                'total_alarms': len(alarms)
+            }
+            
+            # Process each alarm
+            for alarm in alarms:
+                alarm_name = alarm.get('AlarmName', '').upper()
+                state = alarm.get('StateValue', '')
+                
+                # Categorize alarm type
+                if any(kw in alarm_name for kw in ['CPU', 'PROCESSOR']):
+                    alarm_counts['cpu_alarms'] += 1
+                elif any(kw in alarm_name for kw in ['RAM', 'MEMORY', 'MEMORIA']):
+                    alarm_counts['ram_alarms'] += 1
+                elif self._is_disk_alarm(alarm_name):
+                    alarm_counts['disk_alarms'] += 1
+                elif any(kw in alarm_name for kw in ['PING', 'ICMP']):
+                    alarm_counts['ping_alarms'] += 1
+                elif any(kw in alarm_name for kw in ['AVAILABILITY', 'DISPONIBILIDAD', 'AVAILABLE']):
+                    alarm_counts['availability_alarms'] += 1
+                else:
+                    alarm_counts['other_alarms'] += 1
+                
+                # Count by state
+                if state == 'INSUFFICIENT_DATA':
+                    alarm_counts['insufficient_data'] += 1
+                elif state == 'ALARM':
+                    # Check if it's a preventive (yellow) alarm
+                    if any(kw in alarm_name for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA']):
+                        alarm_counts['yellow_alarms'] += 1
+                    else:
+                        alarm_counts['red_alarms'] += 1
+            
+            # Create row data
+            row = {
+                'instance_name': instance.get('Name', instance_id),
+                'private_ip': instance.get('PrivateIP', 'N/A'),
+                'instance_id': instance_id,
+                'disk_count': disk_count,
+                **alarm_counts
+            }
+            
+            report_rows.append(row)
+        
+        return report_rows
+    
+    def _is_disk_alarm(self, alarm_name: str) -> bool:
+        """Check if an alarm is disk-related."""
+        disk_keywords = ['DISK', 'DISCO', 'STORAGE', 'FILESYSTEM', 'VOLUME']
+        return any(kw in alarm_name.upper() for kw in disk_keywords)
+    
+    def _highlight_rows(self, row):
+        """Apply highlighting to rows based on alarm counts."""
+        styles = [''] * len(row)
+        
+        # Highlight based on red alarms
+        if row['Alarmas Rojas'] > 0:
+            return ['background-color: #ffcccc'] * len(row)
+        elif row['Alarmas Amarillas'] > 0:
+            return ['background-color: #fff4cc'] * len(row)
+        elif row['Datos Insuficientes'] > 0:
+            return ['background-color: #e6e6e6'] * len(row)
+        
+        return styles

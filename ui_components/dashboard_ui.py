@@ -195,6 +195,11 @@ class DashboardUI:
         with nav_cols[1]:
             st.markdown(f"<h1 style='text-align: center; margin: 0; padding: 0;'>Dashboard {current_env}</h1>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align: center; font-size: 0.75em; color: grey; margin: 0; padding: 0;'>Esta página se actualiza cada {refresh_interval} segundos {app_version}</p>", unsafe_allow_html=True)
+            # Add alarm report link
+            st.markdown(
+                f"<div style='text-align: center; margin-top: 0.5rem;'><a href='?alarm_report=true' style='text-decoration: none; color: #0066cc; font-size: 0.9rem;'>📊 Reporte Alarmas</a></div>",
+                unsafe_allow_html=True
+            )
         
         st.divider()
 
