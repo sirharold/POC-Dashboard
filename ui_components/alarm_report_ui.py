@@ -48,15 +48,12 @@ class AlarmReportUI:
         with col2:
             st.markdown(f"<h3 style='text-align: center; margin: 0;'>Entorno: {current_env}</h3>", unsafe_allow_html=True)
         
-        # Get alarm data for the selected environment
-        env_map = {"Production": "PROD", "QA": "QA", "DEV": "DEV"}
-        selected_env = env_map.get(current_env, "PROD")
-        
         # Get all instance data with alarms
-        instances_data = self.aws_service.get_aws_data(selected_env)
+        # Use the environment name directly (Production, QA, DEV)
+        instances_data = self.aws_service.get_aws_data(current_env)
         
         # Process alarm data for report
-        report_data = self._process_alarm_data(instances_data, selected_env)
+        report_data = self._process_alarm_data(instances_data, current_env)
         
         # Create and display the report table
         if report_data:
@@ -123,7 +120,7 @@ class AlarmReportUI:
             st.download_button(
                 label="📥 Descargar CSV",
                 data=csv,
-                file_name=f"reporte_alarmas_{selected_env}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                file_name=f"reporte_alarmas_{current_env}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
                 mime="text/csv"
             )
         else:
