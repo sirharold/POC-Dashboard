@@ -102,7 +102,7 @@ class AlarmReportUI:
             with col4:
                 st.metric("Total Alarmas", df['Total Alarmas'].sum())
 
-            st.info("Se consideran alarmas amarillas las alarmas proactivas y de alerta.")
+            st.info("Se consideran alarmas amarillas las alarmas proactivas y de alerta. Las alarmas de disco deben ser 3x la cantidad de discos. La cantidad de alertas de CPU debieran ser dos")
             
             st.markdown("---")
             
@@ -110,7 +110,7 @@ class AlarmReportUI:
             st.markdown("### 📋 Detalle por Instancia")
             
             # Apply custom styling to the dataframe
-            styled_df = df.style.apply(self._highlight_rows, axis=1).apply(self._apply_disk_alarm_validation_style, axis=1)
+            styled_df = df.style.apply(self._apply_report_styles, axis=1)
             st.dataframe(
                 styled_df,
                 use_container_width=True,
@@ -199,29 +199,27 @@ class AlarmReportUI:
         disk_keywords = ['DISK', 'DISCO', 'STORAGE', 'FILESYSTEM', 'VOLUME']
         return any(kw in alarm_name.upper() for kw in disk_keywords)
     
-    def _highlight_rows(self, row):
-        """Apply highlighting to rows based on alarm counts for both light and dark themes."""
-        style = ''
+    def _apply_report_styles(self, row):
+        """Applies all conditional styles to the report row."""
         
-        # Highlight based on red alarms
+        # 1. Set base style for row highlighting
+        base_style = ''
         if row['Alarmas Rojas'] > 0:
-            style = 'background-color: #ffcccc; color: black;'
+            base_style = 'background-color: #ffcccc; color: black;'
         elif row['Alarmas Amarillas'] > 0:
-            style = 'background-color: #fff4cc; color: black;'
+            base_style = 'background-color: #fff4cc; color: black;'
         elif row['Datos Insuficientes'] > 0:
-            style = 'background-color: #e6e6e6; color: black;'
+            base_style = 'background-color: #e6e6e6; color: black;'
         
-        return [style] * len(row)
-
-    def _apply_disk_alarm_validation_style(self, row):
-        """Apply a border to the disk alarm cell if validation fails."""
-        styles = [''] * len(row)
-        # Condition for the validation error
+        styles = [base_style] * len(row)
+        
+        # 2. Apply disk alarm validation border
         if row['Cant. Discos'] > 0 and row['Alarmas Disco'] != (row['Cant. Discos'] * 3):
             try:
                 disk_alarm_col_index = list(row.index).index('Alarmas Disco')
-                styles[disk_alarm_col_index] = 'border: 2px solid red;'
+                # Append border style to existing style
+                styles[disk_alarm_col_index] += ' border: 2px solid red;'
             except ValueError:
-                # Column not found, do nothing
-                pass
+                pass # Column not found
+
         return styles

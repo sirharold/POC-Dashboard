@@ -5,6 +5,49 @@ This document tracks the complete development history of the Dashboard EPMAPS PO
 
 ## Detailed Development Log
 
+### 2025-09-22 - Fix Report Styling and Update Info Text (v0.2.16)
+
+#### Problem Identified
+User reported that the disk alarm validation highlighting (red border) was not appearing correctly. Additionally, the informational text required an update.
+
+#### Solution Applied
+**1. Robust Styling Function**
+- The two separate styling functions (`_highlight_rows` and `_apply_disk_alarm_validation_style`) were merged into a single, more robust function `_apply_report_styles` in `ui_components/alarm_report_ui.py`.
+- This new function handles both row background highlighting and cell-specific borders in the correct order, preventing styles from overwriting each other.
+- It first sets the base row background color and then appends the border style to the specific cell if the validation fails.
+
+**2. Informational Text Update**
+- The text in the `st.info` box on the report page was updated to include the new validation rules, as requested.
+
+#### Technical Fix
+```python
+# ui_components/alarm_report_ui.py
+
+def _apply_report_styles(self, row):
+    # 1. Set base style for row highlighting
+    base_style = ''
+    if row['Alarmas Rojas'] > 0:
+        base_style = 'background-color: #ffcccc; color: black;'
+    # ...
+    styles = [base_style] * len(row)
+    
+    # 2. Apply disk alarm validation border
+    if row['Cant. Discos'] > 0 and row['Alarmas Disco'] != (row['Cant. Discos'] * 3):
+        disk_alarm_col_index = list(row.index).index('Alarmas Disco')
+        styles[disk_alarm_col_index] += ' border: 2px solid red;' # Append style
+
+    return styles
+
+# Updated st.info text
+st.info("Se consideran alarmas amarillas las alarmas proactivas y de alerta. Las alarmas de disco deben ser 3x la cantidad de discos. La cantidad de alertas de CPU debieran ser dos")
+```
+
+#### Result
+- ✅ The red border for disk alarm validation failures now appears correctly.
+- ✅ The informational text on the report page is updated.
+
+#### Version: v0.2.16
+
 ### 2025-09-22 - Add Disk Alarm Validation and Highlighting (v0.2.14)
 
 #### Problem Identified
@@ -23,7 +66,7 @@ User requested a way to validate the number of disk alarms and highlight inconsi
 - The new cell-specific styling is chained with the existing row-level highlighting, so both styles can be applied simultaneously.
 
 #### Technical Fix
-```python
+'''python
 # ui_components/alarm_report_ui.py
 
 def _apply_disk_alarm_validation_style(self, row):
@@ -40,7 +83,7 @@ def _apply_disk_alarm_validation_style(self, row):
 
 # Chained the new style in the display_alarm_report method
 styled_df = df.style.apply(self._highlight_rows, axis=1).apply(self._apply_disk_alarm_validation_style, axis=1)
-```
+'''
 
 #### Result
 - ✅ The report now automatically highlights inconsistencies in the disk alarm count with a red border.
