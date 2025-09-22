@@ -1,4 +1,3 @@
-
 Alarm Report UI component for displaying global alarm statistics.
 """
 import streamlit as st
