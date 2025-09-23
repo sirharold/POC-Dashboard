@@ -59,21 +59,6 @@ def login_form():
                 else:
                     st.error("❌ Email o contraseña incorrectos")
         
-        # Help section
-        with st.expander("💡 Información de acceso"):
-            st.markdown("""
-            **Usuarios de prueba:**
-            - **Email:** admin@dashboardepmaps.com  
-              **Password:** AdminPass123
-            
-            - **Email:** user@dashboardepmaps.com  
-              **Password:** UserPass123
-            
-            **Requisitos de contraseña:**
-            - Mínimo 8 caracteres
-            - Al menos 1 mayúscula, 1 minúscula, 1 número
-            """)
-        
         return False
     
     return True
