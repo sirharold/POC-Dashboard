@@ -68,17 +68,9 @@ class DashboardUI:
             </div>
         </div>'''
         
-        # Use a clickable card with button behavior - preserve columns parameter
+        # Preserve columns parameter when navigating to detail page
         columns_param = st.query_params.get('columns', '2')
-        
-        # Display the card content
-        st.markdown(card_content, unsafe_allow_html=True)
-        
-        # Add invisible button for navigation
-        if st.button(f"Ver detalles de {vm_name}", key=f"detail_{instance_id}", 
-                    type="secondary", use_container_width=True):
-            st.query_params.update({"poc_vm_id": instance_id, "columns": columns_param})
-            st.rerun()
+        st.markdown(f"<a href='?poc_vm_id={instance_id}&columns={columns_param}' target='_self' class='card-link'>{' '.join(card_content.split())}</a>", unsafe_allow_html=True)
 
     def create_group_container(self, group_name: str, instances: list):
         """Create group container. Exact same logic as original function."""
