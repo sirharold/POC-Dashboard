@@ -48,14 +48,13 @@ class DashboardUI:
         state = instance.get('State', 'unknown')
         alerts = instance.get('Alarms', Counter())
         
-        # Determine card color based on alarms
+        # Determine card color based on alarms - new logic
         if alerts.get('ALARM', 0) > 0:
             card_status = 'red'
-        elif alerts.get('PREVENTIVE', 0) > 0:
-            card_status = 'yellow'
         elif alerts.get('INSUFFICIENT_DATA', 0) > 0 or alerts.get('UNKNOWN', 0) > 0:
             card_status = 'gray'
         else:
+            # If only green and yellow alarms, show green
             card_status = 'green'
         
         alert_bar_html = self.create_alert_bar_html(alerts)
@@ -74,9 +73,8 @@ class DashboardUI:
 
     def create_group_container(self, group_name: str, instances: list):
         """Create group container. Exact same logic as original function."""
-        # Determine group status based on all instances' alarms
+        # Determine group status based on all instances' alarms - new logic
         has_critical = False
-        has_preventive = False
         has_insufficient = False
         
         for instance in instances:
@@ -84,19 +82,16 @@ class DashboardUI:
             if alerts.get('ALARM', 0) > 0:
                 has_critical = True
                 break
-            elif alerts.get('PREVENTIVE', 0) > 0:
-                has_preventive = True
             elif alerts.get('INSUFFICIENT_DATA', 0) > 0 or alerts.get('UNKNOWN', 0) > 0:
                 has_insufficient = True
         
-        # Set group color based on worst status
+        # Set group color based on worst status (no yellow for groups)
         if has_critical:
             group_status = 'red'
-        elif has_preventive:
-            group_status = 'yellow'
         elif has_insufficient:
             group_status = 'gray'
         else:
+            # If only green and yellow alarms, show green
             group_status = 'green'
         
         st.markdown(f"<div class='group-container group-status-{group_status}'><div class='group-title'>{group_name}</div></div>", unsafe_allow_html=True)
