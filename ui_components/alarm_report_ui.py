@@ -18,15 +18,14 @@ class AlarmReportUI:
     def display_alarm_report(self):
         """Display the alarm report page."""
         # Add back to dashboard link
-        col1, col2 = st.columns([6, 1])
+        col1, col2 = st.columns([3, 1])
         with col1:
-            st.markdown(
-                f"<a href='/' style='text-decoration: none; color: #0066cc; font-size: 0.9rem; margin-top: 1rem; display: inline-block;'>← Volver al Dashboard</a>",
-                unsafe_allow_html=True
-            )
+            if st.button("← Volver al Dashboard", type="secondary"):
+                # Clear alarm_report query param to go back to dashboard
+                st.query_params.clear()
+                st.rerun()
         
-        # Page title
-        st.markdown("# 📊 Reporte Global de Alarmas")
+        # Page title moved to header - removed duplicate
         
         # Environment selector - use same as dashboard
         ENVIRONMENTS = ["Production", "QA", "DEV"]

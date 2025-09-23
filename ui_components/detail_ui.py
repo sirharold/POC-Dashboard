@@ -150,7 +150,11 @@ class DetailUI:
         details = self.aws_service.get_instance_details(instance_id)
         # Preserve columns parameter when returning to dashboard
         columns_param = st.query_params.get('columns', '2')
-        st.markdown(f"<a href='/?columns={columns_param}' target='_self' style='text-decoration: none; display: inline-block; margin-top: 1rem; margin-bottom: 0.5rem;'>← Volver al Dashboard</a>", unsafe_allow_html=True)
+        if st.button("← Volver al Dashboard", type="secondary"):
+            # Clear detail query param and preserve columns
+            st.query_params.clear()
+            st.query_params.update({"columns": columns_param})
+            st.rerun()
         if not details:
             st.error(f"No se pudieron obtener los detalles para la instancia con ID: {instance_id}")
             return

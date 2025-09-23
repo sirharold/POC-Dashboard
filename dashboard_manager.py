@@ -8,6 +8,7 @@ from ui_components.dashboard_ui import DashboardUI
 from ui_components.detail_ui import DetailUI
 from ui_components.alarm_report_ui import AlarmReportUI
 from utils.helpers import load_css
+from utils.auth import login_form, add_logout_button, add_user_header
 
 
 class DashboardManager:
@@ -58,6 +59,13 @@ class DashboardManager:
         
         # Load CSS (same as original)
         load_css()
+        
+        # Authentication check
+        if not login_form():
+            return  # Stop here if not authenticated
+        
+        # Add user info and logout button to header
+        add_user_header()
         
         # Router principal: decidir qué vista mostrar basado en la URL
         if 'alarm_report' in st.query_params:

@@ -3,3 +3,4 @@ plotly
 PyYAML
 boto3
 pandas
+streamlit-authenticator

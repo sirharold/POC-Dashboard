@@ -67,9 +67,18 @@ class DashboardUI:
                 {alert_bar_html}
             </div>
         </div>'''
-        # Preserve columns parameter when navigating to detail page
+        
+        # Use a clickable card with button behavior - preserve columns parameter
         columns_param = st.query_params.get('columns', '2')
-        st.markdown(f"<a href='?poc_vm_id={instance_id}&columns={columns_param}' target='_self' class='card-link'>{' '.join(card_content.split())}</a>", unsafe_allow_html=True)
+        
+        # Display the card content
+        st.markdown(card_content, unsafe_allow_html=True)
+        
+        # Add invisible button for navigation
+        if st.button(f"Ver detalles de {vm_name}", key=f"detail_{instance_id}", 
+                    type="secondary", use_container_width=True):
+            st.query_params.update({"poc_vm_id": instance_id, "columns": columns_param})
+            st.rerun()
 
     def create_group_container(self, group_name: str, instances: list):
         """Create group container. Exact same logic as original function."""
@@ -193,13 +202,14 @@ class DashboardUI:
         
         current_env = ENVIRONMENTS[st.session_state.env_index]
         with nav_cols[1]:
-            st.markdown(f"<h1 style='text-align: center; margin: 0; padding: 0;'>Dashboard {current_env}</h1>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='text-align: center; margin: 0; padding: 0;'>{current_env}</h2>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align: center; font-size: 0.75em; color: grey; margin: 0; padding: 0;'>Esta página se actualiza cada {refresh_interval} segundos {app_version}</p>", unsafe_allow_html=True)
             # Add alarm report link
-            st.markdown(
-                f"<div style='text-align: center; margin-top: 0.5rem;'><a href='?alarm_report=true' style='text-decoration: none; color: #0066cc; font-size: 0.9rem;'>📊 Reporte Alarmas</a></div>",
-                unsafe_allow_html=True
-            )
+            col_center = st.columns([1, 1, 1])
+            with col_center[1]:
+                if st.button("📊 Reporte Alarmas", use_container_width=True, type="secondary"):
+                    st.query_params.update({"alarm_report": "true"})
+                    st.rerun()
         
         st.divider()
 

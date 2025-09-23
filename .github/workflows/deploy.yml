@@ -1,37 +1,73 @@
-name: Deploy Streamlit App to EC2
+name: Deploy to AWS Fargate
 
 on:
   push:
-    branches:
-      - main # O la rama que uses para despliegues
+    branches: [ main, master ]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: dashboard-epmaps-poc
+  ECS_SERVICE: streamlit-dashboard-service
+  ECS_CLUSTER: streamlit-dashboard-cluster
+  ECS_TASK_DEFINITION: streamlit-dashboard-task
 
 jobs:
   deploy:
+    name: Deploy
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
 
     steps:
-    - name: Checkout code
+    - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Configure AWS Credentials
+    - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+        aws-region: ${{ env.AWS_REGION }}
 
-    - name: Deploy to EC2 via SSM
-      run: |
-        aws ssm send-command \
-          --instance-ids $(aws ec2 describe-instances --filters "Name=tag:Name,Values=streamlit-dashboard" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].InstanceId" --output text --region us-east-1) \
-          --document-name "AWS-RunShellScript" \
-          --comment "Deploy Streamlit app from GitHub Actions" \
-          --parameters commands="'set -x &&           sudo mkdir -p /home/ec2-user/POC-Dashboard &&           sudo chown -R ec2-user:ec2-user /home/ec2-user/POC-Dashboard &&           cd /home/ec2-user/POC-Dashboard &&           sudo -u ec2-user git init &&           if ! sudo -u ec2-user git remote get-url origin > /dev/null 2>&1; then sudo -u ec2-user git remote add origin https://github.com/${{ github.repository }}; fi &&           sudo -u ec2-user git config pull.rebase false &&           sudo -u ec2-user git fetch origin main &&           sudo -u ec2-user git reset --hard origin/main &&           sudo -u ec2-user /usr/bin/python3.13 -m pip install -r requirements.txt &&           sudo systemctl restart ${{ secrets.STREAMLIT_SERVICE_NAME }}'" \
-          --timeout-seconds 600 \
-          --region us-east-1
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Check SSM Command Status (Optional)
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
       run: |
-        # This part is more complex to get the command ID and check status, 
-        # but for now, we assume send-command succeeds if no error is returned.
-        echo "SSM command sent. Check SSM Run Command history in AWS console for status."
+        # Build a docker container and push it to ECR
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Download task definition
+      run: |
+        aws ecs describe-task-definition --task-definition $ECS_TASK_DEFINITION --query taskDefinition > task-definition.json
+
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        container-name: streamlit-app
+        image: ${{ steps.build-image.outputs.image }}
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true
+
+    - name: Get deployment URL
+      run: |
+        ALB_DNS=$(aws elbv2 describe-load-balancers --names streamlit-alb --query 'LoadBalancers[0].DNSName' --output text)
+        echo "🚀 Deployment successful!"
+        echo "📱 App URL: http://$ALB_DNS"
+        echo "::notice title=Deployment URL::http://$ALB_DNS"
