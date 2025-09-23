@@ -5,6 +5,134 @@ This document tracks the complete development history of the Dashboard EPMAPS PO
 
 ## Detailed Development Log
 
+### 2025-09-23 - Authentication System & Navigation Improvements (v0.2.23-v0.2.25)
+
+#### Authentication Implementation
+**Problem Identified:**
+- Application needed secure login/password authentication
+- Users were requesting access to the dashboard with proper security
+
+**Solution Applied:**
+- Implemented custom authentication system using SHA256 password hashing
+- Created login form with user credentials verification
+- Added session state management for persistent login
+- Implemented logout functionality
+
+**Technical Implementation:**
+```python
+# utils/auth.py
+USERS = {
+    "admin@dashboardepmaps.com": {
+        "name": "Admin",
+        "password": "790f48e3ba51e2d0762e7d4a74d4076a62cfb34d44e3dfbc43798fe9ff399602"  # AdminPass123
+    },
+    "user@dashboardepmaps.com": {
+        "name": "User", 
+        "password": "8e3bde512bf178d26128fdcda19de3ecea6ce26c4edaa177a5e2d49713272443"  # UserPass123
+    }
+}
+
+def authenticate_user(username: str, password: str) -> bool:
+    if username in USERS:
+        return verify_password(password, USERS[username]["password"])
+    return False
+```
+
+#### UI/UX Improvements
+**Problem Identified:**
+- User wanted logged-in user info and logout button in header instead of sidebar
+- Navigation between pages was opening new tabs and asking for login again
+- Login page was exposing test credentials publicly
+
+**Solutions Applied:**
+1. **Header Authentication UI:** Moved user info and logout button to main header
+2. **Navigation Fix:** Replaced HTML links with Streamlit buttons to prevent new tabs
+3. **Login Page Cleanup:** Removed public display of test credentials
+4. **Dynamic Titles:** Added context-aware page titles in header
+
+**Technical Changes:**
+```python
+# utils/auth.py - Dynamic header with user info
+def add_user_header():
+    col1, col2, col3 = st.columns([3, 1, 1])
+    with col1:
+        if 'alarm_report' in st.query_params:
+            st.markdown("# ☁️ Dashboard EPMAPS - 📊 Reporte de Alarmas")
+        elif 'poc_vm_id' in st.query_params:
+            st.markdown("# ☁️ Dashboard EPMAPS - Detalle VM")
+        else:
+            st.markdown("# ☁️ Dashboard EPMAPS")
+
+# Navigation with buttons instead of HTML links
+if st.button("📊 Reporte Alarmas", use_container_width=True, type="secondary"):
+    st.query_params.update({"alarm_report": "true"})
+    st.rerun()
+```
+
+#### GitHub Actions CI/CD Setup
+**Problem Identified:**
+- Manual deployments were error-prone and time-consuming
+- User wanted automatic deployment on git push
+- GitHub Actions lacked proper AWS permissions
+
+**Solution Applied:**
+- Fixed IAM permissions for `github-actions-deployer` user
+- Created comprehensive deployment policy
+- Configured automatic ECR push and ECS deployment
+
+**AWS IAM Policy Created:**
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ecr:GetAuthorizationToken",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+                "ecr:InitiateLayerUpload",
+                "ecr:UploadLayerPart",
+                "ecr:CompleteLayerUpload",
+                "ecr:PutImage"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ecs:UpdateService",
+                "ecs:DescribeServices",
+                "ecs:DescribeTasks",
+                "ecs:DescribeTaskDefinition",
+                "ecs:RegisterTaskDefinition"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+#### Results Achieved
+- ✅ Secure authentication system with SHA256 hashing
+- ✅ Professional login interface without exposed credentials
+- ✅ Seamless navigation between pages without re-authentication
+- ✅ User info displayed in header with logout functionality
+- ✅ Automatic deployment pipeline with git push
+- ✅ Fixed GitHub Actions permissions and ECR integration
+
+#### Lessons Learned
+- Always ask before making UI changes that weren't explicitly requested
+- Custom authentication systems provide more control than managed services for simple use cases
+- Proper IAM permissions are critical for CI/CD pipeline success
+- Session state management is essential for smooth user experience
+
+#### Versions:
+- **v0.2.23:** Authentication system and header improvements
+- **v0.2.24:** Login page cleanup (removed public credentials display)
+- **v0.2.25:** Removed unwanted detail buttons, restored original card behavior
+
 ### 2025-09-22 - Fix: Implement Icon & Tooltip for Validation Errors (v0.2.22)
 
 #### Problem Identified
