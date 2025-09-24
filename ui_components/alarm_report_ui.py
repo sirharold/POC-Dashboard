@@ -293,15 +293,21 @@ class AlarmReportUI:
         red_alarms_found = False
         for instance in instances_data:
             instance_name = instance.get('Name', instance.get('ID', 'N/A'))
-            alarms = instance.get('Alarms', {})
+            instance_id = instance['ID']
             
-            # Get all alarm names that are in ALARM state (red)
+            # Get alarms using the same method as the report
+            alarms = self.aws_service.get_alarms_for_instance(instance_id)
+            
+            # Get all alarm names that are in ALARM state (red) and NOT preventive
             red_alarm_names = []
-            for alarm_name, alarm_state in alarms.items():
-                if isinstance(alarm_state, str) and alarm_state == 'ALARM':
-                    red_alarm_names.append(alarm_name)
-                elif isinstance(alarm_state, dict) and alarm_state.get('StateValue') == 'ALARM':
-                    red_alarm_names.append(alarm_name)
+            for alarm in alarms:
+                alarm_name = alarm.get('AlarmName', '')
+                state = alarm.get('StateValue', '')
+                
+                if state == 'ALARM':
+                    # Check if it's NOT a preventive (yellow) alarm
+                    if not any(kw in alarm_name.upper() for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA']):
+                        red_alarm_names.append(alarm_name)
             
             if red_alarm_names:
                 red_alarms_found = True
@@ -320,14 +326,18 @@ class AlarmReportUI:
         insufficient_alarms_found = False
         for instance in instances_data:
             instance_name = instance.get('Name', instance.get('ID', 'N/A'))
-            alarms = instance.get('Alarms', {})
+            instance_id = instance['ID']
+            
+            # Get alarms using the same method as the report
+            alarms = self.aws_service.get_alarms_for_instance(instance_id)
             
             # Get all alarm names that are in INSUFFICIENT_DATA state (gray)
             insufficient_alarm_names = []
-            for alarm_name, alarm_state in alarms.items():
-                if isinstance(alarm_state, str) and alarm_state in ['INSUFFICIENT_DATA', 'UNKNOWN']:
-                    insufficient_alarm_names.append(alarm_name)
-                elif isinstance(alarm_state, dict) and alarm_state.get('StateValue') in ['INSUFFICIENT_DATA', 'UNKNOWN']:
+            for alarm in alarms:
+                alarm_name = alarm.get('AlarmName', '')
+                state = alarm.get('StateValue', '')
+                
+                if state in ['INSUFFICIENT_DATA', 'UNKNOWN']:
                     insufficient_alarm_names.append(alarm_name)
             
             if insufficient_alarm_names:
