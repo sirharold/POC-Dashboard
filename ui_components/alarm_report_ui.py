@@ -278,53 +278,68 @@ class AlarmReportUI:
         return styles
 
     def _generate_important_alarms_csv(self, instances_data: List[Dict], environment: str) -> str:
-        """Generate CSV for important alarms (red and insufficient data)."""
+        """Generate CSV for important alarms (red and insufficient data) across all environments."""
         import io
         from datetime import datetime
         
+        # Get ALL instances data (not just filtered by current environment)
+        all_instances_data = self.aws_service.get_aws_data()
+        
         output = io.StringIO()
-        
-        # Header with title and metadata
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        output.write(f"Alertas Importantes Rojas,{environment},{current_time}\n")
-        output.write("Nombre del Servidor,Nombre de alertas rojas\n")
         
-        # Process red alarms
-        red_alarms_found = False
-        for instance in instances_data:
-            instance_name = instance.get('Name', instance.get('ID', 'N/A'))
-            instance_id = instance['ID']
+        # Process red alarms by environment
+        environments = ["Production", "QA", "DEV"]
+        
+        for env in environments:
+            # Filter instances by environment
+            env_instances = [inst for inst in all_instances_data if inst.get('Environment') == env]
             
-            # Get alarms using the same method as the report
-            alarms = self.aws_service.get_alarms_for_instance(instance_id)
-            
-            # Get all alarm names that are in ALARM state (red) and NOT preventive
-            red_alarm_names = []
-            for alarm in alarms:
-                alarm_name = alarm.get('AlarmName', '')
-                state = alarm.get('StateValue', '')
+            if not env_instances:
+                continue
                 
-                if state == 'ALARM':
-                    # Check if it's NOT a preventive (yellow) alarm
-                    if not any(kw in alarm_name.upper() for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA']):
-                        red_alarm_names.append(alarm_name)
+            # Header for this environment
+            output.write(f"Alertas Importantes Rojas,{env},{current_time}\n")
+            output.write("Nombre del Servidor,Nombre de alertas rojas\n")
             
-            if red_alarm_names:
-                red_alarms_found = True
-                alarm_list = '; '.join(red_alarm_names)
-                output.write(f"{instance_name},\"{alarm_list}\"\n")
+            # Process red alarms for this environment
+            red_alarms_found = False
+            for instance in env_instances:
+                instance_name = instance.get('Name', instance.get('ID', 'N/A'))
+                instance_id = instance['ID']
+                
+                # Get alarms using the same method as the report
+                alarms = self.aws_service.get_alarms_for_instance(instance_id)
+                
+                # Get all alarm names that are in ALARM state (red) and NOT preventive
+                red_alarm_names = []
+                for alarm in alarms:
+                    alarm_name = alarm.get('AlarmName', '')
+                    state = alarm.get('StateValue', '')
+                    
+                    if state == 'ALARM':
+                        # Check if it's NOT a preventive (yellow) alarm
+                        if not any(kw in alarm_name.upper() for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA']):
+                            red_alarm_names.append(alarm_name)
+                
+                if red_alarm_names:
+                    red_alarms_found = True
+                    alarm_list = '; '.join(red_alarm_names)
+                    output.write(f"{instance_name},\"{alarm_list}\"\n")
+            
+            if not red_alarms_found:
+                output.write(f"No hay alertas rojas en {env}\n")
+            
+            # Add blank line after each environment section
+            output.write("\n")
         
-        if not red_alarms_found:
-            output.write("No hay alertas rojas en este momento\n")
-        
-        # Section separator
-        output.write("\n")
+        # Section for insufficient data alarms (all environments together)
         output.write("Alertas No disponibles\n")
         output.write("Nombre del Servidor,Nombre de la alerta que tiene datos no suficientes\n")
         
-        # Process insufficient data alarms
+        # Process insufficient data alarms from all environments
         insufficient_alarms_found = False
-        for instance in instances_data:
+        for instance in all_instances_data:
             instance_name = instance.get('Name', instance.get('ID', 'N/A'))
             instance_id = instance['ID']
             
