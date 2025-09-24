@@ -132,14 +132,30 @@ class AlarmReportUI:
                 height=600
             )
             
-            # Export button (using the original numeric df)
-            csv = df.to_csv(index=False)
-            st.download_button(
-                label="📥 Descargar CSV",
-                data=csv,
-                file_name=f"reporte_alarmas_{current_env}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                mime="text/csv"
-            )
+            # Export buttons
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Original CSV export
+                csv = df.to_csv(index=False)
+                st.download_button(
+                    label="📥 Descargar CSV",
+                    data=csv,
+                    file_name=f"reporte_alarmas_{current_env}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+            
+            with col2:
+                # Important alarms CSV export
+                important_csv = self._generate_important_alarms_csv(instances_data, current_env)
+                st.download_button(
+                    label="🚨 Descargar alarmas importantes",
+                    data=important_csv,
+                    file_name=f"alarmas_importantes_{current_env}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
         else:
             st.info(f"No se encontraron instancias con alarmas en el entorno {current_env}")
     
@@ -260,3 +276,68 @@ class AlarmReportUI:
             styles[ping_idx] += border_style
             
         return styles
+
+    def _generate_important_alarms_csv(self, instances_data: List[Dict], environment: str) -> str:
+        """Generate CSV for important alarms (red and insufficient data)."""
+        import io
+        from datetime import datetime
+        
+        output = io.StringIO()
+        
+        # Header with title and metadata
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        output.write(f"Alertas Importantes Rojas,{environment},{current_time}\n")
+        output.write("Nombre del Servidor,Nombre de alertas rojas\n")
+        
+        # Process red alarms
+        red_alarms_found = False
+        for instance in instances_data:
+            instance_name = instance.get('Name', instance.get('ID', 'N/A'))
+            alarms = instance.get('Alarms', {})
+            
+            # Get all alarm names that are in ALARM state (red)
+            red_alarm_names = []
+            for alarm_name, alarm_state in alarms.items():
+                if isinstance(alarm_state, str) and alarm_state == 'ALARM':
+                    red_alarm_names.append(alarm_name)
+                elif isinstance(alarm_state, dict) and alarm_state.get('StateValue') == 'ALARM':
+                    red_alarm_names.append(alarm_name)
+            
+            if red_alarm_names:
+                red_alarms_found = True
+                alarm_list = '; '.join(red_alarm_names)
+                output.write(f"{instance_name},\"{alarm_list}\"\n")
+        
+        if not red_alarms_found:
+            output.write("No hay alertas rojas en este momento\n")
+        
+        # Section separator
+        output.write("\n")
+        output.write("Alertas No disponibles\n")
+        output.write("Nombre del Servidor,Nombre de la alerta que tiene datos no suficientes\n")
+        
+        # Process insufficient data alarms
+        insufficient_alarms_found = False
+        for instance in instances_data:
+            instance_name = instance.get('Name', instance.get('ID', 'N/A'))
+            alarms = instance.get('Alarms', {})
+            
+            # Get all alarm names that are in INSUFFICIENT_DATA state (gray)
+            insufficient_alarm_names = []
+            for alarm_name, alarm_state in alarms.items():
+                if isinstance(alarm_state, str) and alarm_state in ['INSUFFICIENT_DATA', 'UNKNOWN']:
+                    insufficient_alarm_names.append(alarm_name)
+                elif isinstance(alarm_state, dict) and alarm_state.get('StateValue') in ['INSUFFICIENT_DATA', 'UNKNOWN']:
+                    insufficient_alarm_names.append(alarm_name)
+            
+            if insufficient_alarm_names:
+                insufficient_alarms_found = True
+                alarm_list = '; '.join(insufficient_alarm_names)
+                output.write(f"{instance_name},\"{alarm_list}\"\n")
+        
+        if not insufficient_alarms_found:
+            output.write("No hay alertas con datos insuficientes\n")
+        
+        csv_content = output.getvalue()
+        output.close()
+        return csv_content
