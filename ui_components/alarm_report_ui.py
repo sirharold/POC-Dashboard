@@ -297,37 +297,39 @@ class AlarmReportUI:
             
             if not env_instances:
                 continue
-                
-            # Header for this environment
-            output.write(f"Alertas Importantes Rojas,{env},{current_time}\n")
-            output.write("Nombre del Servidor,Nombre de alertas rojas\n")
             
-            # Process red alarms for this environment
-            red_alarms_found = False
+            # --- New: Pre-process to get total count ---
+            total_red_alarms_in_env = 0
+            env_red_alarm_details = []
             for instance in env_instances:
-                instance_name = instance.get('Name', instance.get('ID', 'N/A'))
                 instance_id = instance['ID']
-                
-                # Get alarms using the same method as the report
                 alarms = self.aws_service.get_alarms_for_instance(instance_id)
                 
-                # Get all alarm names that are in ALARM state (red) and NOT preventive
                 red_alarm_names = []
                 for alarm in alarms:
                     alarm_name = alarm.get('AlarmName', '')
                     state = alarm.get('StateValue', '')
-                    
-                    if state == 'ALARM':
-                        # Check if it's NOT a preventive (yellow) alarm
-                        if not any(kw in alarm_name.upper() for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA']):
-                            red_alarm_names.append(alarm_name)
+                    if state == 'ALARM' and not any(kw in alarm_name.upper() for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA']):
+                        red_alarm_names.append(alarm_name)
                 
                 if red_alarm_names:
-                    red_alarms_found = True
-                    alarm_list = '; '.join(red_alarm_names)
-                    output.write(f"{instance_name},\"{alarm_list}\"\n")
+                    total_red_alarms_in_env += len(red_alarm_names)
+                    env_red_alarm_details.append({
+                        'name': instance.get('Name', instance_id),
+                        'count': len(red_alarm_names),
+                        'alarms': '; '.join(red_alarm_names)
+                    })
+            # --- End of Pre-processing ---
+
+            # Header for this environment with total count
+            output.write(f"Alertas Importantes Rojas,{env},{current_time},Total Alarmas Rojas: {total_red_alarms_in_env}\n")
+            output.write("Nombre del Servidor,Cantidad,Nombre de alertas rojas\n")
             
-            if not red_alarms_found:
+            # Process red alarms for this environment
+            if env_red_alarm_details:
+                for detail in env_red_alarm_details:
+                    output.write(f"{detail['name']},{detail['count']},\"{detail['alarms']}\"\n")
+            else:
                 output.write(f"No hay alertas rojas en {env}\n")
             
             # Add blank line after each environment section
@@ -335,13 +337,14 @@ class AlarmReportUI:
         
         # Section for insufficient data alarms (all environments together)
         output.write("Alertas No disponibles\n")
-        output.write("Nombre del Servidor,Nombre de la alerta que tiene datos no suficientes\n")
+        output.write("Nombre del Servidor,Entorno,Cantidad,Nombre de la alerta que tiene datos no suficientes\n")
         
         # Process insufficient data alarms from all environments
         insufficient_alarms_found = False
         for instance in all_instances_data:
             instance_name = instance.get('Name', instance.get('ID', 'N/A'))
             instance_id = instance['ID']
+            instance_env = instance.get('Environment', 'N/A')
             
             # Get alarms using the same method as the report
             alarms = self.aws_service.get_alarms_for_instance(instance_id)
@@ -357,8 +360,9 @@ class AlarmReportUI:
             
             if insufficient_alarm_names:
                 insufficient_alarms_found = True
+                alarm_count = len(insufficient_alarm_names)
                 alarm_list = '; '.join(insufficient_alarm_names)
-                output.write(f"{instance_name},\"{alarm_list}\"\n")
+                output.write(f"{instance_name},{instance_env},{alarm_count},\"{alarm_list}\"\n")
         
         if not insufficient_alarms_found:
             output.write("No hay alertas con datos insuficientes\n")
