@@ -70,17 +70,8 @@ class DashboardUI:
         # Preserve columns parameter when navigating to detail page
         columns_param = st.query_params.get('columns', '2')
         
-        # Use JavaScript-based navigation to preserve session
-        st.markdown(f"""
-        <div onclick="
-            const params = new URLSearchParams();
-            params.set('poc_vm_id', '{instance_id}');
-            params.set('columns', '{columns_param}');
-            window.location.search = params.toString();
-        " class='card-link' style='cursor: pointer;'>
-            {card_content}
-        </div>
-        """, unsafe_allow_html=True)
+        # Use HTML link - session persistence will handle authentication
+        st.markdown(f"<a href='?poc_vm_id={instance_id}&columns={columns_param}' target='_self' class='card-link'>{' '.join(card_content.split())}</a>", unsafe_allow_html=True)
 
     def create_group_container(self, group_name: str, instances: list):
         """Create group container. Exact same logic as original function."""

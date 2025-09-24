@@ -36,28 +36,9 @@ def get_user_name(username: str) -> str:
 
 def login_form():
     """Display login form and handle authentication."""
-    # Check for persisted authentication first
+    # Initialize authentication state
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
-        # Try to restore authentication from browser storage
-        st.markdown("""
-        <script>
-        const authData = localStorage.getItem('dashboardAuth');
-        if (authData) {
-            const auth = JSON.parse(authData);
-            const now = new Date().getTime();
-            if (now < auth.expires) {
-                // Authentication is still valid
-                window.parent.postMessage({
-                    type: 'streamlit:setComponentValue',
-                    data: {authenticated: true, username: auth.username, user_name: auth.user_name}
-                }, '*');
-            } else {
-                localStorage.removeItem('dashboardAuth');
-            }
-        }
-        </script>
-        """, unsafe_allow_html=True)
     
     if not st.session_state.authenticated:
         st.markdown("# 🔐 Dashboard EPMAPS - Login")
@@ -74,20 +55,6 @@ def login_form():
                     st.session_state.authenticated = True
                     st.session_state.username = username
                     st.session_state.user_name = get_user_name(username)
-                    
-                    # Persist authentication in browser storage (24 hours)
-                    st.markdown(f"""
-                    <script>
-                    const authData = {{
-                        authenticated: true,
-                        username: '{username}',
-                        user_name: '{get_user_name(username)}',
-                        expires: new Date().getTime() + (24 * 60 * 60 * 1000)
-                    }};
-                    localStorage.setItem('dashboardAuth', JSON.stringify(authData));
-                    </script>
-                    """, unsafe_allow_html=True)
-                    
                     st.success("✅ ¡Acceso autorizado!")
                     st.rerun()
                 else:
@@ -104,14 +71,6 @@ def logout():
         del st.session_state.username
     if "user_name" in st.session_state:
         del st.session_state.user_name
-    
-    # Clear persisted authentication from browser storage
-    st.markdown("""
-    <script>
-    localStorage.removeItem('dashboardAuth');
-    </script>
-    """, unsafe_allow_html=True)
-    
     st.rerun()
 
 def add_user_header():
