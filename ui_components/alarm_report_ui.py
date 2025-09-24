@@ -115,7 +115,7 @@ class AlarmReportUI:
             with col6:
                 st.metric("Datos Insuficientes", f"{df['Datos Insuficientes'].sum():.0f}")
 
-            st.info("Se consideran alarmas amarillas las alarmas proactivas y de alerta. Las alarmas de disco deben ser 3x la cantidad de discos. La cantidad de alertas de CPU debieran ser dos")
+            st.info("Se consideran alarmas amarillas las alarmas proactivas y de alerta. Las alarmas de disco deben ser 3x la cantidad de discos.")
             
             st.markdown("---")
             
@@ -147,12 +147,12 @@ class AlarmReportUI:
                 )
             
             with col2:
-                # Important alarms CSV export
-                important_csv = self._generate_important_alarms_csv(instances_data, current_env)
+                # Important alarms CSV export (using cached data)
+                important_csv = self._generate_important_alarms_csv_fast()
                 st.download_button(
                     label="🚨 Descargar alarmas importantes",
                     data=important_csv,
-                    file_name=f"alarmas_importantes_{current_env}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    file_name=f"alarmas_importantes_global_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
                     mime="text/csv",
                     use_container_width=True
                 )
@@ -352,6 +352,99 @@ class AlarmReportUI:
             # Get all alarm names that are in INSUFFICIENT_DATA state (gray)
             insufficient_alarm_names = []
             for alarm in alarms:
+                alarm_name = alarm.get('AlarmName', '')
+                state = alarm.get('StateValue', '')
+                
+                if state in ['INSUFFICIENT_DATA', 'UNKNOWN']:
+                    insufficient_alarm_names.append(alarm_name)
+            
+            if insufficient_alarm_names:
+                insufficient_alarms_found = True
+                alarm_count = len(insufficient_alarm_names)
+                alarm_list = '; '.join(insufficient_alarm_names)
+                output.write(f"{instance_name},{instance_env},{alarm_count},\"{alarm_list}\"\n")
+        
+        if not insufficient_alarms_found:
+            output.write("No hay alertas con datos insuficientes\n")
+        
+        csv_content = output.getvalue()
+        output.close()
+        return csv_content
+
+    def _generate_important_alarms_csv_fast(self) -> str:
+        """Generate CSV for important alarms using cached AWS data (much faster)."""
+        import io
+        from datetime import datetime
+        
+        # Use cached data - no additional AWS calls!
+        all_instances_data = self.aws_service.get_aws_data()
+        
+        output = io.StringIO()
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Process red alarms by environment
+        environments = ["Production", "QA", "DEV"]
+        
+        for env in environments:
+            # Filter instances by environment
+            env_instances = [inst for inst in all_instances_data if inst.get('Environment') == env]
+            
+            if not env_instances:
+                continue
+            
+            # Pre-process to get total count using CACHED alarm data
+            total_red_alarms_in_env = 0
+            env_red_alarm_details = []
+            
+            for instance in env_instances:
+                instance_id = instance['ID']
+                # Use CACHED alarms from the instance data itself
+                cached_alarms = instance.get('AlarmDetails', [])
+                
+                red_alarm_names = []
+                for alarm in cached_alarms:
+                    alarm_name = alarm.get('AlarmName', '')
+                    state = alarm.get('StateValue', '')
+                    if state == 'ALARM' and not any(kw in alarm_name.upper() for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA']):
+                        red_alarm_names.append(alarm_name)
+                
+                if red_alarm_names:
+                    total_red_alarms_in_env += len(red_alarm_names)
+                    env_red_alarm_details.append({
+                        'name': instance.get('Name', instance_id),
+                        'count': len(red_alarm_names),
+                        'alarms': '; '.join(red_alarm_names)
+                    })
+
+            # Header for this environment with total count
+            output.write(f"Alertas Importantes Rojas,{env},{current_time},Total Alarmas Rojas: {total_red_alarms_in_env}\n")
+            output.write("Nombre del Servidor,Cantidad,Nombre de alertas rojas\n")
+            
+            # Process red alarms for this environment
+            if env_red_alarm_details:
+                for detail in env_red_alarm_details:
+                    output.write(f"{detail['name']},{detail['count']},\"{detail['alarms']}\"\n")
+            else:
+                output.write(f"No hay alertas rojas en {env}\n")
+            
+            # Add blank line after each environment section
+            output.write("\n")
+        
+        # Section for insufficient data alarms (all environments together)
+        output.write("Alertas No disponibles\n")
+        output.write("Nombre del Servidor,Entorno,Cantidad,Nombre de la alerta que tiene datos no suficientes\n")
+        
+        # Process insufficient data alarms from all environments using cached data
+        insufficient_alarms_found = False
+        for instance in all_instances_data:
+            instance_name = instance.get('Name', instance.get('ID', 'N/A'))
+            instance_env = instance.get('Environment', 'N/A')
+            # Use CACHED alarms
+            cached_alarms = instance.get('AlarmDetails', [])
+            
+            # Get all alarm names that are in INSUFFICIENT_DATA state (gray)
+            insufficient_alarm_names = []
+            for alarm in cached_alarms:
                 alarm_name = alarm.get('AlarmName', '')
                 state = alarm.get('StateValue', '')
                 
