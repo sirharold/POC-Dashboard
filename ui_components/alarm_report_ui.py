@@ -56,6 +56,13 @@ class AlarmReportUI:
         # Process alarm data for report
         report_data = self._process_alarm_data(filtered_instances, current_env)
         
+        # Process alarm data for ALL environments (for CSV generation)
+        all_env_alarm_data = {}
+        for env in ["Production", "QA", "DEV"]:
+            env_instances = [inst for inst in instances_data if inst.get('Environment') == env]
+            if env_instances:
+                all_env_alarm_data[env] = self._process_alarm_data(env_instances, env)
+        
         # Create and display the report table
         if report_data:
             df = pd.DataFrame(report_data)
@@ -147,8 +154,8 @@ class AlarmReportUI:
                 )
             
             with col2:
-                # Important alarms CSV export (using cached data)
-                important_csv = self._generate_important_alarms_csv_fast()
+                # Important alarms CSV export (using processed data)
+                important_csv = self._generate_important_alarms_csv_from_processed_data(all_env_alarm_data, instances_data)
                 st.download_button(
                     label="🚨 Descargar alarmas importantes",
                     data=important_csv,
@@ -463,3 +470,95 @@ class AlarmReportUI:
         csv_content = output.getvalue()
         output.close()
         return csv_content
+    def _generate_important_alarms_csv_from_processed_data(self, all_env_alarm_data: dict, instances_data: list) -> str:
+        """Generate CSV for important alarms using already processed data (fastest approach)."""
+        import io
+        from datetime import datetime
+        
+        output = io.StringIO()
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Process red alarms by environment using the processed data
+        for env in ["Production", "QA", "DEV"]:
+            if env not in all_env_alarm_data:
+                continue
+            
+            env_data = all_env_alarm_data[env]
+            
+            # Calculate totals from processed data
+            total_red_alarms_in_env = sum(row.get('red_alarms', 0) for row in env_data)
+            
+            # Header for this environment with total count
+            output.write(f"Alertas Importantes Rojas,{env},{current_time},Total Alarmas Rojas: {total_red_alarms_in_env}\n")
+            output.write("Nombre del Servidor,Cantidad,Nombre de alertas rojas\n")
+            
+            # Process servers with red alarms
+            env_has_red_alarms = False
+            for row in env_data:
+                red_count = row.get('red_alarms', 0)
+                if red_count > 0:
+                    env_has_red_alarms = True
+                    server_name = row.get('instance_name', 'N/A')
+                    
+                    # Get actual alarm names for this server
+                    instance_id = row.get('instance_id', '')
+                    red_alarm_names = self._get_red_alarm_names(instance_id)
+                    alarm_list = '; '.join(red_alarm_names) if red_alarm_names else f"({red_count} alarmas rojas)"
+                    
+                    output.write(f"{server_name},{red_count},\"{alarm_list}\"\n")
+            
+            if not env_has_red_alarms:
+                output.write(f"No hay alertas rojas en {env}\n")
+            
+            output.write("\n")
+        
+        # Section for insufficient data alarms
+        output.write("Alertas No disponibles\n")
+        output.write("Nombre del Servidor,Entorno,Cantidad,Nombre de la alerta que tiene datos no suficientes\n")
+        
+        insufficient_alarms_found = False
+        for env, env_data in all_env_alarm_data.items():
+            for row in env_data:
+                insufficient_count = row.get('insufficient_data', 0)
+                if insufficient_count > 0:
+                    insufficient_alarms_found = True
+                    server_name = row.get('instance_name', 'N/A')
+                    instance_id = row.get('instance_id', '')
+                    insufficient_alarm_names = self._get_insufficient_data_alarm_names(instance_id)
+                    alarm_list = '; '.join(insufficient_alarm_names) if insufficient_alarm_names else f"({insufficient_count} alarmas sin datos)"
+                    output.write(f"{server_name},{env},{insufficient_count},\"{alarm_list}\"\n")
+        
+        if not insufficient_alarms_found:
+            output.write("No hay alertas con datos insuficientes\n")
+        
+        csv_content = output.getvalue()
+        output.close()
+        return csv_content
+
+    def _get_red_alarm_names(self, instance_id: str) -> list:
+        """Get names of red alarms for a specific instance."""
+        red_alarm_names = []
+        try:
+            alarms = self.aws_service.get_alarms_for_instance(instance_id)
+            for alarm in alarms:
+                alarm_name = alarm.get('AlarmName', '')
+                state = alarm.get('StateValue', '')
+                if state == 'ALARM' and not any(kw in alarm_name.upper() for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA']):
+                    red_alarm_names.append(alarm_name)
+        except Exception:
+            pass
+        return red_alarm_names
+
+    def _get_insufficient_data_alarm_names(self, instance_id: str) -> list:
+        """Get names of insufficient data alarms for a specific instance."""
+        insufficient_alarm_names = []
+        try:
+            alarms = self.aws_service.get_alarms_for_instance(instance_id)
+            for alarm in alarms:
+                alarm_name = alarm.get('AlarmName', '')
+                state = alarm.get('StateValue', '')
+                if state in ['INSUFFICIENT_DATA', 'UNKNOWN']:
+                    insufficient_alarm_names.append(alarm_name)
+        except Exception:
+            pass
+        return insufficient_alarm_names
