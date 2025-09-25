@@ -1,5 +1,38 @@
 # Dashboard EPMAPS POC - Development History
 
+## v0.3.0 - Major Authentication System Refactoring (2025-09-25)
+
+### Problem Identified
+- The existing authentication system was not robust. It relied on `st.session_state`, causing the user to be logged out when navigating via standard HTML links, which force a full page reload.
+- The previous workaround involved replacing links with buttons, which was a limiting factor.
+- The underlying implementation used `localStorage` and JavaScript injections, which was fundamentally insecure and could be easily bypassed by a malicious user.
+
+### Solution Applied
+- The entire custom authentication system in `utils/auth.py` was deprecated and removed.
+- The application was migrated to use the `streamlit-authenticator` library, which provides a robust, secure, and industry-standard authentication solution.
+- The new system is based on secure, server-signed cookies (`HttpOnly`), ensuring that the authentication state persists across page reloads, link navigation, and even browser sessions.
+
+### Technical Implementation
+1.  **`requirements.txt`**: Confirmed `streamlit-authenticator` was a project dependency.
+2.  **`config.yaml`**: 
+    - Added a `credentials` section to store user information and securely hashed passwords (using bcrypt).
+    - Added a `cookie` section to configure the session cookie's name, signing key, and expiration.
+3.  **`utils/auth.py`**: 
+    - Completely refactored the file. All insecure, custom logic was removed.
+    - It now contains a single function, `get_authenticator()`, which initializes the `streamlit-authenticator` object from the `config.yaml` file.
+4.  **`dashboard_manager.py`**: 
+    - Replaced the call to the old `login_form()` with the `authenticator.login()` widget.
+    - The main application logic is now nested inside a check for `st.session_state["authentication_status"]`.
+    - The logout button is now provided directly by the authenticator object, simplifying the header.
+
+### Result
+- ✅ **Robust Authentication**: The login state is now persistent and survives navigation via any component, including standard links.
+- ✅ **Enhanced Security**: The system is no longer vulnerable to `localStorage` manipulation. Sessions are validated using cryptographically signed cookies.
+- ✅ **Simplified Codebase**: The complex and insecure JavaScript injection code was removed, resulting in a cleaner and more maintainable authentication flow.
+- ✅ **Standard Compliance**: The authentication mechanism now follows modern web application best practices.
+
+### Version: v0.3.0
+
 ## Overview
 This document tracks the complete development history of the Dashboard EPMAPS POC project, including all changes, issues resolved, and technical decisions made.
 

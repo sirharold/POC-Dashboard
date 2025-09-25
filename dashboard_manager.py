@@ -8,7 +8,7 @@ from ui_components.dashboard_ui import DashboardUI
 from ui_components.detail_ui import DetailUI
 from ui_components.alarm_report_ui import AlarmReportUI
 from utils.helpers import load_css
-from utils.auth import login_form, add_logout_button, add_user_header
+from utils.auth import get_authenticator
 
 
 class DashboardManager:
@@ -32,6 +32,7 @@ class DashboardManager:
         self.show_aws_errors = self.config['settings']['show_aws_errors']
         self.refresh_interval = self.config['settings']['refresh_interval_seconds']
         self.app_version = self.config['settings']['version']
+        self.authenticator = get_authenticator()
     
     def run(self):
         """Main entry point that routes to appropriate page."""
@@ -59,22 +60,45 @@ class DashboardManager:
         
         # Load CSS (same as original)
         load_css()
-        
-        # Authentication check
-        if not login_form():
-            return  # Stop here if not authenticated
-        
-        # Add user info and logout button to header
-        add_user_header()
-        
-        # Router principal: decidir qué vista mostrar basado en la URL
-        if 'alarm_report' in st.query_params:
-            self.alarm_report_ui.display_alarm_report()
-        elif 'poc_vm_id' in st.query_params:
-            self.detail_ui.display_detail_page(st.query_params['poc_vm_id'])
-        else:
-            self.dashboard_ui.display_dashboard_page(
-                self.refresh_interval, 
-                self.app_version, 
-                self.show_aws_errors
-            )
+
+        # --- New Authentication Flow ---
+        self.authenticator.login()
+
+        if st.session_state["authentication_status"]:
+            # --- Main Application Logic ---
+            st.markdown("""
+                <style>
+                    div[data-testid="stToolbar"] {
+                        display: none;
+                    }
+                </style>
+            """, unsafe_allow_html=True)
+            
+            # Header with user info and logout
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                # Detect current page and show appropriate title
+                if 'alarm_report' in st.query_params:
+                    st.markdown("# ☁️ Dashboard EPMAPS - 📊 Reporte de Alarmas")
+                elif 'poc_vm_id' in st.query_params:
+                    st.markdown("# ☁️ Dashboard EPMAPS - Detalle VM")
+                else:
+                    st.markdown("# ☁️ Dashboard EPMAPS")
+            with col2:
+                self.authenticator.logout()
+
+            # Router principal: decidir qué vista mostrar basado en la URL
+            if 'alarm_report' in st.query_params:
+                self.alarm_report_ui.display_alarm_report()
+            elif 'poc_vm_id' in st.query_params:
+                self.detail_ui.display_detail_page(st.query_params['poc_vm_id'])
+            else:
+                self.dashboard_ui.display_dashboard_page(
+                    self.refresh_interval,
+                    self.app_version,
+                    self.show_aws_errors
+                )
+        elif st.session_state["authentication_status"] is False:
+            st.error('Email/contraseña incorrectos')
+        elif st.session_state["authentication_status"] is None:
+            st.warning('Por favor, ingrese su email y contraseña')

@@ -67,4 +67,20 @@ server_groups:
 settings:
   refresh_interval_seconds: 30
   show_aws_errors: false
-  version: v0.2.39
+  version: v0.3.0
+
+credentials:
+  usernames:
+    admin@dashboardepmaps.com:
+      email: admin@dashboardepmaps.com
+      name: Admin
+      password: '$2b$12$bvIbjH7KxEJoNx9/N5EFmeFZkyIdgv4setIM0EVXjz5MXwkruF1aO'
+    user@dashboardepmaps.com:
+      email: user@dashboardepmaps.com
+      name: User
+      password: '$2b$12$xmHYObAkYFeR3lA9wO/fOO1u88rW..Goj0eS3LFFMzlFaKTgHX/ha'
+
+cookie:
+  expiry_days: 30
+  key: some_signature_key # This should be a secret!
+  name: epmaps_dashboard_cookie
