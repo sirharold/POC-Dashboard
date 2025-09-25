@@ -31,70 +31,128 @@ class DetailUI:
             return None
 
     def get_memory_utilization(self, instance_id: str):
-        """Get memory utilization. Same as original function."""
+        """Get memory utilization for both Linux and Windows systems."""
         try:
             cloudwatch = self.aws_service.get_cross_account_boto3_client('cloudwatch')
             if not cloudwatch: return None
-            # Try CWAgent namespace first
-            response = cloudwatch.get_metric_statistics(
-                Namespace='CWAgent', MetricName='mem_used_percent',
-                Dimensions=[{'Name': 'InstanceId', 'Value': instance_id}],
-                StartTime=datetime.datetime.utcnow() - datetime.timedelta(minutes=15),
-                EndTime=datetime.datetime.utcnow(), Period=300, Statistics=['Average']
-            )
-            return sorted(response['Datapoints'], key=lambda x: x['Timestamp'], reverse=True)[0] if response['Datapoints'] else None
+            
+            # Try different memory metrics for Linux and Windows
+            memory_metrics = [
+                # Linux CloudWatch Agent
+                {'Namespace': 'CWAgent', 'MetricName': 'mem_used_percent', 'Dimensions': [{'Name': 'InstanceId', 'Value': instance_id}]},
+                # Windows CloudWatch Agent - various possible names
+                {'Namespace': 'CWAgent', 'MetricName': 'Memory % Committed Bytes In Use', 'Dimensions': [{'Name': 'InstanceId', 'Value': instance_id}]},
+                {'Namespace': 'CWAgent', 'MetricName': 'Memory Available Bytes', 'Dimensions': [{'Name': 'InstanceId', 'Value': instance_id}]},
+                # Windows Performance Counters
+                {'Namespace': 'AWS/EC2', 'MetricName': 'MemoryUtilization', 'Dimensions': [{'Name': 'InstanceId', 'Value': instance_id}]},
+            ]
+            
+            for metric in memory_metrics:
+                try:
+                    response = cloudwatch.get_metric_statistics(
+                        Namespace=metric['Namespace'],
+                        MetricName=metric['MetricName'],
+                        Dimensions=metric['Dimensions'],
+                        StartTime=datetime.datetime.utcnow() - datetime.timedelta(minutes=15),
+                        EndTime=datetime.datetime.utcnow(),
+                        Period=300,
+                        Statistics=['Average']
+                    )
+                    if response['Datapoints']:
+                        datapoint = sorted(response['Datapoints'], key=lambda x: x['Timestamp'], reverse=True)[0]
+                        # For Memory Available Bytes, convert to percentage (assuming 8GB total for estimate)
+                        if metric['MetricName'] == 'Memory Available Bytes':
+                            available_gb = datapoint['Average'] / (1024**3)  # Convert to GB
+                            estimated_total_gb = 8  # Default estimate, could be improved
+                            datapoint['Average'] = max(0, 100 - (available_gb / estimated_total_gb * 100))
+                        return datapoint
+                except Exception:
+                    continue
+            
+            return None
         except Exception:
             return None
 
     def get_disk_utilization(self, instance_id: str):
-        """Get disk utilization. Same as original function."""
+        """Get disk utilization for both Linux and Windows systems."""
         try:
             cloudwatch = self.aws_service.get_cross_account_boto3_client('cloudwatch')
             if not cloudwatch: return []
             
             disk_metrics = []
-            # Try to get disk metrics from CWAgent
-            paginator = cloudwatch.get_paginator('list_metrics')
-            pages = paginator.paginate(
-                Namespace='CWAgent',
-                MetricName='disk_used_percent',
-                Dimensions=[{'Name': 'InstanceId', 'Value': instance_id}]
-            )
             
-            for page in pages:
-                for metric in page['Metrics']:
-                    # Get the device/path dimension
-                    device = None
-                    path = None
-                    for dim in metric['Dimensions']:
-                        if dim['Name'] == 'device':
-                            device = dim['Value']
-                        elif dim['Name'] == 'path':
-                            path = dim['Value']
+            # Try different disk metrics for Linux and Windows
+            disk_metric_names = [
+                'disk_used_percent',        # Linux CWAgent
+                'LogicalDisk % Free Space', # Windows CWAgent
+            ]
+            
+            paginator = cloudwatch.get_paginator('list_metrics')
+            
+            for metric_name in disk_metric_names:
+                try:
+                    pages = paginator.paginate(
+                        Namespace='CWAgent',
+                        MetricName=metric_name,
+                        Dimensions=[{'Name': 'InstanceId', 'Value': instance_id}]
+                    )
                     
-                    if device or path:
-                        # Filter out tmpfs and other non-physical filesystems
-                        disk_name = device or path or 'Unknown'
-                        if any(exclude in disk_name.lower() for exclude in ['tmpfs', 'devtmpfs', 'udev', 'proc', 'sys', 'run']):
-                            continue
+                    for page in pages:
+                        for metric in page['Metrics']:
+                            # Get the device/path/objectname dimension
+                            device = None
+                            path = None
+                            objectname = None
+                            
+                            for dim in metric['Dimensions']:
+                                if dim['Name'] == 'device':
+                                    device = dim['Value']
+                                elif dim['Name'] == 'path':
+                                    path = dim['Value']
+                                elif dim['Name'] == 'objectname':  # Windows uses this
+                                    objectname = dim['Value']
+                            
+                            # Determine disk name based on OS type
+                            if objectname:  # Windows
+                                disk_name = objectname
+                                if any(exclude in disk_name.lower() for exclude in ['_total', 'system']):
+                                    continue
+                            else:  # Linux
+                                disk_name = device or path or 'Unknown'
+                                if any(exclude in disk_name.lower() for exclude in ['tmpfs', 'devtmpfs', 'udev', 'proc', 'sys', 'run']):
+                                    continue
+                            
+                            if disk_name:
+                                # Get the latest value
+                                response = cloudwatch.get_metric_statistics(
+                                    Namespace='CWAgent',
+                                    MetricName=metric_name,
+                                    Dimensions=metric['Dimensions'],
+                                    StartTime=datetime.datetime.utcnow() - datetime.timedelta(minutes=15),
+                                    EndTime=datetime.datetime.utcnow(),
+                                    Period=300,
+                                    Statistics=['Average']
+                                )
+                                
+                                if response['Datapoints']:
+                                    latest = sorted(response['Datapoints'], key=lambda x: x['Timestamp'], reverse=True)[0]
+                                    usage_value = latest['Average']
+                                    
+                                    # Convert Windows "Free Space" to "Used Space"
+                                    if metric_name == 'LogicalDisk % Free Space':
+                                        usage_value = 100 - usage_value
+                                    
+                                    disk_metrics.append({
+                                        'device': disk_name,
+                                        'usage': usage_value
+                                    })
+                    
+                    # If we found metrics with this metric name, break to avoid duplicates
+                    if disk_metrics:
+                        break
                         
-                        # Get the latest value
-                        response = cloudwatch.get_metric_statistics(
-                            Namespace='CWAgent',
-                            MetricName='disk_used_percent',
-                            Dimensions=metric['Dimensions'],
-                            StartTime=datetime.datetime.utcnow() - datetime.timedelta(minutes=15),
-                            EndTime=datetime.datetime.utcnow(),
-                            Period=300,
-                            Statistics=['Average']
-                        )
-                        
-                        if response['Datapoints']:
-                            latest = sorted(response['Datapoints'], key=lambda x: x['Timestamp'], reverse=True)[0]
-                            disk_metrics.append({
-                                'device': disk_name,
-                                'usage': latest['Average']
-                            })
+                except Exception:
+                    continue
             
             return disk_metrics
         except Exception:
