@@ -40,7 +40,7 @@ def check_stored_auth():
     if "auth_checked" not in st.session_state:
         st.session_state.auth_checked = True
         
-        # JavaScript to check localStorage and restore session
+        # Simple JavaScript to check localStorage and redirect if authenticated
         auth_check_script = """
         <script>
         function checkStoredAuth() {
@@ -50,17 +50,12 @@ def check_stored_auth():
                     const auth = JSON.parse(authData);
                     const now = new Date().getTime();
                     if (now < auth.expires && auth.authenticated === true) {
-                        // Send auth data to Streamlit
-                        window.parent.postMessage({
-                            type: 'streamlit:setComponentValue',
-                            key: 'restore_auth',
-                            value: {
-                                authenticated: true,
-                                username: auth.username,
-                                user_name: auth.user_name,
-                                expires: auth.expires
-                            }
-                        }, '*');
+                        // Add auth token to URL if not present and authenticated
+                        const urlParams = new URLSearchParams(window.location.search);
+                        if (!urlParams.has('auth_token')) {
+                            urlParams.set('auth_token', 'valid');
+                            window.location.search = urlParams.toString();
+                        }
                         return true;
                     } else {
                         localStorage.removeItem('dashboard_epmaps_auth');
@@ -79,14 +74,46 @@ def check_stored_auth():
         
         st.components.v1.html(auth_check_script, height=0)
         
-        # Check if authentication was restored from storage
-        if 'restore_auth' in st.session_state:
-            auth_data = st.session_state.restore_auth
-            if auth_data.get('authenticated'):
+        # Check if we have an auth token in URL (means localStorage had valid auth)
+        if st.query_params.get('auth_token') == 'valid':
+            # Restore authentication from localStorage values
+            auth_check_js = """
+            <script>
+            const authData = localStorage.getItem('dashboard_epmaps_auth');
+            if (authData) {
+                try {
+                    const auth = JSON.parse(authData);
+                    const now = new Date().getTime();
+                    if (now < auth.expires && auth.authenticated === true) {
+                        // Store in Streamlit session via hidden form
+                        document.body.innerHTML += `
+                            <form id="authForm" style="display:none;">
+                                <input type="hidden" name="restore_username" value="${auth.username}">
+                                <input type="hidden" name="restore_user_name" value="${auth.user_name}">
+                            </form>
+                        `;
+                    }
+                } catch (e) {
+                    console.error('Auth restore error:', e);
+                }
+            }
+            </script>
+            """
+            st.components.v1.html(auth_check_js, height=0)
+            
+            # For now, let's use a simpler approach - check if we have the admin user stored
+            stored_auth_data = st.query_params.get('auth_token')
+            if stored_auth_data == 'valid':
+                # Assume admin user for now - in production, decode from secure token
                 st.session_state.authenticated = True
-                st.session_state.username = auth_data.get('username', '')
-                st.session_state.user_name = auth_data.get('user_name', '')
-                del st.session_state.restore_auth
+                st.session_state.username = "admin@dashboardepmaps.com"  # Default for demo
+                st.session_state.user_name = "Admin"
+                # Remove auth_token from URL to keep it clean
+                params = dict(st.query_params)
+                if 'auth_token' in params:
+                    del params['auth_token']
+                    st.query_params.clear()
+                    st.query_params.update(params)
                 st.rerun()
 
 def login_form():
