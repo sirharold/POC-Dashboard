@@ -1,8 +1,8 @@
 """
 Alarm Report UI component for displaying global alarm statistics.
 """
-import streamlit as st
-import pandas as pd
+import streamlit as st # type: ignore
+import pandas as pd # pyright: ignore[reportMissingModuleSource]
 from typing import Dict, List
 from collections import Counter
 import re
@@ -102,7 +102,7 @@ class AlarmReportUI:
             df.columns = [column_names[col] for col in column_order]
 
             # Sort by instance name by default
-            df = df.sort_values(by='Nombre Instancia').reset_index(drop=True)
+            df = df.sort_values(by='Nombre Instancia').reset_index(drop=True) # type: ignore
 
             # --- End of Setup ---
 
