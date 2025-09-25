@@ -23,7 +23,6 @@ def get_authenticator() -> stauth.Authenticate:
         config['credentials'],
         config['cookie']['name'],
         config['cookie']['key'],
-        config['cookie']['expiry_days'],
-        config['credentials']['usernames']  # pre-authorized users
+        config['cookie']['expiry_days']
     )
     return authenticator

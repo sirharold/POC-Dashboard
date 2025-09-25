@@ -1,5 +1,34 @@
 # Dashboard EPMAPS POC - Development History
 
+## v0.3.1 - Fix: Adapt to streamlit-authenticator API change (2025-09-25)
+
+### Problem Identified
+- After refactoring to `streamlit-authenticator`, the application failed to start, throwing a `DeprecationError`.
+- The error indicated that the `pre_authorized` parameter has been removed from the `Authenticate` class constructor in recent versions of the library.
+
+### Solution Applied
+- The `stauth.Authenticate` instantiation in `utils/auth.py` was updated to match the new API.
+- The fifth argument (`config['credentials']['usernames']`), which was being passed as `pre_authorized`, was removed.
+- The library correctly uses the main `credentials` dictionary (the first argument) to determine the list of valid users, so the extra parameter was redundant.
+
+### Technical Fix
+```python
+# utils/auth.py - Corrected Authenticate call
+
+authenticator = stauth.Authenticate(
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days'] # No longer passing the 5th (pre_authorized) argument
+)
+```
+
+### Result
+- ✅ The application is now compatible with recent versions of `streamlit-authenticator`.
+- ✅ The `DeprecationError` is resolved, and the application starts correctly.
+
+### Version: v0.3.1
+
 ## v0.3.0 - Major Authentication System Refactoring (2025-09-25)
 
 ### Problem Identified
