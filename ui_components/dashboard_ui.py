@@ -70,8 +70,20 @@ class DashboardUI:
         # Preserve columns parameter when navigating to detail page
         columns_param = st.query_params.get('columns', '2')
         
-        # Use HTML link - session persistence will handle authentication
-        st.markdown(f"<a href='?poc_vm_id={instance_id}&columns={columns_param}' target='_self' class='card-link'>{' '.join(card_content.split())}</a>", unsafe_allow_html=True)
+        # Display the server card content
+        st.markdown(card_content, unsafe_allow_html=True)
+        
+        # Use Streamlit button for navigation to preserve session state
+        if st.button(f"📊 Ver detalles de {vm_name}", 
+                    key=f"detail_{instance_id}", 
+                    use_container_width=True,
+                    type="secondary"):
+            st.query_params.clear()
+            st.query_params.update({
+                "poc_vm_id": instance_id,
+                "columns": columns_param
+            })
+            st.rerun()
 
     def create_group_container(self, group_name: str, instances: list):
         """Create group container. Exact same logic as original function."""
