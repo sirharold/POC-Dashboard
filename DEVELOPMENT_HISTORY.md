@@ -1,5 +1,29 @@
 # Dashboard EPMAPS POC - Development History
 
+## v0.4.4 - Fix: Display Disk Information Table (2025-09-26)
+
+### Problem Identified
+- The disk information table, intended to replace the old gauges, was not appearing on the detail page. An info message "No hay datos de disco disponibles" was shown instead.
+
+### Root Cause
+- The initial implementation attempted to create a single, unified table by joining two different data sources:
+  1.  **CloudWatch Agent Metrics**: Provided disk usage percentage.
+  2.  **AWS EC2 API**: Provided EBS volume details (size, tags, IOPS).
+- A debug investigation revealed that there was no reliable, common key to join these two sources. The Agent provided the OS drive letter (e.g., `C:`), but the EC2 API only provides the hypervisor device name (e.g., `/dev/xvdf`) and Volume ID. The link between them was missing.
+
+### Solution Applied
+- **1. Improved Metric Parsing**: A debug script (`ScriptsUtil/debug_metrics.py`) was created to inspect the raw CloudWatch metric dimensions. It was discovered that the OS drive letter was available in the `instance` dimension, and the `get_disk_utilization` function was corrected to parse it properly.
+- **2. Two-Table UI**: Acknowledging the data-linking problem, the UI was redesigned to present the information honestly and robustly in two separate tables:
+    - A **"Uso de Disco (Vista del Sistema Operativo)"** table, showing the drive letter and its usage percentage.
+    - A **"Volúmenes EBS (Vista de AWS)"** table, showing the low-level AWS device name, size, IOPS, type, and tags for each physical volume.
+- **3. Cleanup**: All debugging code and temporary scripts were removed after the fix was implemented.
+
+### Result
+- ✅ The disk information is now correctly displayed on the detail page.
+- ✅ The two-table approach provides a complete and accurate picture by showing both the OS-level and AWS-level perspectives, which is more robust than a fragile, assumed join.
+
+### Version: v0.4.4
+
 ## v0.4.3 - Fix: Preserve Column Selection During Navigation (2025-09-25)
 
 ### Problem Identified

@@ -100,22 +100,22 @@ class DetailUI:
                     for page in pages:
                         for metric in page['Metrics']:
                             # Get the device/path/objectname dimension
-                            device = None
-                            path = None
-                            objectname = None
+                            instance_dim = None # For Windows drive letters
                             
                             for dim in metric['Dimensions']:
                                 if dim['Name'] == 'device':
                                     device = dim['Value']
                                 elif dim['Name'] == 'path':
                                     path = dim['Value']
-                                elif dim['Name'] == 'objectname':  # Windows uses this
+                                elif dim['Name'] == 'objectname':
                                     objectname = dim['Value']
+                                elif dim['Name'] == 'instance': # This dimension often holds the drive letter
+                                    instance_dim = dim['Value']
                             
                             # Determine disk name based on OS type
-                            if objectname:  # Windows
-                                disk_name = objectname
-                                if any(exclude in disk_name.lower() for exclude in ['_total', 'system']):
+                            if objectname == 'LogicalDisk' and instance_dim:  # Windows
+                                disk_name = instance_dim
+                                if any(exclude in disk_name.lower() for exclude in ['_total', 'system', 'harddisk']):
                                     continue
                             else:  # Linux
                                 disk_name = device or path or 'Unknown'
@@ -144,7 +144,8 @@ class DetailUI:
                                     
                                     disk_metrics.append({
                                         'device': disk_name,
-                                        'usage': usage_value
+                                        'usage': usage_value,
+                                        'dimensions': metric['Dimensions'] # Return all dimensions for debugging
                                     })
                     
                     # If we found metrics with this metric name, break to avoid duplicates
@@ -352,40 +353,38 @@ class DetailUI:
             # --- Disk I/O History Chart ---
             st.markdown("**💾 Utilización de Discos**")
 
-            # --- DEBUGGING START ---
-            st.markdown("### 🐞 DEBUG INFO: Disk Data Sources")
-            with st.expander("Click to see raw disk data"):
-                st.write("**Source 1: Usage Metrics (from get_disk_utilization)**")
-                disk_usage_metrics_debug = self.get_disk_utilization(instance_id)
-                st.json(disk_usage_metrics_debug)
-
-                st.write("**Source 2: Block Device Mappings (from instance details)**")
-                block_devices_debug = details.get('BlockDeviceMappings', [])
-                st.json(block_devices_debug)
-
-                st.write("**Source 3: Volume Details (from get_volume_details)**")
-                volume_details_debug = self.aws_service.get_volume_details(block_devices_debug)
-                st.json(volume_details_debug)
-            st.markdown("--- ")
-            # --- DEBUGGING END ---
-            disk_read_df = self.aws_service.get_metric_history(instance_id, 'DiskReadBytes', 'AWS/EC2', statistic='Sum')
-            disk_write_df = self.aws_service.get_metric_history(instance_id, 'DiskWriteBytes', 'AWS/EC2', statistic='Sum')
-
-            if not disk_read_df.empty or not disk_write_df.empty:
-                disk_fig = go.Figure()
-                if not disk_read_df.empty:
-                    disk_fig.add_trace(go.Scatter(x=disk_read_df['Timestamp'], y=disk_read_df['Sum'] / 1024**2, name='Lectura (MB)', line=dict(color='#00ff88')))
-                if not disk_write_df.empty:
-                    disk_fig.add_trace(go.Scatter(x=disk_write_df['Timestamp'], y=disk_write_df['Sum'] / 1024**2, name='Escritura (MB)', line=dict(color='#ff006e')))
-                
-                disk_fig.update_layout(
-                    title={'text': 'I/O de Disco (MB)', 'y':0.9, 'x':0.5, 'xanchor': 'center', 'yanchor': 'top', 'font': {'color': 'white', 'size': 16}},
-                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0.1)", font_color="white", height=300,
-                    margin=dict(l=20, r=20, t=50, b=20), yaxis_title="Megabytes (MB)", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-                )
-                st.plotly_chart(disk_fig, use_container_width=True)
+            # --- OS-Level Disk Usage ---
+            st.markdown("##### Uso de Disco (Vista del Sistema Operativo)")
+            disk_usage_metrics = self.get_disk_utilization(instance_id)
+            if disk_usage_metrics:
+                df_usage = pd.DataFrame(disk_usage_metrics)
+                df_usage.rename(columns={'device': 'Unidad', 'usage': 'Uso %', 'dimensions': 'Dimensiones'}, inplace=True)
+                df_usage['Uso %'] = df_usage['Uso %'].map('{:,.2f}%'.format)
+                st.dataframe(df_usage[['Unidad', 'Uso %']], use_container_width=True)
             else:
-                st.info("No hay datos históricos de I/O de disco disponibles.")
+                st.info("No se encontraron métricas de uso de disco desde el Agente de CloudWatch.")
+
+            # --- AWS EBS Volume Details ---
+            st.markdown("##### Volúmenes EBS (Vista de AWS)")
+            block_devices = details.get('BlockDeviceMappings', [])
+            volume_details = self.aws_service.get_volume_details(block_devices)
+            if volume_details:
+                aws_disk_data = []
+                for mapping in block_devices:
+                    vol_id = mapping.get('Ebs', {}).get('VolumeId')
+                    if vol_id and vol_id in volume_details:
+                        details = volume_details[vol_id]
+                        aws_disk_data.append({
+                            "Device AWS": mapping.get('DeviceName'),
+                            "Tamaño (GB)": details.get('Size'),
+                            "IOPS": details.get('Iops'),
+                            "Tipo": details.get('VolumeType'),
+                            "Tags": str(details.get('Tags', {}))
+                        })
+                df_vols = pd.DataFrame(aws_disk_data)
+                st.dataframe(df_vols, use_container_width=True)
+            else:
+                st.info("No se encontraron volúmenes EBS para esta instancia.")
 
             # --- CloudWatch Log Viewer ---
             st.markdown("---")
