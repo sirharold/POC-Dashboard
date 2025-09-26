@@ -263,21 +263,23 @@ class DetailUI:
             st.text(f"IP Privada: {details.get('PrivateIpAddress')}")
             st.text(f"S.O.: {details.get('PlatformDetails', 'Linux/UNIX')}")
 
-            st.markdown("## ⚙️ Metadatos de la Instancia")
-            st.text(f"AMI ID: {details.get('ImageId')}")
-            # Format launch time for readability
-            launch_time = details.get('LaunchTime')
-            if launch_time:
-                st.text(f"Lanzamiento: {launch_time.strftime('%Y-%m-%d %H:%M:%S')}")
-            st.text(f"VPC ID: {details.get('VpcId')}")
-            st.text(f"Subnet ID: {details.get('SubnetId')}")
+            with st.expander("⚙️ Metadatos de la Instancia"):
+                st.text(f"AMI ID: {details.get('ImageId')}")
+                # Format launch time for readability
+                launch_time = details.get('LaunchTime')
+                if launch_time:
+                    st.text(f"Lanzamiento: {launch_time.strftime('%Y-%m-%d %H:%M:%S')}")
+                st.text(f"VPC ID: {details.get('VpcId')}")
+                st.text(f"Subnet ID: {details.get('SubnetId')}")
             
-            # Display Security Groups
+            # Display Security Groups in a separate expander
             sgs = details.get('SecurityGroups', [])
-            if sgs:
-                st.markdown("**Grupos de Seguridad:**")
-                for sg in sgs:
-                    st.text(f"- {sg['GroupName']} ({sg['GroupId']})")
+            with st.expander(f"🔒 Grupos de Seguridad ({len(sgs)})"):
+                if sgs:
+                    for sg in sgs:
+                        st.text(f"- {sg['GroupName']} ({sg['GroupId']})")
+                else:
+                    st.text("No hay grupos de seguridad asociados.")
             st.markdown("## 🚨 Alarmas")
             st.markdown(create_alarm_legend(), unsafe_allow_html=True)
             alarms = self.aws_service.get_alarms_for_instance(instance_id)
@@ -348,7 +350,24 @@ class DetailUI:
                 st.info("No hay datos históricos de red disponibles.")
 
             # --- Disk I/O History Chart ---
-            st.markdown("### 💾 Operaciones de Disco")
+            st.markdown("**💾 Utilización de Discos**")
+
+            # --- DEBUGGING START ---
+            st.markdown("### 🐞 DEBUG INFO: Disk Data Sources")
+            with st.expander("Click to see raw disk data"):
+                st.write("**Source 1: Usage Metrics (from get_disk_utilization)**")
+                disk_usage_metrics_debug = self.get_disk_utilization(instance_id)
+                st.json(disk_usage_metrics_debug)
+
+                st.write("**Source 2: Block Device Mappings (from instance details)**")
+                block_devices_debug = details.get('BlockDeviceMappings', [])
+                st.json(block_devices_debug)
+
+                st.write("**Source 3: Volume Details (from get_volume_details)**")
+                volume_details_debug = self.aws_service.get_volume_details(block_devices_debug)
+                st.json(volume_details_debug)
+            st.markdown("--- ")
+            # --- DEBUGGING END ---
             disk_read_df = self.aws_service.get_metric_history(instance_id, 'DiskReadBytes', 'AWS/EC2', statistic='Sum')
             disk_write_df = self.aws_service.get_metric_history(instance_id, 'DiskWriteBytes', 'AWS/EC2', statistic='Sum')
 
