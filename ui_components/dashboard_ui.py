@@ -197,7 +197,10 @@ class DashboardUI:
             col_center = st.columns([1, 1, 1])
             with col_center[1]:
                 if st.button("📊 Reporte Alarmas", use_container_width=True, type="secondary"):
-                    st.query_params.update({"alarm_report": "true"})
+                    # Preserve columns param when navigating
+                    columns_param = st.query_params.get('columns', '2')
+                    st.query_params.clear()
+                    st.query_params.update({"alarm_report": "true", "columns": columns_param})
                     st.rerun()
         
         st.divider()

@@ -1,5 +1,47 @@
 # Dashboard EPMAPS POC - Development History
 
+## v0.4.3 - Fix: Preserve Column Selection During Navigation (2025-09-25)
+
+### Problem Identified
+- When a user selected a column layout (e.g., 3 columns) on the main dashboard, this selection was lost upon navigating to the Alarm Report page and then returning.
+- The layout would reset to the default of 2 columns.
+
+### Root Cause
+- The navigation logic was incomplete. 
+- 1. The button to navigate **to** the Alarm Report page (`dashboard_ui.py`) did not include the existing `columns` parameter in the new URL.
+- 2. The button to navigate **back from** the Alarm Report page (`alarm_report_ui.py`) was clearing all URL parameters without preserving the `columns` parameter.
+
+### Solution Applied
+- **`alarm_report_ui.py`**: The "Volver al Dashboard" button logic was updated to first read the `columns` parameter from the URL, then clear the URL, and finally re-apply the preserved `columns` parameter. (This was the initial fix).
+- **`dashboard_ui.py`**: The "Reporte Alarmas" button logic was also updated to ensure it preserves the `columns` parameter when adding the `alarm_report=true` parameter to the URL.
+
+### Result
+- ✅ The selected column layout now persists correctly when navigating between the main dashboard and the alarm report page.
+- ✅ The user experience is more consistent and less frustrating.
+
+### Version: v0.4.3
+
+## v0.4.2 - Fix: Correct Alarm Status on Main Dashboard (2025-09-25)
+
+### Problem Identified
+- The main dashboard page was showing all servers with a green/OK status, even when there were active alarms visible on the detail and alarm report pages.
+- This created a critical discrepancy and made the main dashboard unreliable.
+
+### Root Cause
+- The `get_aws_data` function in `services/aws_service.py`, which provides data for the main dashboard, was correctly calculating the alarm counts for each instance.
+- However, the resulting `instance_alarms` counter object was not being included in the final `instance_data` dictionary that is returned by the function.
+- The UI, not finding an `Alarms` key, defaulted to a zero-alarm state.
+
+### Solution Applied
+- The `instance_data` dictionary within `get_aws_data` was modified to correctly include the alarm data.
+- The line `'Alarms': instance_alarms,` was added to ensure the calculated alarm counts are passed to the UI.
+
+### Result
+- ✅ The server cards on the main dashboard now accurately reflect the real-time alarm status (Critical, Preventive, etc.) from CloudWatch.
+- ✅ The discrepancy between the main page and detail pages is resolved.
+
+### Version: v0.4.2
+
 ## v0.4.1 - Fix: Resolve SyntaxError in aws_service.py (2025-09-25)
 
 ### Problem Identified

@@ -20,9 +20,12 @@ class AlarmReportUI:
         # Add back to dashboard link
         col1, col2 = st.columns([3, 1])
         with col1:
+            # Preserve columns parameter when returning to dashboard
+            columns_param = st.query_params.get('columns', '2')
             if st.button("← Volver al Dashboard", type="secondary"):
-                # Clear alarm_report query param to go back to dashboard
+                # Clear alarm_report query param and preserve columns
                 st.query_params.clear()
+                st.query_params.update({"columns": columns_param})
                 st.rerun()
         
         # Page title moved to header - removed duplicate

@@ -173,6 +173,7 @@ class AWSService:
                         'State': instance_state,
                         'Environment': tags.get('Environment', 'Unknown'),
                         'DashboardGroup': dashboard_group,
+                        'Alarms': instance_alarms,
                         'AlarmsList': [], # Placeholder, as alarms_list is not defined here
                         'OperatingSystem': instance.get('PlatformDetails', 'Linux/UNIX'),
                         'PrivateIP': instance.get('PrivateIpAddress', 'N/A'),
