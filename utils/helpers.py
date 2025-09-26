@@ -310,44 +310,14 @@ def create_alarm_item_html(alarm_name: str, status: str, alarm_arn: str = None) 
     Args:
         alarm_name (str): Name of the alarm
         status (str): Status of the alarm
-        alarm_arn (str): ARN of the alarm for AWS console link
+        alarm_arn (str): This parameter is ignored.
         
     Returns:
         str: HTML string for the alarm item
     """
     status_icon = "🔴" if status == "red" else "🟡" if status == "yellow" else "⚫" if status == "gray" else "🟢"
     
-    # Generate AWS console link if ARN is provided
-    if alarm_arn:
-        # Extract account ID and region from ARN (format: arn:aws:cloudwatch:region:account:alarm:name)
-        try:
-            arn_parts = alarm_arn.split(':')
-            region = arn_parts[3] if len(arn_parts) > 3 else 'us-east-1'
-            account_id = arn_parts[4] if len(arn_parts) > 4 else '011528297340'
-            
-            # Create the encoded search parameter for the URL
-            # Replace special characters for URL encoding (more comprehensive)
-            encoded_search = alarm_name.replace(' ', '*20').replace('-', '*20').replace('(', '*28').replace(')', '*29').replace('+', '*20').replace('%', '*25').replace('>', '*3E').replace('<', '*3C').replace('&', '*26').replace('=', '*3D')
-            
-            # Generate the CloudWatch console URL in the correct format
-            # Use quote with safe='' to ensure all special characters are encoded
-            console_url = f"https://{account_id}-pdl6i3zc.{region}.console.aws.amazon.com/cloudwatch/home?region={region}#alarmsV2:alarm/{quote(alarm_name, safe='')}?~(search~'{encoded_search}')"
-            
-            # HTML escape the alarm name for safe display
-            escaped_alarm_name = html.escape(alarm_name)
-            
-            return f'''
-            <div class="alarm-item">
-                <a href="{console_url}" target="_blank" style="color: white; text-decoration: none; font-weight: 500;">
-                    {escaped_alarm_name} 🔗
-                </a>
-                <span style="font-size: 1.5rem;">{status_icon}</span>
-            </div>
-            '''
-        except:
-            pass
-    
-    # HTML escape the alarm name for safe display (fallback case)
+    # HTML escape the alarm name for safe display
     escaped_alarm_name = html.escape(alarm_name)
     
     return f'''

@@ -203,6 +203,40 @@ class DetailUI:
         
         return fig
 
+    def create_history_chart(self, df: pd.DataFrame, title: str, y_column: str, y_title: str) -> go.Figure:
+        """Create a time-series line chart for a given metric."""
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(
+            x=df['Timestamp'], 
+            y=df[y_column],
+            mode='lines', 
+            line=dict(color='#00d4ff', width=2),
+            fill='tozeroy', # Fill area under the line
+            fillcolor='rgba(0, 212, 255, 0.1)'
+        ))
+
+        fig.update_layout(
+            title={
+                'text': title,
+                'y':0.9,
+                'x':0.5,
+                'xanchor': 'center',
+                'yanchor': 'top',
+                'font': {'color': 'white', 'size': 16}
+            },
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0.1)",
+            font_color="white",
+            height=300,
+            margin=dict(l=20, r=20, t=50, b=20),
+            xaxis_title="",
+            yaxis_title=y_title,
+            xaxis=dict(showgrid=False),
+            yaxis=dict(gridcolor='rgba(255, 255, 255, 0.1)')
+        )
+        return fig
+
     def display_detail_page(self, instance_id: str):
         """Display detail page. Exact same logic as original function."""
         details = self.aws_service.get_instance_details(instance_id)
@@ -227,6 +261,23 @@ class DetailUI:
             st.text(f"Estado: {details.get('State', {}).get('Name')}")
             st.text(f"Zona: {details.get('Placement', {}).get('AvailabilityZone')}")
             st.text(f"IP Privada: {details.get('PrivateIpAddress')}")
+            st.text(f"S.O.: {details.get('PlatformDetails', 'Linux/UNIX')}")
+
+            st.markdown("## ⚙️ Metadatos de la Instancia")
+            st.text(f"AMI ID: {details.get('ImageId')}")
+            # Format launch time for readability
+            launch_time = details.get('LaunchTime')
+            if launch_time:
+                st.text(f"Lanzamiento: {launch_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            st.text(f"VPC ID: {details.get('VpcId')}")
+            st.text(f"Subnet ID: {details.get('SubnetId')}")
+            
+            # Display Security Groups
+            sgs = details.get('SecurityGroups', [])
+            if sgs:
+                st.markdown("**Grupos de Seguridad:**")
+                for sg in sgs:
+                    st.text(f"- {sg['GroupName']} ({sg['GroupId']})")
             st.markdown("## 🚨 Alarmas")
             st.markdown(create_alarm_legend(), unsafe_allow_html=True)
             alarms = self.aws_service.get_alarms_for_instance(instance_id)
@@ -265,44 +316,79 @@ class DetailUI:
                 st.info("❌ NO existe available.log para este servidor.")
             
             st.markdown("---")
-            st.markdown("## 📊 Métricas de Rendimiento")
-            
-            # Create columns for gauges
-            gauge_col1, gauge_col2 = st.columns(2)
-            
-            # CPU Metric
-            with gauge_col1:
-                cpu_datapoint = self.get_cpu_utilization(instance_id)
-                if cpu_datapoint:
-                    cpu_avg = round(cpu_datapoint.get('Average', 0), 2)
-                    cpu_fig = self.create_gauge(cpu_avg, "🖥️ CPU %", 100)
-                    st.plotly_chart(cpu_fig, use_container_width=True)
-                else:
-                    st.info("No hay datos de CPU disponibles.")
-            
-            # Memory Metric
-            with gauge_col2:
-                memory_datapoint = self.get_memory_utilization(instance_id)
-                if memory_datapoint:
-                    mem_avg = round(memory_datapoint.get('Average', 0), 2)
-                    mem_fig = self.create_gauge(mem_avg, "🧠 RAM %", 100)
-                    st.plotly_chart(mem_fig, use_container_width=True)
-                else:
-                    st.info("No hay datos de memoria disponibles.")
-            
-            # Disk Metrics
-            st.markdown("---")
-            st.markdown("**💾 Utilización de Discos**")
-            disk_metrics = self.get_disk_utilization(instance_id)
-            if disk_metrics:
-                # Create columns for disk gauges (2 per row)
-                disk_cols = st.columns(2)
-                for i, disk in enumerate(disk_metrics):
-                    device = disk['device']
-                    usage = round(disk['usage'], 2)
-                    
-                    with disk_cols[i % 2]:
-                        disk_fig = self.create_gauge(usage, f"💾 {device}", 100)
-                        st.plotly_chart(disk_fig, use_container_width=True)
+            st.markdown("## 📊 Métricas de Rendimiento (Últimas 3 Horas)")
+
+            # --- CPU History Chart ---
+            cpu_df = self.aws_service.get_metric_history(instance_id, 'CPUUtilization', 'AWS/EC2')
+            if not cpu_df.empty:
+                cpu_chart = self.create_history_chart(cpu_df, "🖥️ Uso de CPU (%)", 'Average', 'Uso Promedio (%)')
+                st.plotly_chart(cpu_chart, use_container_width=True)
             else:
-                st.info("No hay datos de disco disponibles.")
+                st.info("No hay datos históricos de CPU disponibles.")
+
+            # --- Network History Chart ---
+            st.markdown("### 🌐 Tráfico de Red")
+            net_in_df = self.aws_service.get_metric_history(instance_id, 'NetworkIn', 'AWS/EC2', statistic='Sum')
+            net_out_df = self.aws_service.get_metric_history(instance_id, 'NetworkOut', 'AWS/EC2', statistic='Sum')
+
+            if not net_in_df.empty or not net_out_df.empty:
+                net_fig = go.Figure()
+                if not net_in_df.empty:
+                    net_fig.add_trace(go.Scatter(x=net_in_df['Timestamp'], y=net_in_df['Sum'] / 1024**2, name='Entrada (MB)', line=dict(color='#00d4ff')))
+                if not net_out_df.empty:
+                    net_fig.add_trace(go.Scatter(x=net_out_df['Timestamp'], y=net_out_df['Sum'] / 1024**2, name='Salida (MB)', line=dict(color='#ffb700')))
+                
+                net_fig.update_layout(
+                    title={'text': 'Tráfico de Red (MB)', 'y':0.9, 'x':0.5, 'xanchor': 'center', 'yanchor': 'top', 'font': {'color': 'white', 'size': 16}},
+                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0.1)", font_color="white", height=300,
+                    margin=dict(l=20, r=20, t=50, b=20), yaxis_title="Megabytes (MB)", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                )
+                st.plotly_chart(net_fig, use_container_width=True)
+            else:
+                st.info("No hay datos históricos de red disponibles.")
+
+            # --- Disk I/O History Chart ---
+            st.markdown("### 💾 Operaciones de Disco")
+            disk_read_df = self.aws_service.get_metric_history(instance_id, 'DiskReadBytes', 'AWS/EC2', statistic='Sum')
+            disk_write_df = self.aws_service.get_metric_history(instance_id, 'DiskWriteBytes', 'AWS/EC2', statistic='Sum')
+
+            if not disk_read_df.empty or not disk_write_df.empty:
+                disk_fig = go.Figure()
+                if not disk_read_df.empty:
+                    disk_fig.add_trace(go.Scatter(x=disk_read_df['Timestamp'], y=disk_read_df['Sum'] / 1024**2, name='Lectura (MB)', line=dict(color='#00ff88')))
+                if not disk_write_df.empty:
+                    disk_fig.add_trace(go.Scatter(x=disk_write_df['Timestamp'], y=disk_write_df['Sum'] / 1024**2, name='Escritura (MB)', line=dict(color='#ff006e')))
+                
+                disk_fig.update_layout(
+                    title={'text': 'I/O de Disco (MB)', 'y':0.9, 'x':0.5, 'xanchor': 'center', 'yanchor': 'top', 'font': {'color': 'white', 'size': 16}},
+                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0.1)", font_color="white", height=300,
+                    margin=dict(l=20, r=20, t=50, b=20), yaxis_title="Megabytes (MB)", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                )
+                st.plotly_chart(disk_fig, use_container_width=True)
+            else:
+                st.info("No hay datos históricos de I/O de disco disponibles.")
+
+            # --- CloudWatch Log Viewer ---
+            st.markdown("---")
+            st.markdown("## 📜 Visor de Logs")
+            log_groups = self.aws_service.get_log_groups(instance_id)
+
+            if not log_groups:
+                st.info("No se encontraron grupos de logs asociados a esta instancia.")
+            else:
+                selected_log_group = st.selectbox("Selecciona un grupo de logs para inspeccionar:", options=log_groups)
+                if selected_log_group:
+                    log_events = self.aws_service.get_log_events(selected_log_group)
+                    if not log_events:
+                        st.warning(f"No se encontraron eventos recientes en el grupo '{selected_log_group}'.")
+                    else:
+                        # Format logs for display
+                        formatted_logs = """
+                        Mostrando los últimos eventos...
+                        ------------------------------------\n"
+                        for event in sorted(log_events, key=lambda x: x['timestamp'], reverse=True):
+                            ts = datetime.datetime.fromtimestamp(event['timestamp'] / 1000).strftime('%Y-%m-%d %H:%M:%S')
+                            msg = event['message']
+                            formatted_logs += f"[{ts}] {msg}\n"
+                        
+                        st.code(formatted_logs, language='log')

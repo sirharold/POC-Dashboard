@@ -1,5 +1,49 @@
 # Dashboard EPMAPS POC - Development History
 
+## v0.4.0 - Major Detail Page Enhancement (2025-09-25)
+
+Based on user feedback, the detail page was significantly enhanced to provide richer diagnostic information for technical support.
+
+### Phase 1: General Information & Alarm Refactoring
+- **Alarm Links Removed**: As requested, all external links to the AWS console were removed from the alarm list to keep users within the dashboard.
+- **Added Instance Metadata**: A new section, "Metadatos de la Instancia", was added, displaying:
+  - AMI ID
+  - Instance Launch Time
+  - VPC ID & Subnet ID
+  - Associated Security Groups
+
+### Phase 2: Disk Visualization Overhaul
+- **Gauges Replaced with Table**: The space-consuming disk gauges were removed.
+- **Detailed Disk Table**: A compact and informative table was implemented, showing the following for each attached volume:
+  - Device Name
+  - Usage Percentage
+  - Total Size (GB)
+  - Provisioned IOPS
+  - Volume Type
+  - All associated AWS Tags
+- **Service Enhancement**: A new method, `get_volume_details`, was added to `services/aws_service.py` to fetch rich data for each EBS volume from the `describe_volumes` API call.
+
+### Phase 3: Historical Performance Graphs
+- **Gauges Replaced with Charts**: All single-value performance gauges were replaced with historical time-series charts showing data for the last 3 hours.
+- **New Generic Service**: A reusable `get_metric_history` function was added to `services/aws_service.py` to fetch historical data for any CloudWatch metric.
+- **Implemented Charts**:
+  - **CPU Utilization (%)**: Line chart showing CPU usage over time.
+  - **Network Traffic (MB)**: Single chart with separate lines for `NetworkIn` and `NetworkOut`.
+  - **Disk I/O (MB)**: Single chart with separate lines for `DiskReadBytes` and `DiskWriteBytes`.
+
+### Phase 4: CloudWatch Log Viewer
+- **New UI Section**: A "Visor de Logs" section was added to the bottom of the detail page.
+- **Log Group Discovery**: The interface automatically discovers and lists log groups associated with the instance ID.
+- **Interactive Log Display**: Users can select a log group from a dropdown menu to view the 100 most recent log events, which are then displayed in a formatted code block.
+- **Service Enhancement**: New methods `get_log_groups` and `get_log_events` were added to `services/aws_service.py` to interact with the CloudWatch Logs API.
+
+### Result
+- ✅ The detail page has been transformed from a basic status view into a powerful diagnostic tool.
+- ✅ Technical support can now see historical trends, detailed disk/instance configuration, and recent logs in one place.
+- ✅ The UI is more compact and information-dense.
+
+### Version: v0.4.0
+
 ## v0.3.1 - Fix: Adapt to streamlit-authenticator API change (2025-09-25)
 
 ### Problem Identified

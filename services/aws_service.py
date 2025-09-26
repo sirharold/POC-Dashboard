@@ -171,7 +171,8 @@ class AWSService:
                         'State': instance_state,
                         'Environment': tags.get('Environment', 'Unknown'),
                         'DashboardGroup': dashboard_group,
-                        'Alarms': instance_alarms,
+                        'AlarmsList': alarms_list, # Added for detail page
+            'OperatingSystem': instance.get('PlatformDetails', 'Linux/UNIX')
                         'PrivateIP': instance.get('PrivateIpAddress', 'N/A'),
                         'DiskCount': disk_count
                     }
@@ -201,8 +202,101 @@ class AWSService:
             if response['Reservations'] and response['Reservations'][0]['Instances']:
                 return response['Reservations'][0]['Instances'][0]
             return None
-        except (ClientError, IndexError):
+        except Exception as e:
+            st.error(f"Error getting instance details: {e}")
             return None
+
+    def get_volume_details(self, block_device_mappings: list) -> dict:
+        """Get detailed information for EBS volumes from block device mappings."""
+        volume_details = {}
+        volume_ids = [device['Ebs']['VolumeId'] for device in block_device_mappings if 'Ebs' in device]
+
+        if not volume_ids:
+            return volume_details
+
+        try:
+            ec2 = self.get_cross_account_boto3_client('ec2')
+            if not ec2: return {}
+            
+            response = ec2.describe_volumes(VolumeIds=volume_ids)
+            
+            for volume in response.get('Volumes', []):
+                tags = {tag['Key']: tag['Value'] for tag in volume.get('Tags', [])}
+                volume_details[volume['VolumeId']] = {
+                    'Size': volume.get('Size'),
+                    'Iops': volume.get('Iops'),
+                    'Tags': tags,
+                    'VolumeType': volume.get('VolumeType')
+                }
+            return volume_details
+        except Exception as e:
+            st.error(f"Error getting volume details: {e}")
+            return {}
+
+    def get_metric_history(self, instance_id: str, metric_name: str, namespace: str, statistic: str = 'Average', hours: int = 3) -> pd.DataFrame:
+        """Get time-series data for a specific CloudWatch metric."""
+        try:
+            cloudwatch = self.get_cross_account_boto3_client('cloudwatch')
+            if not cloudwatch: return pd.DataFrame()
+
+            response = cloudwatch.get_metric_statistics(
+                Namespace=namespace,
+                MetricName=metric_name,
+                Dimensions=[{'Name': 'InstanceId', 'Value': instance_id}],
+                StartTime=datetime.datetime.utcnow() - datetime.timedelta(hours=hours),
+                EndTime=datetime.datetime.utcnow(),
+                Period=300,  # 5-minute intervals
+                Statistics=[statistic]
+            )
+            
+            if not response['Datapoints']:
+                return pd.DataFrame()
+
+            # Convert to DataFrame and sort
+            df = pd.DataFrame(response['Datapoints'])
+            df = df.sort_values(by='Timestamp').reset_index(drop=True)
+            return df
+
+        except Exception as e:
+            # Don't show error for metrics that might not exist
+            # st.warning(f"Could not retrieve metric {metric_name}: {e}")
+            return pd.DataFrame()
+
+    def get_log_groups(self, instance_id: str) -> list:
+        """Find CloudWatch log groups potentially related to an instance ID."""
+        try:
+            logs_client = self.get_cross_account_boto3_client('logs')
+            if not logs_client: return []
+
+            # Search for log groups with the instance ID in their name
+            response = logs_client.describe_log_groups(
+                logGroupNamePrefix=f'/aws/ec2/{instance_id}' # A common convention
+            )
+            
+            groups = [lg['logGroupName'] for lg in response.get('logGroups', [])]
+            
+            # Also search for instance ID directly
+            response_alt = logs_client.describe_log_groups(logGroupNamePrefix=f'{instance_id}')
+            groups.extend([lg['logGroupName'] for lg in response_alt.get('logGroups', [])])
+
+            return sorted(list(set(groups))) # Return unique, sorted list
+        except Exception:
+            return []
+
+    def get_log_events(self, log_group_name: str, limit: int = 100) -> list:
+        """Get the most recent log events from a CloudWatch log group."""
+        try:
+            logs_client = self.get_cross_account_boto3_client('logs')
+            if not logs_client: return []
+
+            response = logs_client.filter_log_events(
+                logGroupName=log_group_name,
+                limit=limit,
+                interleaved=True # Returns events from all streams, sorted by time
+            )
+            return response.get('events', [])
+        except Exception:
+            return []
 
     def get_alarms_for_instance(self, instance_id: str):
         """Get CloudWatch alarms for an instance. Same as original function."""
