@@ -1,5 +1,20 @@
 # Dashboard EPMAPS POC - Development History
 
+## v0.4.1 - Fix: Resolve SyntaxError in aws_service.py (2025-09-25)
+
+### Problem Identified
+- The application was crashing on startup with a `SyntaxError` in `services/aws_service.py`.
+- The error was caused by a missing comma in the `instance_data` dictionary after a new field (`OperatingSystem`) was added in version `v0.4.0`.
+
+### Solution Applied
+- The missing comma was added to the end of the `'AlarmsList': alarms_list` line within the `get_aws_data` method.
+
+### Result
+- ✅ The `SyntaxError` is resolved.
+- ✅ The application starts correctly as intended.
+
+### Version: v0.4.1
+
 ## v0.4.0 - Major Detail Page Enhancement (2025-09-25)
 
 Based on user feedback, the detail page was significantly enhanced to provide richer diagnostic information for technical support.
