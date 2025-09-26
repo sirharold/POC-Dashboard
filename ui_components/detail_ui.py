@@ -383,12 +383,14 @@ class DetailUI:
                         st.warning(f"No se encontraron eventos recientes en el grupo '{selected_log_group}'.")
                     else:
                         # Format logs for display
-                        formatted_logs = """
-                        Mostrando los últimos eventos...
-                        ------------------------------------\n"
+                        header = "Mostrando los últimos eventos...\n"
+                        header += "------------------------------------\n"
+                        
+                        log_lines = []
                         for event in sorted(log_events, key=lambda x: x['timestamp'], reverse=True):
                             ts = datetime.datetime.fromtimestamp(event['timestamp'] / 1000).strftime('%Y-%m-%d %H:%M:%S')
                             msg = event['message']
-                            formatted_logs += f"[{ts}] {msg}\n"
+                            log_lines.append(f"[{ts}] {msg}")
                         
+                        formatted_logs = header + "\n".join(log_lines)
                         st.code(formatted_logs, language='log')

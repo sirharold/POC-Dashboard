@@ -6,6 +6,8 @@ import boto3
 import time
 from collections import Counter
 from botocore.exceptions import ClientError
+import pandas as pd
+import datetime
 
 
 class AWSService:
@@ -171,8 +173,8 @@ class AWSService:
                         'State': instance_state,
                         'Environment': tags.get('Environment', 'Unknown'),
                         'DashboardGroup': dashboard_group,
-                        'AlarmsList': alarms_list, # Added for detail page
-            'OperatingSystem': instance.get('PlatformDetails', 'Linux/UNIX')
+                        'AlarmsList': [], # Placeholder, as alarms_list is not defined here
+                        'OperatingSystem': instance.get('PlatformDetails', 'Linux/UNIX'),
                         'PrivateIP': instance.get('PrivateIpAddress', 'N/A'),
                         'DiskCount': disk_count
                     }
