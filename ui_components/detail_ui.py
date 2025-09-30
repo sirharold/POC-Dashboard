@@ -238,6 +238,11 @@ class DetailUI:
         )
         return fig
 
+    def _is_disk_alarm(self, alarm_name: str) -> bool:
+        """Check if an alarm is disk-related by its name."""
+        disk_keywords = ['DISK', 'DISCO', 'STORAGE', 'FILESYSTEM', 'VOLUME']
+        return any(kw in alarm_name.upper() for kw in disk_keywords)
+
     def display_detail_page(self, instance_id: str):
         """Display detail page. Exact same logic as original function."""
         details = self.aws_service.get_instance_details(instance_id)
@@ -284,19 +289,75 @@ class DetailUI:
             st.markdown("## 🚨 Alarmas")
             st.markdown(create_alarm_legend(), unsafe_allow_html=True)
             alarms = self.aws_service.get_alarms_for_instance(instance_id)
+
             if alarms:
+                # --- Advanced Alarm Categorization ---
+                proactiva_disk_alarms = []
+                alerta_disk_alarms = []
+                unassociated_disk_alarms = []
+                other_alarms = []
+                
+                block_devices = details.get('BlockDeviceMappings', [])
+                known_volume_ids = {bd.get('Ebs', {}).get('VolumeId') for bd in block_devices}
+
                 for alarm in alarms:
-                    state = alarm.get('StateValue')
-                    alarm_name = alarm.get('AlarmName', '')
+                    alarm_name_upper = alarm.get('AlarmName', '').upper()
+
+                    # Category 1: Named PROACTIVA-DISK
+                    if 'PROACTIVA-DISK' in alarm_name_upper:
+                        proactiva_disk_alarms.append(alarm)
+                        continue
                     
-                    # Check if this is a preventive alarm
-                    if state == "ALARM" and ('ALERTA' in alarm_name.upper() or 'PROACTIVA' in alarm_name.upper() or 'PREVENTIVA' in alarm_name.upper()):
-                        color = "yellow"
+                    # Category 2: Named ALERTA-DISK
+                    if 'ALERTA-DISK' in alarm_name_upper:
+                        alerta_disk_alarms.append(alarm)
+                        continue
+
+                    # Category 3: Unassociated Disk Alarms
+                    if self._is_disk_alarm(alarm_name_upper):
+                        is_associated = False
+                        for dim in alarm.get('Dimensions', []):
+                            if dim.get('Name') == 'VolumeId' and dim.get('Value') in known_volume_ids:
+                                is_associated = True
+                                break
+                        if not is_associated:
+                            unassociated_disk_alarms.append(alarm)
+                        else:
+                            other_alarms.append(alarm) # Is a disk alarm, but associated and not named
                     else:
+                        # Category 4: All other alarms
+                        other_alarms.append(alarm)
+
+                # --- Render Categorized Alarms ---
+                with st.expander(f"🟡 Alarmas PROACTIVA-DISK ({len(proactiva_disk_alarms)})"):
+                    if proactiva_disk_alarms:
+                        for alarm in proactiva_disk_alarms:
+                            st.markdown(create_alarm_item_html(alarm.get('AlarmName'), "yellow"), unsafe_allow_html=True)
+                    else:
+                        st.text("No hay alarmas de este tipo.")
+
+                with st.expander(f"🟡 Alarmas ALERTA-DISK ({len(alerta_disk_alarms)})"):
+                    if alerta_disk_alarms:
+                        for alarm in alerta_disk_alarms:
+                            st.markdown(create_alarm_item_html(alarm.get('AlarmName'), "yellow"), unsafe_allow_html=True)
+                    else:
+                        st.text("No hay alarmas de este tipo.")
+                
+                with st.expander(f"❓ Alarmas de Disco No Asociado ({len(unassociated_disk_alarms)})"):
+                    if unassociated_disk_alarms:
+                        for alarm in unassociated_disk_alarms:
+                            st.markdown(create_alarm_item_html(alarm.get('AlarmName'), "yellow"), unsafe_allow_html=True)
+                    else:
+                        st.text("No hay alarmas de este tipo.")
+
+                # Render other alarms
+                if other_alarms:
+                    st.markdown("--- ") # Separator
+                    for alarm in other_alarms:
+                        state = alarm.get('StateValue')
+                        alarm_name = alarm.get('AlarmName', '')
                         color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
-                    
-                    alarm_arn = alarm.get('AlarmArn')
-                    st.markdown(create_alarm_item_html(alarm_name, color, alarm_arn), unsafe_allow_html=True)
+                        st.markdown(create_alarm_item_html(alarm_name, color), unsafe_allow_html=True)
             else:
                 st.info("No se encontraron alarmas para esta instancia.")
         with col2:
@@ -382,6 +443,8 @@ class DetailUI:
                             "Tags": str(details.get('Tags', {}))
                         })
                 df_vols = pd.DataFrame(aws_disk_data)
+                # Sort by device name
+                df_vols = df_vols.sort_values(by="Device AWS").reset_index(drop=True)
                 st.dataframe(df_vols, use_container_width=True)
             else:
                 st.info("No se encontraron volúmenes EBS para esta instancia.")

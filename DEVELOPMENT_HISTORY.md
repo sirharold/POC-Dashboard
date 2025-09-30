@@ -1,5 +1,21 @@
 # Dashboard EPMAPS POC - Development History
 
+## v0.4.5 - Detail Page UI Refinements (2025-09-26)
+
+### 1. Disk Table Sorting
+- **Enhancement**: The "Volúmenes EBS (Vista de AWS)" table on the detail page is now sorted by the "Device AWS" column by default, making it easier to find specific devices.
+
+### 2. Named Disk Alarm Grouping
+- **Enhancement**: The alarm list on the detail page was refactored to improve clarity.
+- Alarms with names containing "PROACTIVA-DISK" or "ALERTA-DISK" are now grouped into their own respective collapsible accordion sections, reducing clutter.
+
+### 3. Unassociated Disk Alarm Identification
+- **Feature**: Implemented a new category to identify disk-related alarms that do not correspond to a known physical EBS volume attached to the instance.
+- **Logic**: The system now inspects the dimensions of each disk-related alarm. If the alarm lacks a `VolumeId` dimension that matches a known EBS volume, it is categorized as "No Asociado".
+- **UI**: These alarms are now grouped into a new collapsible section, "Alarmas de Disco No Asociado", helping technicians quickly identify alerts related to non-EBS storage like EFS or other shared filesystems.
+
+### Version: v0.4.5
+
 ## v0.4.4 - Fix: Display Disk Information Table (2025-09-26)
 
 ### Problem Identified
