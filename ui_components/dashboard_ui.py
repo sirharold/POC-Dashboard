@@ -289,23 +289,42 @@ class DashboardUI:
             instance_name = instance.get('Name', instance_id)
             alarm_objects = instance.get('AlarmObjects', [])
             
+            # DEBUG: Temporary logging for SRVERPPRD
+            if instance_name == 'SRVERPPRD':
+                debug_alarms = [alarm.get('AlarmName', '') for alarm in alarm_objects]
+                st.write(f"DEBUG SRVERPPRD - Alarmas encontradas: {debug_alarms}")
+            
             # Look for SAP SERVICES alarm for this instance using flexible matching
             sap_services_alarm = None
             for alarm in alarm_objects:
                 alarm_name = alarm.get('AlarmName', '').upper()
+                
+                # DEBUG: Check specific alarm for SRVERPPRD
+                if instance_name == 'SRVERPPRD' and 'SAP' in alarm_name:
+                    st.write(f"DEBUG SRVERPPRD - Evaluando: '{alarm_name}'")
+                    st.write(f"  - Contiene SAP SERVICES: {'SAP SERVICES' in alarm_name}")
+                    st.write(f"  - Contiene instance name: {instance_name.upper() in alarm_name}")
+                    st.write(f"  - Contiene INCIDENTE: {'INCIDENTE' in alarm_name}")
+                
                 # Match pattern: contains SAP SERVICES and instance name and INCIDENTE
                 if ("SAP SERVICES" in alarm_name and 
                     instance_name.upper() in alarm_name and 
                     "INCIDENTE" in alarm_name):
                     sap_services_alarm = alarm
+                    if instance_name == 'SRVERPPRD':
+                        st.write(f"DEBUG SRVERPPRD - ¡MATCH! Alarma: {alarm_name}")
                     break
             
             if sap_services_alarm:
                 state = sap_services_alarm.get('StateValue', 'UNKNOWN')
+                if instance_name == 'SRVERPPRD':
+                    st.write(f"DEBUG SRVERPPRD - Estado: {state}")
                 if state == 'ALARM':
                     sap_statuses.append(f"<span style='color: #ff006e; font-size: 0.8rem;'>●</span> {instance_name}")
                 else:
                     sap_statuses.append(f"<span style='color: #00ff88; font-size: 0.8rem;'>●</span> {instance_name}")
+            elif instance_name == 'SRVERPPRD':
+                st.write(f"DEBUG SRVERPPRD - No se encontró alarma SAP SERVICES")
         
         if not sap_statuses:
             return ""  # No SAP services in this group
