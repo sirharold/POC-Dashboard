@@ -289,14 +289,14 @@ class DashboardUI:
             instance_name = instance.get('Name', instance_id)
             alarm_objects = instance.get('AlarmObjects', [])
             
-            # Look for SAP SERVICES alarm for this instance
+            # Look for SAP SERVICES alarm for this instance using flexible matching
             sap_services_alarm = None
             for alarm in alarm_objects:
                 alarm_name = alarm.get('AlarmName', '').upper()
-                if f"EPMAPS PROD {instance_name.upper()} INCIDENTE SAP SERVICES" in alarm_name:
-                    sap_services_alarm = alarm
-                    break
-                elif "SAP SERVICES" in alarm_name and instance_name.upper() in alarm_name:
+                # Match pattern: contains SAP SERVICES and instance name and INCIDENTE
+                if ("SAP SERVICES" in alarm_name and 
+                    instance_name.upper() in alarm_name and 
+                    "INCIDENTE" in alarm_name):
                     sap_services_alarm = alarm
                     break
             

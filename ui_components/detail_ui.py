@@ -250,40 +250,53 @@ class DetailUI:
         # Get instance name for alarm matching
         instance_name = next((tag['Value'] for tag in instance_details.get('Tags', []) if tag['Key'] == 'Name'), instance_details.get('InstanceId', ''))
         
-        # Updated SAP alarm patterns based on actual alarm naming convention
-        sap_alarm_keywords = [
-            f"EPMAPS PROD {instance_name} INCIDENTE SAP SERVICES",
-            f"EPMAPS PROD {instance_name} INCIDENTE SAP ABAP DOWN",
-            f"EPMAPS PROD {instance_name} INCIDENTE SAP JAVA DOWN", 
-            f"EPMAPS PROD {instance_name} INCIDENTE SAP ABAP CENTRAL DOWN",
-            f"EPMAPS PROD {instance_name} INCIDENTE SAP JAVA CENTRAL DOWN"
-        ]
-
-        # Find the relevant alarms using flexible matching
+        # Dynamically find all SAP alarms for this instance
         sap_alarms = []
-        for keyword in sap_alarm_keywords:
-            # First try exact match
-            found_alarm = next((alarm for alarm in alarms if keyword.upper() == alarm.get('AlarmName', '').upper()), None)
+        sap_services_alarm = None
+        specific_service_alarms = []
+        
+        # Pattern: EPMAPS PROD <servername> INCIDENTE SAP <service_name> DOWN
+        # Or: EPMAPS PROD <servername> INCIDENTE SAP SERVICES
+        
+        for alarm in alarms:
+            alarm_name = alarm.get('AlarmName', '').upper()
             
-            # If no exact match, try partial match for the service type
-            if not found_alarm:
-                service_type = keyword.split('SAP ')[-1]  # Extract the service part (e.g., "SERVICES", "ABAP DOWN")
-                found_alarm = next((alarm for alarm in alarms 
-                                  if f"SAP {service_type}" in alarm.get('AlarmName', '').upper() 
-                                  and instance_name.upper() in alarm.get('AlarmName', '').upper()), None)
-            
-            sap_alarms.append((keyword, found_alarm))
+            # Check if this is a SAP alarm for this instance
+            if (f"EPMAPS PROD {instance_name.upper()} INCIDENTE SAP" in alarm_name or 
+                (f"SAP" in alarm_name and instance_name.upper() in alarm_name and "INCIDENTE" in alarm_name)):
+                
+                if "SAP SERVICES" in alarm_name:
+                    sap_services_alarm = alarm
+                    sap_alarms.append(("SAP SERVICES", alarm))
+                elif "SAP " in alarm_name and ("DOWN" in alarm_name or "CENTRAL" in alarm_name):
+                    # Extract service name from alarm
+                    try:
+                        # Find the part after "SAP " and before potential "DOWN"
+                        sap_part = alarm_name.split("SAP ")[1]
+                        if " DOWN" in sap_part:
+                            service_name = sap_part.split(" DOWN")[0].strip()
+                        else:
+                            service_name = sap_part.strip()
+                        
+                        display_name = f"SAP {service_name}"
+                        if "DOWN" in alarm_name:
+                            display_name += " DOWN"
+                            
+                        specific_service_alarms.append(alarm)
+                        sap_alarms.append((display_name, alarm))
+                    except:
+                        # Fallback: use the alarm name as-is
+                        sap_alarms.append((alarm_name, alarm))
 
         if not any(alarm for _, alarm in sap_alarms):
             st.info("No se encontraron alarmas específicas de servicios SAP para esta instancia.")
             return
 
         # Determine if any specific service is down (for SAP SERVICES alarm logic)
-        specific_services_down = False
-        for keyword, alarm in sap_alarms:
-            if "SAP SERVICES" not in keyword and alarm and alarm.get('StateValue') == 'ALARM':
-                specific_services_down = True
-                break
+        specific_services_down = any(alarm.get('StateValue') == 'ALARM' for alarm in specific_service_alarms)
+        
+        # Sort alarms: SAP SERVICES first, then others alphabetically
+        sap_alarms.sort(key=lambda x: (0 if "SAP SERVICES" in x[0] else 1, x[0]))
         
         # Create a styled container for the statuses
         st.markdown("""<div style='background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px; backdrop-filter: blur(10px);'>""", unsafe_allow_html=True)
