@@ -1,5 +1,23 @@
 # Dashboard EPMAPS POC - Development History
 
+## v0.5.0 - SAP Service Alarm Integration (2025-09-26)
+
+### 1. Main Dashboard: SAP Status Indicator
+- **Feature**: A new status indicator for SAP services now appears on the main dashboard server cards.
+- **Logic**: 
+    - The `get_aws_data` service was enhanced to return the full list of alarm objects for each instance, not just a count.
+    - The server card UI (`dashboard_ui.py`) now checks if a specific "INCIDENTE SAP SERVICES" alarm exists for the instance.
+    - If the alarm exists, an indicator showing the service status (e.g., "Servicios SAP: ● OK" or "Servicios SAP: ● DOWN") is displayed on the card.
+- **UI Tweak**: The label "Alertas Cloudwatch" was shortened to "Alertas".
+
+### 2. Detail Page: Dedicated SAP Alarm Status Section
+- **Feature**: The detail page now has a new, dedicated section titled "✳️ Estado Servicios SAP".
+- **UI**: This component displays the status of individual SAP service alarms (e.g., `SAP JAVA CENTRAL DOWN`, `SAP ABAP CENTRAL DOWN`) in a clean, readable list format with colored status indicators.
+- **Refactoring**: This new section replaces the previous, less specific "Disponibilidad Servicios SAP" table and the `available.log` viewer, centralizing SAP status monitoring around the new, specific alarms.
+- **Logic**: The UI now filters the instance's alarms to find those related to SAP services and renders them in this dedicated component, while excluding them from the general alarm list to avoid duplication.
+
+### Version: v0.5.0
+
 ## v0.4.5 - Detail Page UI Refinements (2025-09-26)
 
 ### 1. Disk Table Sorting

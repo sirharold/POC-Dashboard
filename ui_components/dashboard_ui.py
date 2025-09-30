@@ -41,30 +41,47 @@ class DashboardUI:
         return f'''<div class='alert-bar-container'><div class='alert-bar'><div class='alert-bar-critical' style='width: {crit_pct}%;' title='Alarm: {critical}'></div><div class='alert-bar-preventive' style='width: {prev_pct}%; background-color: #ffb700;' title='Preventive: {preventive}'></div><div class='alert-bar-insufficient' style='width: {insuf_pct}%;' title='Insufficient Data: {insufficient}'></div><div class='alert-bar-ok' style='width: {ok_pct}%;' title='OK: {ok}'></div></div><div class='alert-bar-labels'><span style='color: #ff006e;'>A: {critical}</span> <span style='color: #ffb700;'>P: {preventive}</span> <span style='color: #808080;'>I: {insufficient}</span> <span style='color: #00ff88;'>O: {ok}</span></div></div>'''
 
     def create_server_card(self, instance: dict):
-        """Create server card. Exact same logic as original function."""
+        """Create server card with SAP service status indicator."""
         vm_name = instance.get('Name', instance.get('ID', 'N/A'))
         instance_id = instance.get('ID', '')
         private_ip = instance.get('PrivateIP', 'N/A')
-        state = instance.get('State', 'unknown')
         alerts = instance.get('Alarms', Counter())
-        
-        # Determine card color based on alarms - new logic
+        alarm_objects = instance.get('AlarmObjects', [])
+
+        # Determine card color based on alarms
         if alerts.get('ALARM', 0) > 0:
             card_status = 'red'
         elif alerts.get('INSUFFICIENT_DATA', 0) > 0 or alerts.get('UNKNOWN', 0) > 0:
             card_status = 'gray'
         else:
-            # If only green and yellow alarms, show green
             card_status = 'green'
         
+        # --- SAP Service Status Indicator Logic ---
+        sap_service_indicator_html = ''
+        sap_service_alarm = next((alarm for alarm in alarm_objects if 'INCIDENTE SAP SERVICES' in alarm.get('AlarmName', '').upper()), None)
+        
+        if sap_service_alarm:
+            sap_status = sap_service_alarm.get('StateValue', 'UNKNOWN')
+            if sap_status == 'OK':
+                sap_indicator = "<span style='color: #00ff88;'>●</span> OK"
+            elif sap_status == 'ALARM':
+                sap_indicator = "<span style='color: #ff006e;'>●</span> DOWN"
+            else:
+                sap_indicator = "<span style='color: #808080;'>●</span> N/A"
+            
+            sap_service_indicator_html = f"""<div style='font-size: 0.8rem; color: white; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;'>
+                <span style='font-weight: 600;'>Servicios SAP:</span> {sap_indicator}
+            </div>"""
+
         alert_bar_html = self.create_alert_bar_html(alerts)
         card_content = f'''<div class='server-card server-card-{card_status}'>
             <div class='server-name'>{vm_name}</div>
             <div style='font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 2px;'>{private_ip}</div>
             <div style='margin-top: 12px;'>
-                <div style='font-size: 0.7rem; color: rgba(255,255,255,0.8); margin-bottom: 4px; text-align: center;'>🚨 Alertas CloudWatch</div>
+                <div style='font-size: 0.7rem; color: rgba(255,255,255,0.8); margin-bottom: 4px; text-align: center;'>🚨 Alertas</div>
                 {alert_bar_html}
             </div>
+            {sap_service_indicator_html}
         </div>'''
         
         # Preserve columns parameter when navigating to detail page

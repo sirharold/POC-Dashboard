@@ -137,9 +137,11 @@ class AWSService:
                     
                     # Count alarms for this instance
                     instance_alarms = Counter()
+                    alarms_list_for_instance = [] # Store full alarm objects
                     for alarm in all_alarms:
                         dimensions = alarm.get('Dimensions', [])
                         if any(d['Name'] == 'InstanceId' and d['Value'] == instance_id for d in dimensions):
+                            alarms_list_for_instance.append(alarm) # Add the full object
                             alarm_state = alarm.get('StateValue', 'UNKNOWN')
                             alarm_name = alarm.get('AlarmName', '')
                             
@@ -177,7 +179,8 @@ class AWSService:
                         'AlarmsList': [], # Placeholder, as alarms_list is not defined here
                         'OperatingSystem': instance.get('PlatformDetails', 'Linux/UNIX'),
                         'PrivateIP': instance.get('PrivateIpAddress', 'N/A'),
-                        'DiskCount': disk_count
+                        'DiskCount': disk_count,
+                        'AlarmObjects': alarms_list_for_instance
                     }
                     
                     

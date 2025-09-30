@@ -243,6 +243,56 @@ class DetailUI:
         disk_keywords = ['DISK', 'DISCO', 'STORAGE', 'FILESYSTEM', 'VOLUME']
         return any(kw in alarm_name.upper() for kw in disk_keywords)
 
+    def _display_sap_service_alarms(self, alarms: list):
+        """Displays a dedicated UI component for specific SAP service alarms."""
+        st.markdown("## ✳️ Estado Servicios SAP")
+
+        sap_alarm_keywords = [
+            "SAP JAVA CENTRAL DOWN",
+            "SAP ABAP CENTRAL DOWN",
+            "SAP ABAP DOW", # Typo from user request, kept for matching
+            "SAP JAVA DOWN",
+            "SAP SERVICES"
+        ]
+
+        # Find the relevant alarms
+        sap_alarms = []
+        for keyword in sap_alarm_keywords:
+            found_alarm = next((alarm for alarm in alarms if keyword in alarm.get('AlarmName', '').upper()), None)
+            sap_alarms.append((keyword, found_alarm))
+
+        if not any(alarm for _, alarm in sap_alarms):
+            st.info("No se encontraron alarmas específicas de servicios SAP para esta instancia.")
+            return
+
+        # Create a styled container for the statuses
+        st.markdown("""<div style='background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px; backdrop-filter: blur(10px);'>""", unsafe_allow_html=True)
+        
+        for keyword, alarm in sap_alarms:
+            if alarm:
+                state = alarm.get('StateValue', 'UNKNOWN')
+                if state == 'ALARM':
+                    status_icon = "<span style='color: #ff006e; font-size: 1.5rem;'>●</span>"
+                    status_text = "<span style='color: #ff006e;'>DOWN</span>"
+                else:
+                    status_icon = "<span style='color: #00ff88; font-size: 1.5rem;'>●</span>"
+                    status_text = "OK"
+            else:
+                status_icon = "<span style='color: #808080; font-size: 1.5rem;'>●</span>"
+                status_text = "N/A"
+
+            # Clean up keyword for display
+            display_name = keyword.replace("SAP", "").replace("DOWN", "").replace("INCIDENTE", "").strip()
+
+            st.markdown(f"""<div style='display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05);'>
+                <span style='font-weight: 600;'>{display_name}</span>
+                <div style='display: flex; align-items: center; gap: 8px;'>
+                    {status_icon} {status_text}
+                </div>
+            </div>""", unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+
     def display_detail_page(self, instance_id: str):
         """Display detail page. Exact same logic as original function."""
         details = self.aws_service.get_instance_details(instance_id)
@@ -286,10 +336,13 @@ class DetailUI:
                         st.text(f"- {sg['GroupName']} ({sg['GroupId']})")
                 else:
                     st.text("No hay grupos de seguridad asociados.")
-            st.markdown("## 🚨 Alarmas")
-            st.markdown(create_alarm_legend(), unsafe_allow_html=True)
-            alarms = self.aws_service.get_alarms_for_instance(instance_id)
 
+            # --- SAP Service Status ---
+            self._display_sap_service_alarms(alarms)
+
+            st.markdown("## 🚨 Alarmas Generales")
+            st.markdown(create_alarm_legend(), unsafe_allow_html=True)
+            
             if alarms:
                 # --- Advanced Alarm Categorization ---
                 proactiva_disk_alarms = []
@@ -302,6 +355,10 @@ class DetailUI:
 
                 for alarm in alarms:
                     alarm_name_upper = alarm.get('AlarmName', '').upper()
+
+                    # Exclude SAP alarms from general categorization
+                    if 'INCIDENTE SAP' in alarm_name_upper:
+                        continue
 
                     # Category 1: Named PROACTIVA-DISK
                     if 'PROACTIVA-DISK' in alarm_name_upper:
@@ -361,23 +418,7 @@ class DetailUI:
             else:
                 st.info("No se encontraron alarmas para esta instancia.")
         with col2:
-            # SAP Availability Section
-            from services.sap_service import SAPService
-            sap_service = SAPService(self.aws_service)
-            sap_data = sap_service.get_sap_availability_data(instance_id)
-            if sap_data:
-                sap_service.create_sap_availability_table(sap_data)
-                st.markdown("---")
             
-            # Available.log Content Section
-            st.markdown("## 📋 Contenido de available.log")
-            log_content = sap_service.get_available_log_content(instance_id)
-            if log_content:
-                # Display the log content in an expandable section
-                with st.expander("📄 Ver contenido completo del archivo available.log", expanded=False):
-                    st.code(log_content, language="text")
-            else:
-                st.info("❌ NO existe available.log para este servidor.")
             
             st.markdown("---")
             st.markdown("## 📊 Métricas de Rendimiento (Últimas 3 Horas)")

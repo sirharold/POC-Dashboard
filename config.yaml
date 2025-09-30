@@ -67,7 +67,7 @@ server_groups:
 settings:
   refresh_interval_seconds: 30
   show_aws_errors: false
-  version: v0.4.5
+  version: v0.5.0
 
 credentials:
   usernames:
