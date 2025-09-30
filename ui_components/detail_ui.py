@@ -338,6 +338,7 @@ class DetailUI:
                     st.text("No hay grupos de seguridad asociados.")
 
             # --- SAP Service Status ---
+            alarms = self.aws_service.get_alarms_for_instance(instance_id)
             self._display_sap_service_alarms(alarms)
 
             st.markdown("## 🚨 Alarmas Generales")
