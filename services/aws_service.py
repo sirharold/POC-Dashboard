@@ -138,12 +138,21 @@ class AWSService:
                     # Count alarms for this instance
                     instance_alarms = Counter()
                     alarms_list_for_instance = [] # Store full alarm objects
+                    instance_name = tags.get('Name', instance_id)
+                    
                     for alarm in all_alarms:
                         dimensions = alarm.get('Dimensions', [])
-                        if any(d['Name'] == 'InstanceId' and d['Value'] == instance_id for d in dimensions):
+                        alarm_name = alarm.get('AlarmName', '')
+                        
+                        # Check if alarm belongs to this instance (InstanceId dimension OR instance name in alarm name)
+                        belongs_to_instance = (
+                            any(d['Name'] == 'InstanceId' and d['Value'] == instance_id for d in dimensions) or
+                            (instance_name in alarm_name and ('EPMAPS' in alarm_name.upper() or 'SAP' in alarm_name.upper()))
+                        )
+                        
+                        if belongs_to_instance:
                             alarms_list_for_instance.append(alarm) # Add the full object
                             alarm_state = alarm.get('StateValue', 'UNKNOWN')
-                            alarm_name = alarm.get('AlarmName', '')
                             
                             # Log each alarm for debugging
                             with open("/tmp/streamlit_aws_debug.log", "a") as f:
