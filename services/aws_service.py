@@ -314,17 +314,42 @@ class AWSService:
             return []
 
     def get_alarms_for_instance(self, instance_id: str):
-        """Get CloudWatch alarms for an instance. Same as original function."""
+        """Get CloudWatch alarms for an instance, including SAP alarms by name matching."""
         try:
             cloudwatch = self.get_cross_account_boto3_client('cloudwatch')
             if not cloudwatch: 
                 return []
+            
+            # Get instance name for SAP alarm matching
+            ec2 = self.get_cross_account_boto3_client('ec2')
+            instance_name = instance_id  # Default fallback
+            if ec2:
+                try:
+                    response = ec2.describe_instances(InstanceIds=[instance_id])
+                    for reservation in response['Reservations']:
+                        for instance in reservation['Instances']:
+                            tags = {tag['Key']: tag['Value'] for tag in instance.get('Tags', [])}
+                            if 'Name' in tags:
+                                instance_name = tags['Name']
+                                break
+                except:
+                    pass  # Keep using instance_id as fallback
+            
             paginator = cloudwatch.get_paginator('describe_alarms')
             pages = paginator.paginate()
             instance_alarms = []
             for page in pages:
                 for alarm in page['MetricAlarms']:
-                    if any(dim['Name'] == 'InstanceId' and dim['Value'] == instance_id for dim in alarm['Dimensions']):
+                    alarm_name = alarm.get('AlarmName', '')
+                    dimensions = alarm.get('Dimensions', [])
+                    
+                    # Check if alarm belongs to this instance (InstanceId dimension OR instance name in alarm name)
+                    belongs_to_instance = (
+                        any(dim['Name'] == 'InstanceId' and dim['Value'] == instance_id for dim in dimensions) or
+                        (instance_name in alarm_name and ('EPMAPS' in alarm_name.upper() or 'SAP' in alarm_name.upper()))
+                    )
+                    
+                    if belongs_to_instance:
                         instance_alarms.append(alarm)
             return instance_alarms
         except ClientError:
