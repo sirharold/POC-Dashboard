@@ -243,43 +243,79 @@ class DetailUI:
         disk_keywords = ['DISK', 'DISCO', 'STORAGE', 'FILESYSTEM', 'VOLUME']
         return any(kw in alarm_name.upper() for kw in disk_keywords)
 
-    def _display_sap_service_alarms(self, alarms: list):
+    def _display_sap_service_alarms(self, alarms: list, instance_details: dict):
         """Displays a dedicated UI component for specific SAP service alarms."""
         st.markdown("## ✳️ Estado Servicios SAP")
 
+        # Get instance name for alarm matching
+        instance_name = next((tag['Value'] for tag in instance_details.get('Tags', []) if tag['Key'] == 'Name'), instance_details.get('InstanceId', ''))
+        
+        # Updated SAP alarm patterns based on actual alarm naming convention
         sap_alarm_keywords = [
-            "SAP JAVA CENTRAL DOWN",
-            "SAP ABAP CENTRAL DOWN",
-            "SAP ABAP DOW", # Typo from user request, kept for matching
-            "SAP JAVA DOWN",
-            "SAP SERVICES"
+            f"EPMAPS PROD {instance_name} INCIDENTE SAP SERVICES",
+            f"EPMAPS PROD {instance_name} INCIDENTE SAP ABAP DOWN",
+            f"EPMAPS PROD {instance_name} INCIDENTE SAP JAVA DOWN", 
+            f"EPMAPS PROD {instance_name} INCIDENTE SAP ABAP CENTRAL DOWN",
+            f"EPMAPS PROD {instance_name} INCIDENTE SAP JAVA CENTRAL DOWN"
         ]
 
-        # Find the relevant alarms
+        # Find the relevant alarms using flexible matching
         sap_alarms = []
         for keyword in sap_alarm_keywords:
-            found_alarm = next((alarm for alarm in alarms if keyword in alarm.get('AlarmName', '').upper()), None)
+            # First try exact match
+            found_alarm = next((alarm for alarm in alarms if keyword.upper() == alarm.get('AlarmName', '').upper()), None)
+            
+            # If no exact match, try partial match for the service type
+            if not found_alarm:
+                service_type = keyword.split('SAP ')[-1]  # Extract the service part (e.g., "SERVICES", "ABAP DOWN")
+                found_alarm = next((alarm for alarm in alarms 
+                                  if f"SAP {service_type}" in alarm.get('AlarmName', '').upper() 
+                                  and instance_name.upper() in alarm.get('AlarmName', '').upper()), None)
+            
             sap_alarms.append((keyword, found_alarm))
 
         if not any(alarm for _, alarm in sap_alarms):
             st.info("No se encontraron alarmas específicas de servicios SAP para esta instancia.")
             return
 
+        # Determine if any specific service is down (for SAP SERVICES alarm logic)
+        specific_services_down = False
+        for keyword, alarm in sap_alarms:
+            if "SAP SERVICES" not in keyword and alarm and alarm.get('StateValue') == 'ALARM':
+                specific_services_down = True
+                break
+        
         # Create a styled container for the statuses
         st.markdown("""<div style='background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px; backdrop-filter: blur(10px);'>""", unsafe_allow_html=True)
         
         for keyword, alarm in sap_alarms:
-            if alarm:
-                state = alarm.get('StateValue', 'UNKNOWN')
-                if state == 'ALARM':
+            # Special logic for SAP SERVICES alarm
+            if "SAP SERVICES" in keyword:
+                if specific_services_down:
                     status_icon = "<span style='color: #ff006e; font-size: 1.5rem;'>●</span>"
-                    status_text = "<span style='color: #ff006e;'>DOWN</span>"
-                else:
+                    status_text = "<span style='color: #ff006e;'>SERVICIOS DOWN</span>"
+                elif alarm and alarm.get('StateValue') == 'ALARM':
+                    status_icon = "<span style='color: #ff006e; font-size: 1.5rem;'>●</span>"
+                    status_text = "<span style='color: #ff006e;'>ALARM</span>"
+                elif alarm:
                     status_icon = "<span style='color: #00ff88; font-size: 1.5rem;'>●</span>"
                     status_text = "OK"
+                else:
+                    status_icon = "<span style='color: #808080; font-size: 1.5rem;'>●</span>"
+                    status_text = "N/A"
             else:
-                status_icon = "<span style='color: #808080; font-size: 1.5rem;'>●</span>"
-                status_text = "N/A"
+                # Logic for specific service alarms
+                if alarm:
+                    state = alarm.get('StateValue', 'UNKNOWN')
+                    if state == 'ALARM':
+                        status_icon = "<span style='color: #ff006e; font-size: 1.5rem;'>●</span>"
+                        status_text = "<span style='color: #ff006e;'>DOWN</span>"
+                    else:
+                        status_icon = "<span style='color: #00ff88; font-size: 1.5rem;'>●</span>"
+                        status_text = "OK"
+                else:
+                    status_icon = "<span style='color: #808080; font-size: 1.5rem;'>●</span>"
+                    status_text = "N/A"
 
             # Clean up keyword for display
             display_name = keyword.replace("SAP", "").replace("DOWN", "").replace("INCIDENTE", "").strip()
@@ -339,7 +375,7 @@ class DetailUI:
 
             # --- SAP Service Status ---
             alarms = self.aws_service.get_alarms_for_instance(instance_id)
-            self._display_sap_service_alarms(alarms)
+            self._display_sap_service_alarms(alarms, details)
 
             st.markdown("## 🚨 Alarmas Generales")
             st.markdown(create_alarm_legend(), unsafe_allow_html=True)

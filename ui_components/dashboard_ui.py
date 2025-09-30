@@ -113,7 +113,10 @@ class DashboardUI:
             # If only green and yellow alarms, show green
             group_status = 'green'
         
-        st.markdown(f"<div class='group-container group-status-{group_status}'><div class='group-title'>{group_name}</div></div>", unsafe_allow_html=True)
+        # Get SAP service status for the group
+        sap_status_html = self._get_group_sap_status(instances)
+        
+        st.markdown(f"<div class='group-container group-status-{group_status}'><div class='group-title'>{group_name}</div>{sap_status_html}</div>", unsafe_allow_html=True)
         cols = st.columns(3)
         for idx, instance in enumerate(instances):
             with cols[idx % 3]:
@@ -276,3 +279,35 @@ class DashboardUI:
 
         # --- Renderizado del Dashboard ---
         self.build_and_display_dashboard(current_env, show_aws_errors)
+
+    def _get_group_sap_status(self, instances: list) -> str:
+        """Get SAP service status summary for a group of instances."""
+        sap_statuses = []
+        
+        for instance in instances:
+            instance_id = instance.get('ID', '')
+            instance_name = instance.get('Name', instance_id)
+            alarm_objects = instance.get('AlarmObjects', [])
+            
+            # Look for SAP SERVICES alarm for this instance
+            sap_services_alarm = None
+            for alarm in alarm_objects:
+                alarm_name = alarm.get('AlarmName', '').upper()
+                if f"EPMAPS PROD {instance_name.upper()} INCIDENTE SAP SERVICES" in alarm_name:
+                    sap_services_alarm = alarm
+                    break
+                elif "SAP SERVICES" in alarm_name and instance_name.upper() in alarm_name:
+                    sap_services_alarm = alarm
+                    break
+            
+            if sap_services_alarm:
+                state = sap_services_alarm.get('StateValue', 'UNKNOWN')
+                if state == 'ALARM':
+                    sap_statuses.append(f"<span style='color: #ff006e; font-size: 0.8rem;'>●</span> {instance_name}")
+                else:
+                    sap_statuses.append(f"<span style='color: #00ff88; font-size: 0.8rem;'>●</span> {instance_name}")
+        
+        if not sap_statuses:
+            return ""  # No SAP services in this group
+        
+        return f"<div class='sap-status-group' style='margin-top: 8px; font-size: 0.75rem; opacity: 0.9;'><strong>SAP Services:</strong><br/>{'<br/>'.join(sap_statuses)}</div>"
