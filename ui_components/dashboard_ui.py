@@ -45,44 +45,71 @@ class DashboardUI:
         vm_name = instance.get('Name', instance.get('ID', 'N/A'))
         instance_id = instance.get('ID', '')
         private_ip = instance.get('PrivateIP', 'N/A')
+        state = instance.get('State', 'unknown')
         alerts = instance.get('Alarms', Counter())
         alarm_objects = instance.get('AlarmObjects', [])
 
-        # Determine card color based on alarms
-        if alerts.get('ALARM', 0) > 0:
-            card_status = 'red'
-        elif alerts.get('INSUFFICIENT_DATA', 0) > 0 or alerts.get('UNKNOWN', 0) > 0:
-            card_status = 'gray'
+        # Check if machine is not running
+        if state != 'running':
+            # Non-running machines: black card, no alarms shown
+            card_status = 'black'
+            state_labels = {
+                'stopped': '⚫ DETENIDO',
+                'stopping': '🟡 DETENIÉNDOSE',
+                'shutting-down': '🟡 APAGÁNDOSE',
+                'pending': '🔵 INICIANDO',
+                'terminated': '⚫ TERMINADO'
+            }
+            state_label = state_labels.get(state, f'⚪ {state.upper()}')
         else:
-            card_status = 'green'
-        
-        # --- SAP Service Status Indicator Logic ---
-        sap_service_indicator_html = ''
-        sap_service_alarm = next((alarm for alarm in alarm_objects if 'INCIDENTE SAP SERVICES' in alarm.get('AlarmName', '').upper()), None)
-        
-        if sap_service_alarm:
-            sap_status = sap_service_alarm.get('StateValue', 'UNKNOWN')
-            if sap_status == 'OK':
-                sap_indicator = "<span style='color: #00ff88;'>●</span> OK"
-            elif sap_status == 'ALARM':
-                sap_indicator = "<span style='color: #ff006e;'>●</span> DOWN"
+            # Running machines: normal alarm-based color logic
+            if alerts.get('ALARM', 0) > 0:
+                card_status = 'red'
+            elif alerts.get('INSUFFICIENT_DATA', 0) > 0 or alerts.get('UNKNOWN', 0) > 0:
+                card_status = 'gray'
             else:
-                sap_indicator = "<span style='color: #808080;'>●</span> N/A"
-            
-            sap_service_indicator_html = f"""<div style='font-size: 0.8rem; color: white; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;'>
-                <span style='font-weight: 600;'>Servicios SAP:</span> {sap_indicator}
-            </div>"""
+                card_status = 'green'
+            state_label = None
+        
+        # Build card content based on machine state
+        if state != 'running':
+            # Non-running machine: only show name, IP, and state
+            card_content = f'''<div class='server-card server-card-{card_status}'>
+                <div class='server-name'>{vm_name}</div>
+                <div style='font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 2px;'>{private_ip}</div>
+                <div style='margin-top: 20px; text-align: center;'>
+                    <div style='font-size: 0.85rem; color: rgba(255,255,255,0.9); font-weight: 600;'>{state_label}</div>
+                </div>
+            </div>'''
+        else:
+            # Running machine: show all information (alarms, SAP services)
+            # --- SAP Service Status Indicator Logic ---
+            sap_service_indicator_html = ''
+            sap_service_alarm = next((alarm for alarm in alarm_objects if 'INCIDENTE SAP SERVICES' in alarm.get('AlarmName', '').upper()), None)
 
-        alert_bar_html = self.create_alert_bar_html(alerts)
-        card_content = f'''<div class='server-card server-card-{card_status}'>
-            <div class='server-name'>{vm_name}</div>
-            <div style='font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 2px;'>{private_ip}</div>
-            <div style='margin-top: 12px;'>
-                <div style='font-size: 0.7rem; color: rgba(255,255,255,0.8); margin-bottom: 4px; text-align: center;'>🚨 Alertas</div>
-                {alert_bar_html}
-            </div>
-            {sap_service_indicator_html}
-        </div>'''
+            if sap_service_alarm:
+                sap_status = sap_service_alarm.get('StateValue', 'UNKNOWN')
+                if sap_status == 'OK':
+                    sap_indicator = "<span style='color: #00ff88;'>●</span> OK"
+                elif sap_status == 'ALARM':
+                    sap_indicator = "<span style='color: #ff006e;'>●</span> DOWN"
+                else:
+                    sap_indicator = "<span style='color: #808080;'>●</span> N/A"
+
+                sap_service_indicator_html = f"""<div style='font-size: 0.8rem; color: white; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;'>
+                    <span style='font-weight: 600;'>Servicios SAP:</span> {sap_indicator}
+                </div>"""
+
+            alert_bar_html = self.create_alert_bar_html(alerts)
+            card_content = f'''<div class='server-card server-card-{card_status}'>
+                <div class='server-name'>{vm_name}</div>
+                <div style='font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 2px;'>{private_ip}</div>
+                <div style='margin-top: 12px;'>
+                    <div style='font-size: 0.7rem; color: rgba(255,255,255,0.8); margin-bottom: 4px; text-align: center;'>🚨 Alertas</div>
+                    {alert_bar_html}
+                </div>
+                {sap_service_indicator_html}
+            </div>'''
         
         # Preserve columns parameter when navigating to detail page
         columns_param = st.query_params.get('columns', '2')

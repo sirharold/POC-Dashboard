@@ -356,7 +356,22 @@ class DetailUI:
             st.error(f"No se pudieron obtener los detalles para la instancia con ID: {instance_id}")
             return
         instance_name = next((tag['Value'] for tag in details.get('Tags', []) if tag['Key'] == 'Name'), instance_id)
-        st.markdown(f"<h1 style='margin: 0; padding: 0;'>Detalles de <span style='color: #00d4ff;'>{instance_name}</span></h1>", unsafe_allow_html=True)
+
+        # Get machine state and create badge if not running
+        state = details.get('State', {}).get('Name', 'unknown')
+        state_badge = ''
+        if state != 'running':
+            state_info = {
+                'stopped': ('#ff006e', '🔴', 'DETENIDO'),
+                'stopping': ('#ffb700', '🟡', 'DETENIÉNDOSE'),
+                'shutting-down': ('#ffb700', '🟡', 'APAGÁNDOSE'),
+                'pending': ('#00d4ff', '🔵', 'INICIANDO'),
+                'terminated': ('#808080', '⚫', 'TERMINADO')
+            }
+            color, icon, label = state_info.get(state, ('#808080', '⚪', state.upper()))
+            state_badge = f"<span style='color: {color}; font-size: 0.75em; font-weight: 600; margin-left: 8px;'>{icon} {label}</span>"
+
+        st.markdown(f"<h1 style='margin: 0; padding: 0;'>Detalles de <span style='color: #00d4ff;'>{instance_name}</span>{state_badge}</h1>", unsafe_allow_html=True)
         st.divider()
         col1, col2 = st.columns([1, 2])
         with col1:
