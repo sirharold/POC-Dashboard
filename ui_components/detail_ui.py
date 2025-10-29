@@ -454,21 +454,27 @@ class DetailUI:
                 with st.expander(f"🟡 Alarmas PROACTIVA-DISK ({len(proactiva_disk_alarms)})"):
                     if proactiva_disk_alarms:
                         for alarm in proactiva_disk_alarms:
-                            st.markdown(create_alarm_item_html(alarm.get('AlarmName'), "yellow"), unsafe_allow_html=True)
+                            state = alarm.get('StateValue')
+                            color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
+                            st.markdown(create_alarm_item_html(alarm.get('AlarmName'), color), unsafe_allow_html=True)
                     else:
                         st.text("No hay alarmas de este tipo.")
 
                 with st.expander(f"🟡 Alarmas ALERTA-DISK ({len(alerta_disk_alarms)})"):
                     if alerta_disk_alarms:
                         for alarm in alerta_disk_alarms:
-                            st.markdown(create_alarm_item_html(alarm.get('AlarmName'), "yellow"), unsafe_allow_html=True)
+                            state = alarm.get('StateValue')
+                            color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
+                            st.markdown(create_alarm_item_html(alarm.get('AlarmName'), color), unsafe_allow_html=True)
                     else:
                         st.text("No hay alarmas de este tipo.")
-                
+
                 with st.expander(f"❓ Alarmas de Disco No Asociado ({len(unassociated_disk_alarms)})"):
                     if unassociated_disk_alarms:
                         for alarm in unassociated_disk_alarms:
-                            st.markdown(create_alarm_item_html(alarm.get('AlarmName'), "yellow"), unsafe_allow_html=True)
+                            state = alarm.get('StateValue')
+                            color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
+                            st.markdown(create_alarm_item_html(alarm.get('AlarmName'), color), unsafe_allow_html=True)
                     else:
                         st.text("No hay alarmas de este tipo.")
 
