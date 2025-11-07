@@ -216,7 +216,7 @@ class AlarmReportUI:
                     alarm_counts['insufficient_data'] += 1
                 elif state == 'ALARM':
                     # Check if it's a preventive (yellow) alarm
-                    if any(kw in alarm_name for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA']):
+                    if any(kw in alarm_name for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA', 'SMDA98']):
                         alarm_counts['yellow_alarms'] += 1
                     else:
                         alarm_counts['red_alarms'] += 1
@@ -319,7 +319,7 @@ class AlarmReportUI:
                 for alarm in alarms:
                     alarm_name = alarm.get('AlarmName', '')
                     state = alarm.get('StateValue', '')
-                    if state == 'ALARM' and not any(kw in alarm_name.upper() for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA']):
+                    if state == 'ALARM' and not any(kw in alarm_name.upper() for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA', 'SMDA98']):
                         red_alarm_names.append(alarm_name)
                 
                 if red_alarm_names:
@@ -415,7 +415,7 @@ class AlarmReportUI:
                 for alarm in cached_alarms:
                     alarm_name = alarm.get('AlarmName', '')
                     state = alarm.get('StateValue', '')
-                    if state == 'ALARM' and not any(kw in alarm_name.upper() for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA']):
+                    if state == 'ALARM' and not any(kw in alarm_name.upper() for kw in ['ALERTA', 'PROACTIVA', 'PREVENTIVA', 'SMDA98']):
                         red_alarm_names.append(alarm_name)
                 
                 if red_alarm_names:

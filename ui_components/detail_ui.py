@@ -455,8 +455,13 @@ class DetailUI:
                     if proactiva_disk_alarms:
                         for alarm in proactiva_disk_alarms:
                             state = alarm.get('StateValue')
-                            color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
-                            st.markdown(create_alarm_item_html(alarm.get('AlarmName'), color), unsafe_allow_html=True)
+                            alarm_name = alarm.get('AlarmName', '')
+                            # Check if alarm contains SMDA98 to mark as preventive (yellow)
+                            if state == "ALARM" and 'SMDA98' in alarm_name.upper():
+                                color = "yellow"
+                            else:
+                                color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
+                            st.markdown(create_alarm_item_html(alarm_name, color), unsafe_allow_html=True)
                     else:
                         st.text("No hay alarmas de este tipo.")
 
@@ -464,8 +469,13 @@ class DetailUI:
                     if alerta_disk_alarms:
                         for alarm in alerta_disk_alarms:
                             state = alarm.get('StateValue')
-                            color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
-                            st.markdown(create_alarm_item_html(alarm.get('AlarmName'), color), unsafe_allow_html=True)
+                            alarm_name = alarm.get('AlarmName', '')
+                            # Check if alarm contains SMDA98 to mark as preventive (yellow)
+                            if state == "ALARM" and 'SMDA98' in alarm_name.upper():
+                                color = "yellow"
+                            else:
+                                color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
+                            st.markdown(create_alarm_item_html(alarm_name, color), unsafe_allow_html=True)
                     else:
                         st.text("No hay alarmas de este tipo.")
 
@@ -473,8 +483,13 @@ class DetailUI:
                     if unassociated_disk_alarms:
                         for alarm in unassociated_disk_alarms:
                             state = alarm.get('StateValue')
-                            color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
-                            st.markdown(create_alarm_item_html(alarm.get('AlarmName'), color), unsafe_allow_html=True)
+                            alarm_name = alarm.get('AlarmName', '')
+                            # Check if alarm contains SMDA98 to mark as preventive (yellow)
+                            if state == "ALARM" and 'SMDA98' in alarm_name.upper():
+                                color = "yellow"
+                            else:
+                                color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
+                            st.markdown(create_alarm_item_html(alarm_name, color), unsafe_allow_html=True)
                     else:
                         st.text("No hay alarmas de este tipo.")
 
@@ -484,7 +499,11 @@ class DetailUI:
                     for alarm in other_alarms:
                         state = alarm.get('StateValue')
                         alarm_name = alarm.get('AlarmName', '')
-                        color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
+                        # Check if alarm contains SMDA98 to mark as preventive (yellow)
+                        if state == "ALARM" and 'SMDA98' in alarm_name.upper():
+                            color = "yellow"
+                        else:
+                            color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
                         st.markdown(create_alarm_item_html(alarm_name, color), unsafe_allow_html=True)
             else:
                 st.info("No se encontraron alarmas para esta instancia.")

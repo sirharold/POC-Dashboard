@@ -1,5 +1,22 @@
 # Dashboard EPMAPS POC - Development History
 
+## v0.6.3 - SMDA98 Alarm Treatment as Preventive (2025-11-07)
+
+### Enhancement: SMDA98 Alarms Classification
+- **Feature**: Alarms containing "SMDA98" in their name are now treated as preventive (yellow/warning) alarms instead of critical (red) alarms.
+- **Context**: SMDA98 is a SAP instance identifier that requires special handling. Even when these alarms are in ALARM state, they should be displayed as preventive alerts.
+- **Implementation**:
+  - Modified `services/aws_service.py` line 162: Added 'SMDA98' to the preventive alarm keywords check in the alarm classification logic
+  - Modified `ui_components/alarm_report_ui.py` lines 219, 322, 418: Updated alarm report to classify SMDA98 alarms as yellow (preventive) in statistics and CSV exports
+  - Modified `ui_components/detail_ui.py` lines 460, 474, 488, 503: Updated detail page alarm visualization to show SMDA98 alarms in yellow across all alarm categories
+- **Impact**:
+  - Dashboard cards now show SMDA98 alarms as preventive (yellow bar) instead of critical (red bar)
+  - Alarm reports count SMDA98 alarms in the "Alarmas Amarillas" column instead of "Alarmas Rojas"
+  - Detail page displays SMDA98 alarms with yellow indicators (🟡) instead of red (🔴)
+  - CSV exports categorize SMDA98 alarms correctly as preventive alarms
+
+### Version: v0.6.3
+
 ## v0.5.0 - SAP Service Alarm Integration (2025-09-26)
 
 ### 1. Main Dashboard: SAP Status Indicator
