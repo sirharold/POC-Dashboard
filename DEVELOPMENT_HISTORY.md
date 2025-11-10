@@ -1,44 +1,64 @@
 # Dashboard EPMAPS POC - Development History
 
-## v0.6.4 - Hybrid Alarm Filtering (Fix Duplicate Alarms) (2025-11-10)
+## v0.6.4 - Dimension-Based Alarm Filtering (Fix Duplicate/Wrong Alarms) (2025-11-10)
 
-### Bug Fix: Duplicate Alarms in Detail Page
-- **Problem**: When opening detail page for an instance (e.g., "srvcrmqas"), alarms from multiple case variants were appearing (srvcrmqas, SRVCRMQAS, etc.)
+### Bug Fix: Duplicate and Wrong Instance Alarms in Detail Page
+- **Problem**: When opening detail page for an instance (e.g., "srvcrmqas"), alarms from different instances were appearing:
+  - Alarms from "srvcrmqasV" (substring matching issue)
+  - Multiple case variants (SRVCRMQAS, srvcrmqas)
+  - **Example**: Opening "srvcrmqas" showed 39 alarms, 22 of which belonged to "srvcrmqasV"
+
 - **Root Cause**:
-  - Original alarm filtering used case-sensitive string matching: `instance_name in alarm_name`
-  - This caused alarms with different capitalizations to pass through the filter
-  - Additionally, 63 SAP/EPMAPS alarms don't have `InstanceId` dimension, using `Server` dimension instead
+  - Original alarm filtering used **substring matching**: `instance_name in alarm_name`
+  - Case-sensitive: "srvcrmqas" ≠ "SRVCRMQAS" → missed some alarms
+  - Substring matching: "srvcrmqas" ⊂ "srvcrmqasV" → included wrong alarms
+  - Additionally, 63 SAP/EPMAPS alarms don't have `InstanceId` dimension
 
-- **Analysis Performed**: Created `ScriptsUtil/analyze_alarm_dimensions.py` to analyze all 841 CloudWatch alarms
-  - **778 alarms** have `InstanceId` dimension (standard)
-  - **63 alarms** lack `InstanceId` dimension (SSM Agent and Composite Service alarms)
-  - These 63 alarms use alternative dimensions: `Environment`, `Server`, `ProcessName`
+- **Analysis Performed**:
+  - Created `ScriptsUtil/analyze_alarm_dimensions.py` to analyze all 841 CloudWatch alarms
+    - **778 alarms** (92.5%) have `InstanceId` dimension (standard)
+    - **63 alarms** (7.5%) lack `InstanceId` dimension (SSM Agent and Composite Service alarms)
+    - These 63 alarms use `Environment`, `Server`, `ProcessName` dimensions
 
-- **Solution Implemented**: Hybrid 3-tier alarm matching approach
+  - Created `ScriptsUtil/debug_alarm_matching.py` to debug specific instance matching
+    - Revealed **22 false positive alarms** from "srvcrmqasV" when querying "srvcrmqas"
+    - All false positives had correct `InstanceId` dimension (different from target instance)
+    - Confirmed substring matching was the problem
+
+- **Solution Implemented**: Pure dimension-based matching (2-tier approach)
   ```python
   belongs_to_instance = (
-      # 1. Prefer InstanceId dimension (most reliable - handles 778 alarms)
+      # 1. InstanceId dimension (most reliable - covers 778/841 alarms)
       any(d['Name'] == 'InstanceId' and d['Value'] == instance_id for d in dimensions) or
 
-      # 2. For SSM/Composite alarms, check 'Server' dimension (case-insensitive - handles 63 alarms)
-      any(d['Name'] == 'Server' and d['Value'].upper() == instance_name.upper() for d in dimensions) or
-
-      # 3. Last resort: name-based matching (case-insensitive - fallback)
-      (instance_name.upper() in alarm_name.upper() and ('EPMAPS' in alarm_name.upper() or 'SAP' in alarm_name.upper()))
+      # 2. Server dimension for SSM/Composite alarms (covers remaining 63/841 alarms)
+      any(d['Name'] == 'Server' and d['Value'].upper() == instance_name.upper() for d in dimensions)
   )
   ```
 
+  **Key changes from original approach:**
+  - ❌ **Removed** Level 3 (name-based substring matching) - was causing 22 false positives
+  - ✅ **Relies only on dimensions** - 100% coverage with 2 levels (InstanceId + Server)
+  - ✅ **Case-insensitive Server dimension** matching
+
 - **Files Modified**:
-  - `services/aws_service.py` line 147-157: Updated `get_aws_data()` alarm filtering
-  - `services/aws_service.py` line 352-362: Updated `get_alarms_for_instance()` alarm filtering
+  - `config.yaml` line 70: Updated version to v0.6.4
+  - `services/aws_service.py` line 147-154: Updated `get_aws_data()` alarm filtering
+  - `services/aws_service.py` line 349-356: Updated `get_alarms_for_instance()` alarm filtering
   - `ScriptsUtil/analyze_alarm_dimensions.py`: New analysis tool for alarm dimension inspection
+  - `ScriptsUtil/debug_alarm_matching.py`: New debugging tool for instance-specific alarm matching
+
+- **Verification**:
+  - **Before**: "srvcrmqas" showed 39 alarms (17 correct + 22 false positives from "srvcrmqasV")
+  - **After**: "srvcrmqas" shows 17 alarms (0 false positives) ✅
 
 - **Impact**:
-  - ✅ Eliminates duplicate alarms in detail page
-  - ✅ More robust matching using structured dimensions
-  - ✅ Case-insensitive matching prevents capitalization issues
+  - ✅ Eliminates ALL false positive alarms from similar instance names
+  - ✅ No more substring matching issues (srvcrmqas vs srvcrmqasV)
+  - ✅ No more case sensitivity issues (srvcrmqas vs SRVCRMQAS)
+  - ✅ More robust matching using only structured dimensions
   - ✅ Handles all 841 alarms correctly (778 with InstanceId + 63 with Server dimension)
-  - ✅ Reduces false positives from name-based matching
+  - ✅ Zero false positives verified by debug tool
 
 ### Version: v0.6.4
 
