@@ -1,5 +1,47 @@
 # Dashboard EPMAPS POC - Development History
 
+## v0.6.4 - Hybrid Alarm Filtering (Fix Duplicate Alarms) (2025-11-10)
+
+### Bug Fix: Duplicate Alarms in Detail Page
+- **Problem**: When opening detail page for an instance (e.g., "srvcrmqas"), alarms from multiple case variants were appearing (srvcrmqas, SRVCRMQAS, etc.)
+- **Root Cause**:
+  - Original alarm filtering used case-sensitive string matching: `instance_name in alarm_name`
+  - This caused alarms with different capitalizations to pass through the filter
+  - Additionally, 63 SAP/EPMAPS alarms don't have `InstanceId` dimension, using `Server` dimension instead
+
+- **Analysis Performed**: Created `ScriptsUtil/analyze_alarm_dimensions.py` to analyze all 841 CloudWatch alarms
+  - **778 alarms** have `InstanceId` dimension (standard)
+  - **63 alarms** lack `InstanceId` dimension (SSM Agent and Composite Service alarms)
+  - These 63 alarms use alternative dimensions: `Environment`, `Server`, `ProcessName`
+
+- **Solution Implemented**: Hybrid 3-tier alarm matching approach
+  ```python
+  belongs_to_instance = (
+      # 1. Prefer InstanceId dimension (most reliable - handles 778 alarms)
+      any(d['Name'] == 'InstanceId' and d['Value'] == instance_id for d in dimensions) or
+
+      # 2. For SSM/Composite alarms, check 'Server' dimension (case-insensitive - handles 63 alarms)
+      any(d['Name'] == 'Server' and d['Value'].upper() == instance_name.upper() for d in dimensions) or
+
+      # 3. Last resort: name-based matching (case-insensitive - fallback)
+      (instance_name.upper() in alarm_name.upper() and ('EPMAPS' in alarm_name.upper() or 'SAP' in alarm_name.upper()))
+  )
+  ```
+
+- **Files Modified**:
+  - `services/aws_service.py` line 147-157: Updated `get_aws_data()` alarm filtering
+  - `services/aws_service.py` line 352-362: Updated `get_alarms_for_instance()` alarm filtering
+  - `ScriptsUtil/analyze_alarm_dimensions.py`: New analysis tool for alarm dimension inspection
+
+- **Impact**:
+  - ✅ Eliminates duplicate alarms in detail page
+  - ✅ More robust matching using structured dimensions
+  - ✅ Case-insensitive matching prevents capitalization issues
+  - ✅ Handles all 841 alarms correctly (778 with InstanceId + 63 with Server dimension)
+  - ✅ Reduces false positives from name-based matching
+
+### Version: v0.6.4
+
 ## v0.6.3 - SMDA98 Alarm Treatment as Preventive (2025-11-07)
 
 ### Enhancement: SMDA98 Alarms Classification

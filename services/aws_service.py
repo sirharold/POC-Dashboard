@@ -144,10 +144,16 @@ class AWSService:
                         dimensions = alarm.get('Dimensions', [])
                         alarm_name = alarm.get('AlarmName', '')
                         
-                        # Check if alarm belongs to this instance (InstanceId dimension OR instance name in alarm name)
+                        # Check if alarm belongs to this instance using hybrid approach
                         belongs_to_instance = (
+                            # 1. Prefer InstanceId dimension (most reliable)
                             any(d['Name'] == 'InstanceId' and d['Value'] == instance_id for d in dimensions) or
-                            (instance_name in alarm_name and ('EPMAPS' in alarm_name.upper() or 'SAP' in alarm_name.upper()))
+
+                            # 2. For SSM/Composite alarms, check 'Server' dimension (case-insensitive)
+                            any(d['Name'] == 'Server' and d['Value'].upper() == instance_name.upper() for d in dimensions) or
+
+                            # 3. Last resort: name-based matching (case-insensitive)
+                            (instance_name.upper() in alarm_name.upper() and ('EPMAPS' in alarm_name.upper() or 'SAP' in alarm_name.upper()))
                         )
                         
                         if belongs_to_instance:
@@ -343,10 +349,16 @@ class AWSService:
                     alarm_name = alarm.get('AlarmName', '')
                     dimensions = alarm.get('Dimensions', [])
                     
-                    # Check if alarm belongs to this instance (InstanceId dimension OR instance name in alarm name)
+                    # Check if alarm belongs to this instance using hybrid approach
                     belongs_to_instance = (
+                        # 1. Prefer InstanceId dimension (most reliable)
                         any(dim['Name'] == 'InstanceId' and dim['Value'] == instance_id for dim in dimensions) or
-                        (instance_name in alarm_name and ('EPMAPS' in alarm_name.upper() or 'SAP' in alarm_name.upper()))
+
+                        # 2. For SSM/Composite alarms, check 'Server' dimension (case-insensitive)
+                        any(dim['Name'] == 'Server' and dim['Value'].upper() == instance_name.upper() for dim in dimensions) or
+
+                        # 3. Last resort: name-based matching (case-insensitive)
+                        (instance_name.upper() in alarm_name.upper() and ('EPMAPS' in alarm_name.upper() or 'SAP' in alarm_name.upper()))
                     )
                     
                     if belongs_to_instance:
