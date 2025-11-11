@@ -1,5 +1,117 @@
 # Dashboard EPMAPS POC - Development History
 
+## v0.6.9 - Organize Monthly Report by Environment Sections (2025-11-11)
+
+### Feature: Multiple Environment Sections in Monthly Report
+- **Description**: Monthly report now organizes servers by Environment (Production, QA, DEV) with section subtitles
+- **Previous**: Showed only QA servers with "Procesando X servidor(es) de QA..." notification
+- **Current**: Shows all environments organized in sections with descriptive subtitles
+
+### Implementation Details
+
+**Environment Sections:**
+- Process environments in order: Production → QA → DEV
+- Display format: `#### {environment_name} ({count} servidor/es)`
+- Examples:
+  - "Producción (5 servidores)"
+  - "QA (13 servidores)"
+  - "Desarrollo (3 servidores)"
+
+**Modified: `_display_ping_metrics()`**
+- Loops through 3 environments: Production, QA, DEV
+- For each environment:
+  1. Gets instances with `_get_instances_by_environment(env_tag)`
+  2. Skips silently if no instances found
+  3. Displays section subtitle with server count
+  4. Processes all servers in that environment
+  5. Shows charts in 4-column grid
+  6. Adds horizontal separator `st.markdown("---")` between sections
+  7. Accumulates all charts for PDF export
+
+**UI Improvements:**
+- ❌ Removed: `st.info("Procesando X servidor(es) de QA...")`
+- ✅ Added: Section subtitles with semantic hierarchy (####)
+- ✅ Added: Visual separators between environment sections
+- ✅ Maintained: Spinner during data loading
+- ✅ Maintained: 4-column grid layout per section
+
+**PDF Export:**
+- Includes ALL servers from ALL environments
+- Maintains order: Production → QA → DEV
+- Single unified PDF with complete metrics
+
+### User Experience
+
+**Display Flow:**
+1. User clicks "🔍 Consultar"
+2. System shows title: "Métricas de Ping Desde DD/MM/YYYY hasta DD/MM/YYYY"
+3. For each environment with servers:
+   - Shows section subtitle: "Producción (X servidores)"
+   - Displays charts in 4-column grid
+   - Shows horizontal separator
+4. Repeats for QA and DEV environments
+5. PDF button generates report with all environments
+
+**Layout Example:**
+```
+### Métricas de Ping Desde 01/11/2025 hasta 11/11/2025        [📄 PDF]
+
+#### Producción (5 servidores)
+[Chart 1] [Chart 2] [Chart 3] [Chart 4]
+[Chart 5]
+
+───────────────────────────────────────────────
+
+#### QA (13 servidores)
+[Chart 1] [Chart 2] [Chart 3] [Chart 4]
+[Chart 5] [Chart 6] [Chart 7] [Chart 8]
+[Chart 9] [Chart 10] [Chart 11] [Chart 12]
+[Chart 13]
+
+───────────────────────────────────────────────
+
+#### Desarrollo (3 servidores)
+[Chart 1] [Chart 2] [Chart 3]
+
+───────────────────────────────────────────────
+```
+
+### Files Modified:
+- `ui_components/monthly_report_ui.py`:
+  - Lines 395-554: Refactored `_display_ping_metrics()` for multi-environment support
+  - Added environment loop with tuple mapping: (tag, display_name)
+  - Added section subtitles with server count
+  - Added visual separators between sections
+  - Changed from `charts_data` to `all_charts_data` for PDF aggregation
+- `config.yaml` line 70: Bumped version to v0.6.9
+
+### Impact:
+- ✅ Complete visibility across all environments (Production, QA, DEV)
+- ✅ Better organization with clear visual separation
+- ✅ Professional UI with semantic hierarchy
+- ✅ Scalable: works with any number of environments/servers
+- ✅ Single PDF with complete infrastructure overview
+- ✅ Cleaner UI without redundant notifications
+- ✅ Maintains all v0.6.8 features (schedule-aware availability, dynamic grid)
+
+### Use Cases:
+
+**Scenario 1: Full infrastructure (all 3 environments)**
+- Shows 3 sections with their respective servers
+- PDF includes complete infrastructure metrics
+
+**Scenario 2: Partial infrastructure (e.g., only Production + QA)**
+- Shows 2 sections (skips DEV silently)
+- PDF includes only existing environments
+
+**Scenario 3: Single environment (e.g., only QA)**
+- Shows 1 section with new format
+- Backward compatible with v0.6.8 use case
+
+### Version: v0.6.9
+
+---
+
 ## v0.6.8 - Multiple QA Servers in Monthly Report (2025-11-11)
 
 ### Feature: Display All QA Environment Servers

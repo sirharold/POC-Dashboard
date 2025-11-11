@@ -393,7 +393,7 @@ class MonthlyReportUI:
         return buffer
 
     def _display_ping_metrics(self, start_date, end_date):
-        """Display ping metrics for the selected period for all QA instances."""
+        """Display ping metrics for the selected period organized by environment."""
         # Title and PDF button in same row
         title_col, button_col = st.columns([6, 1])
 
@@ -401,18 +401,8 @@ class MonthlyReportUI:
             title_text = f"Métricas de Ping Desde {start_date.strftime('%d/%m/%Y')} hasta {end_date.strftime('%d/%m/%Y')}"
             st.markdown(f"### {title_text}")
 
-        # We'll store chart data for PDF generation
-        charts_data = []
-
-        # Get all QA instances
-        with st.spinner("Obteniendo servidores de QA..."):
-            qa_instances = self._get_instances_by_environment('QA')
-
-        if not qa_instances:
-            st.warning("No se encontraron servidores con Environment=QA")
-            return
-
-        st.info(f"Procesando {len(qa_instances)} servidor(es) de QA...")
+        # We'll store chart data for PDF generation (all environments)
+        all_charts_data = []
 
         # Convert dates to datetime objects with time
         start_datetime = datetime.combine(start_date, datetime.min.time())
@@ -421,107 +411,135 @@ class MonthlyReportUI:
         # Calculate optimal period once (same for all instances)
         period = self._calculate_optimal_period(start_datetime, end_datetime)
 
-        # Process each instance
-        for idx, instance_data in enumerate(qa_instances):
-            instance_id = instance_data['ID']
-            instance_name = instance_data['Name']
-            schedule_tag = instance_data['Schedule']
+        # Process each environment in order: Production, QA, DEV
+        environments = [
+            ('Production', 'Producción'),
+            ('QA', 'QA'),
+            ('DEV', 'Desarrollo')
+        ]
 
-            with st.spinner(f"Obteniendo datos de {instance_name}..."):
-                # Get metric data from CloudWatch using BOTH dimensions
-                df = self._get_ping_metric_with_dimensions(
-                    instance_id=instance_id,
-                    instance_name=instance_name,
-                    start_time=start_datetime,
-                    end_time=end_datetime,
-                    period=period
-                )
+        for env_tag, env_display_name in environments:
+            # Get instances for this environment
+            with st.spinner(f"Obteniendo servidores de {env_display_name}..."):
+                env_instances = self._get_instances_by_environment(env_tag)
 
-                if df.empty:
-                    st.warning(f"⚠️ Sin datos de ping para {instance_name}")
-                    continue
+            # Skip if no instances found
+            if not env_instances:
+                continue
 
-                # Calculate availability using the AvailabilityCalculator
-                stat_column = 'Maximum' if 'Maximum' in df.columns else 'Average'
-                availability_stats = AvailabilityCalculator.calculate_availability(
-                    df=df,
-                    schedule_tag=schedule_tag,
-                    value_column=stat_column
-                )
+            # Display section subtitle
+            st.markdown(f"#### {env_display_name} ({len(env_instances)} servidor{'es' if len(env_instances) > 1 else ''})")
 
-                # Use scheduled availability percentage (excludes scheduled downtime)
-                availability_percentage = availability_stats['scheduled_availability_percentage']
+            # Store charts for this environment section
+            section_charts_data = []
 
-                # Format title string (avoiding potential f-string issues with %)
-                chart_title = "{} - Disp: {:.1f}%".format(instance_name, availability_percentage)
+            # Process each instance in this environment
+            for idx, instance_data in enumerate(env_instances):
+                instance_id = instance_data['ID']
+                instance_name = instance_data['Name']
+                schedule_tag = instance_data['Schedule']
 
-                # Create plotly line chart
-                fig = go.Figure()
+                with st.spinner(f"Obteniendo datos de {instance_name}..."):
+                    # Get metric data from CloudWatch using BOTH dimensions
+                    df = self._get_ping_metric_with_dimensions(
+                        instance_id=instance_id,
+                        instance_name=instance_name,
+                        start_time=start_datetime,
+                        end_time=end_datetime,
+                        period=period
+                    )
 
-                fig.add_trace(go.Scatter(
-                    x=df['Timestamp'],
-                    y=df[stat_column],
-                    mode='lines+markers',
-                    name='Ping Status',
-                    line=dict(color='#1f77b4', width=2),
-                    marker=dict(size=4),
-                    hovertemplate='<b>Fecha:</b> %{x|%d/%m/%Y %H:%M}<br><b>Estado:</b> %{y}<extra></extra>'
-                ))
+                    if df.empty:
+                        st.warning(f"⚠️ Sin datos de ping para {instance_name}")
+                        continue
 
-                # Configure layout for binary data (0 or 1)
-                fig.update_layout(
-                    title=dict(
-                        text=chart_title,
-                        x=0.5,
-                        xanchor='center',
-                        font=dict(size=16, family='Arial, sans-serif', color='black')
-                    ),
-                    height=300,
-                    margin=dict(l=30, r=20, t=50, b=40),
-                    xaxis=dict(
-                        title="",
-                        gridcolor='lightgray',
-                        showgrid=True
-                    ),
-                    yaxis=dict(
-                        title="",
-                        gridcolor='lightgray',
-                        showgrid=True,
-                        tickmode='array',
-                        tickvals=[0, 1],
-                        ticktext=['0', '1'],
-                        range=[-0.1, 1.1]
-                    ),
-                    hovermode='x unified',
-                    plot_bgcolor='white',
-                    paper_bgcolor='white'
-                )
+                    # Calculate availability using the AvailabilityCalculator
+                    stat_column = 'Maximum' if 'Maximum' in df.columns else 'Average'
+                    availability_stats = AvailabilityCalculator.calculate_availability(
+                        df=df,
+                        schedule_tag=schedule_tag,
+                        value_column=stat_column
+                    )
 
-                # Store chart data for PDF generation
-                charts_data.append((instance_name, availability_percentage, fig))
+                    # Use scheduled availability percentage (excludes scheduled downtime)
+                    availability_percentage = availability_stats['scheduled_availability_percentage']
 
-        # Display all charts in a 4-column grid
-        if charts_data:
-            num_charts = len(charts_data)
-            cols_per_row = 4
+                    # Format title string (avoiding potential f-string issues with %)
+                    chart_title = "{} - Disp: {:.1f}%".format(instance_name, availability_percentage)
 
-            # Create rows with 4 columns each
-            for row_start in range(0, num_charts, cols_per_row):
-                cols = st.columns(cols_per_row)
-                row_charts = charts_data[row_start:row_start + cols_per_row]
+                    # Create plotly line chart
+                    fig = go.Figure()
 
-                for col_idx, (inst_name, avail_pct, chart_fig) in enumerate(row_charts):
-                    with cols[col_idx]:
-                        st.plotly_chart(chart_fig, use_container_width=True)
+                    fig.add_trace(go.Scatter(
+                        x=df['Timestamp'],
+                        y=df[stat_column],
+                        mode='lines+markers',
+                        name='Ping Status',
+                        line=dict(color='#1f77b4', width=2),
+                        marker=dict(size=4),
+                        hovertemplate='<b>Fecha:</b> %{x|%d/%m/%Y %H:%M}<br><b>Estado:</b> %{y}<extra></extra>'
+                    ))
 
-        # Add PDF download button after charts are displayed
+                    # Configure layout for binary data (0 or 1)
+                    fig.update_layout(
+                        title=dict(
+                            text=chart_title,
+                            x=0.5,
+                            xanchor='center',
+                            font=dict(size=16, family='Arial, sans-serif', color='black')
+                        ),
+                        height=300,
+                        margin=dict(l=30, r=20, t=50, b=40),
+                        xaxis=dict(
+                            title="",
+                            gridcolor='lightgray',
+                            showgrid=True
+                        ),
+                        yaxis=dict(
+                            title="",
+                            gridcolor='lightgray',
+                            showgrid=True,
+                            tickmode='array',
+                            tickvals=[0, 1],
+                            ticktext=['0', '1'],
+                            range=[-0.1, 1.1]
+                        ),
+                        hovermode='x unified',
+                        plot_bgcolor='white',
+                        paper_bgcolor='white'
+                    )
+
+                    # Store chart data for this section
+                    section_charts_data.append((instance_name, availability_percentage, fig))
+
+            # Display charts for this environment in a 4-column grid
+            if section_charts_data:
+                num_charts = len(section_charts_data)
+                cols_per_row = 4
+
+                # Create rows with 4 columns each
+                for row_start in range(0, num_charts, cols_per_row):
+                    cols = st.columns(cols_per_row)
+                    row_charts = section_charts_data[row_start:row_start + cols_per_row]
+
+                    for col_idx, (inst_name, avail_pct, chart_fig) in enumerate(row_charts):
+                        with cols[col_idx]:
+                            st.plotly_chart(chart_fig, use_container_width=True)
+
+                # Add all section charts to the global list for PDF
+                all_charts_data.extend(section_charts_data)
+
+                # Add spacing between environment sections
+                st.markdown("---")
+
+        # Add PDF download button after all charts are displayed
         with button_col:
             # Add some vertical spacing to align with title
             st.markdown("<div style='margin-top: 0.5rem;'></div>", unsafe_allow_html=True)
 
-            if charts_data:
-                # Generate PDF
-                pdf_buffer = self._generate_pdf_report(charts_data, start_date, end_date)
+            if all_charts_data:
+                # Generate PDF with all environments
+                pdf_buffer = self._generate_pdf_report(all_charts_data, start_date, end_date)
 
                 # Create filename with dates
                 filename = f"Ping_Report_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.pdf"
