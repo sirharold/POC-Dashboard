@@ -394,12 +394,9 @@ class MonthlyReportUI:
 
     def _display_ping_metrics(self, start_date, end_date):
         """Display ping metrics for the selected period organized by environment."""
-        # Title and PDF button in same row
-        title_col, button_col = st.columns([6, 1])
-
-        with title_col:
-            title_text = f"Métricas de Ping Desde {start_date.strftime('%d/%m/%Y')} hasta {end_date.strftime('%d/%m/%Y')}"
-            st.markdown(f"### {title_text}")
+        # Title
+        title_text = f"Métricas de Ping Desde {start_date.strftime('%d/%m/%Y')} hasta {end_date.strftime('%d/%m/%Y')}"
+        st.markdown(f"### {title_text}")
 
         # Convert dates to datetime objects with time
         start_datetime = datetime.combine(start_date, datetime.min.time())
@@ -532,12 +529,11 @@ class MonthlyReportUI:
                 # Add spacing between environment sections
                 st.markdown("---")
 
-        # Add PDF download button in the title row (button_col)
-        with button_col:
-            # Add some vertical spacing to align with title
-            st.markdown("<div style='margin-top: 0.5rem;'></div>", unsafe_allow_html=True)
-
-            if all_charts_data:
+        # Show PDF download button at the end if we have charts
+        if all_charts_data:
+            # PDF button centered at the bottom
+            col1, col2, col3 = st.columns([2, 1, 2])
+            with col2:
                 # Generate PDF with all environments
                 pdf_buffer = self._generate_pdf_report(all_charts_data, start_date, end_date)
 
@@ -546,9 +542,10 @@ class MonthlyReportUI:
 
                 # Download button
                 st.download_button(
-                    label="📄 PDF",
+                    label="📄 Descargar PDF",
                     data=pdf_buffer,
                     file_name=filename,
                     mime="application/pdf",
-                    use_container_width=True
+                    use_container_width=True,
+                    type="primary"
                 )
