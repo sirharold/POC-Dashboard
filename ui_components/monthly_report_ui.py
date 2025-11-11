@@ -93,8 +93,6 @@ class MonthlyReportUI:
             st.query_params.update({"columns": columns_param})
             st.rerun()
 
-        st.markdown("# 📅 Informe Mensual")
-
         # Get available months
         available_months = self._get_available_months()
 
@@ -531,21 +529,27 @@ class MonthlyReportUI:
 
         # Show PDF download button at the end if we have charts
         if all_charts_data:
+            st.markdown("---")
             # PDF button centered at the bottom
             col1, col2, col3 = st.columns([2, 1, 2])
             with col2:
-                # Generate PDF with all environments
-                pdf_buffer = self._generate_pdf_report(all_charts_data, start_date, end_date)
+                try:
+                    # Generate PDF with all environments
+                    pdf_buffer = self._generate_pdf_report(all_charts_data, start_date, end_date)
 
-                # Create filename with dates
-                filename = f"Ping_Report_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.pdf"
+                    # Create filename with dates
+                    filename = f"Ping_Report_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.pdf"
 
-                # Download button
-                st.download_button(
-                    label="📄 Descargar PDF",
-                    data=pdf_buffer,
-                    file_name=filename,
-                    mime="application/pdf",
-                    use_container_width=True,
-                    type="primary"
-                )
+                    # Download button
+                    st.download_button(
+                        label="📄 Descargar PDF",
+                        data=pdf_buffer,
+                        file_name=filename,
+                        mime="application/pdf",
+                        use_container_width=True,
+                        type="primary"
+                    )
+                except Exception as e:
+                    st.error(f"Error generando PDF: {str(e)}")
+        else:
+            st.info(f"No se generaron gráficos. Total de charts: {len(all_charts_data)}")
