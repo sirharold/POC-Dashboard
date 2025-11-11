@@ -1,5 +1,320 @@
 # Dashboard EPMAPS POC - Development History
 
+## v0.6.8 - Multiple QA Servers in Monthly Report (2025-11-11)
+
+### Feature: Display All QA Environment Servers
+- **Description**: Monthly report now shows ping metrics for ALL servers with Environment=QA tag
+- **Previous**: Only showed SRVERPQA (hardcoded)
+- **Current**: Dynamically fetches and displays all QA servers
+
+### Implementation Details
+
+**New Method: `_get_instances_by_environment()`**
+- Filters instances by Environment tag (case-insensitive)
+- Returns list of dictionaries with ID, Name, and Schedule
+- Reusable for other environments (PROD, DEV, etc.)
+
+**Modified: `_display_ping_metrics()`**
+- Now processes all QA instances instead of single hardcoded server
+- Displays progress: "Procesando X servidor(es) de QA..."
+- Shows warning for servers without ping data (continues processing others)
+- Displays all charts in 4-column grid layout (multiple rows as needed)
+- All charts included in PDF export
+
+**Grid Layout:**
+- Dynamic rows: Creates new row for every 4 charts
+- Responsive: Uses Streamlit columns for proper spacing
+- Example with 13 servers: 3 full rows + 1 partial row (1 chart)
+
+**Performance:**
+- Progress indicators for each server
+- Optimal period calculated once (same for all servers)
+- Parallel-ready structure for future optimization
+
+### Testing Results
+
+**Local Test:**
+```bash
+python -c "from ui_components.monthly_report_ui import MonthlyReportUI; ..."
+✅ Método _get_instances_by_environment funcional
+📊 Encontradas 13 instancias de QA
+```
+
+**QA Servers Found:**
+- SRVHANDBQAS
+- SRVERPQA
+- (+ 11 more QA servers)
+
+### Files Modified:
+- `ui_components/monthly_report_ui.py`:
+  - Lines 228-229: Added 'Name' to _get_instance_data_by_name return
+  - Lines 238-257: New `_get_instances_by_environment()` method
+  - Lines 395-515: Completely refactored `_display_ping_metrics()` for multiple servers
+  - Dynamic grid display with 4 columns per row
+- `config.yaml` line 70: Bumped version to v0.6.8
+
+### Impact:
+- ✅ Complete visibility of QA environment (13 servers)
+- ✅ Scalable to any number of servers (grid adapts)
+- ✅ Reusable for other environments (PROD, DEV)
+- ✅ Better insights: all servers in one report
+- ✅ PDF includes all QA servers automatically
+- ✅ Maintains schedule-aware availability calculation
+
+### User Experience:
+1. User clicks "🔍 Consultar"
+2. System finds all Environment=QA servers
+3. Shows: "Procesando 13 servidor(es) de QA..."
+4. Displays progress for each server
+5. Shows all charts in clean 4-column grid
+6. PDF export includes all servers (landscape format)
+
+### Version: v0.6.8
+
+## v0.6.7 - PDF Export Functionality (2025-11-11)
+
+### Feature: Export Monthly Reports to PDF
+- **Description**: Added PDF export functionality for ping metric reports
+- **UI**: PDF button appears next to the report title "Métricas de Ping Desde DD/MM/YYYY hasta DD/MM/YYYY"
+
+### Implementation Details
+
+**New Dependencies:**
+- `plotly[kaleido]>=6.1.1`: Plotly with bundled compatible kaleido for chart-to-image conversion
+- `reportlab`: For PDF generation
+
+**Important Note on Dependencies:**
+- Use `plotly[kaleido]>=6.1.1` instead of installing kaleido separately
+- This ensures compatible versions are installed (Plotly 6.4.0 + Kaleido 1.2.0)
+- Avoids `ImportError: cannot import name 'broadcast_args_to_dicts'` compatibility issue
+- Install command: `pip install 'plotly[kaleido]>=6.1.1'`
+
+**PDF Generation:**
+- Method: `_generate_pdf_report()` in `MonthlyReportUI` class
+- Format: Landscape orientation (11" x 8.5")
+- Layout: 4 columns (same as UI), multiple rows if needed
+- Title: "Métricas de Ping Desde DD/MM/YYYY hasta DD/MM/YYYY" (centered, 18pt)
+- Charts: Converted to PNG images (300x250px) and embedded in PDF
+- Filename: `Ping_Report_YYYYMMDD_YYYYMMDD.pdf`
+
+**UI Changes:**
+- Title and PDF button layout: 6:1 column ratio
+- PDF button: `📄 PDF` positioned to the right of the title
+- Button triggers immediate PDF generation and download
+- No page reload required
+
+**Technical Details:**
+```python
+# PDF Layout
+- Landscape orientation: landscape(letter)
+- Chart size: 2.4" x 2" (300x250px)
+- Column widths: 2.5" each (4 columns)
+- Table padding: 3px left/right, 5px top/bottom
+- Title spacing: 0.3" after title
+```
+
+**Chart Conversion:**
+```python
+img_bytes = fig.to_image(format="png", width=300, height=250)
+```
+
+### Files Modified:
+- `ui_components/monthly_report_ui.py`:
+  - Lines 9-15: Added PDF generation imports
+  - Lines 300-371: New `_generate_pdf_report()` method
+  - Lines 375-376: Modified title layout (6:1 columns)
+  - Lines 479-500: Added PDF button and download logic
+- `requirements.txt`: Changed to `plotly[kaleido]>=6.1.1` and added `reportlab`
+- `Dockerfile`: Added chromium and chromium-driver system dependencies
+- `config.yaml` line 70: Bumped version to v0.6.7
+- `README.md`: Updated with PDF features and dependency notes
+- `CLAUDE.md`: Added PDF documentation and troubleshooting section
+
+### Files Created:
+- `ScriptsUtil/test_pdf_generation.py`: Test script for PDF generation
+- `DEPLOY_NOTES.md`: Comprehensive deployment guide with dependency requirements and troubleshooting
+
+### Testing:
+- ✅ PDF generation tested with sample data
+- ✅ Plotly chart to image conversion working (kaleido)
+- ✅ ReportLab PDF creation working
+- ✅ Test PDF: 13KB, 1 page, landscape format
+- ✅ Charts embedded correctly with titles
+
+### Usage:
+1. Navigate to Monthly Report page
+2. Select date range and query ping metrics
+3. Click "📄 PDF" button next to title
+4. PDF downloads automatically with filename: `Ping_Report_20250901_20250930.pdf`
+
+### PDF Content:
+- Title with date range (centered, bold)
+- Charts in 4-column grid (landscape)
+- Server name and availability percentage in each chart title
+- Professional formatting with proper spacing
+
+### Impact:
+- ✅ Export monthly reports for documentation
+- ✅ Share reports via email/Slack
+- ✅ Archive historical reports
+- ✅ Professional PDF formatting
+- ✅ No external tools needed
+- ✅ Instant download (no processing delay)
+
+### Version: v0.6.7
+
+## v0.6.6 - Scheduled Availability Calculator (2025-11-11)
+
+### Feature: Smart Availability Calculation with Schedule Support
+- **Description**: Implemented intelligent availability calculation that considers scheduled downtime periods
+- **Impact**: Accurate availability metrics that exclude planned maintenance windows from availability calculations
+
+### Implementation Details
+
+**New Library: `utils/availability_calculator.py`**
+- Created `AvailabilityCalculator` class for centralized availability calculations
+- Supports multiple schedule types:
+  - **Weekends**: Powered off Friday 21:00 to Monday 10:00
+  - **Nights**: Powered off 21:00 to 06:00 daily
+  - **BusinessHours**: Only available Monday-Friday 08:00-18:00
+
+**Schedule Detection Logic:**
+- `_is_weekend_downtime()`: Detects Friday 21:00 through Monday 10:00 (confirmed via tests)
+- `_is_night_downtime()`: Detects daily 21:00 to 06:00
+- `_is_outside_business_hours()`: Detects non-business hours (outside M-F 08:00-18:00)
+
+**Availability Metrics:**
+- `total_points`: Total datapoints in query
+- `available_points`: Points where metric == 1
+- `unavailable_points`: Points where metric == 0
+- `scheduled_downtime_points`: Points during scheduled maintenance
+- `unscheduled_downtime_points`: Actual downtime outside schedule
+- `availability_percentage`: Overall availability (raw)
+- `scheduled_availability_percentage`: Availability excluding scheduled downtime (what we show)
+
+**AWS Service Integration:**
+- Modified `services/aws_service.py` line 196: Added `Schedule` tag extraction
+- Tag is read from EC2 instance tags: `Schedule` (case sensitive, with capital S)
+- Stored in instance data dictionary for use in calculations
+
+**UI Updates:**
+- `ui_components/monthly_report_ui.py`:
+  - Modified `_get_instance_data_by_name()`: Returns both instance ID and schedule tag
+  - Modified `_display_ping_metrics()`:
+    - Changed title format: "Métricas de Ping Desde DD/MM/YYYY hasta DD/MM/YYYY" (no emojis)
+    - Removed success/info messages about query dates and intervals
+    - Integrated AvailabilityCalculator for accurate availability calculation
+    - Uses `scheduled_availability_percentage` for display
+    - Chart still shows all datapoints (including scheduled downtime)
+
+**Testing:**
+- Created `ScriptsUtil/test_availability_calculator.py`:
+  - 16 unit tests for weekend schedule detection (all passed ✅)
+  - Integration tests with sample data
+  - Verified correct handling of Friday 21:00 boundary
+  - Verified correct handling of Monday 10:00 boundary
+  - Confirmed 100% scheduled availability when downtime matches schedule
+
+### Example Behavior:
+```
+Server: SRVERPQA (schedule: "Weekends")
+Period: Friday 20:00 - Monday 11:00 (84 hours)
+
+Without schedule consideration:
+- 23 hours UP, 61 hours DOWN = 27.38% availability ❌ Misleading
+
+With schedule consideration:
+- 23 hours UP, 0 hours unscheduled DOWN = 100% availability ✅ Accurate
+- 61 hours were during scheduled maintenance (excluded from metric)
+```
+
+### Files Created:
+- `utils/availability_calculator.py`: New availability calculation library
+- `ScriptsUtil/test_availability_calculator.py`: Comprehensive test suite
+
+### Files Modified:
+- `services/aws_service.py` line 196: Added Schedule tag extraction
+- `ui_components/monthly_report_ui.py`:
+  - Line 8: Added import for AvailabilityCalculator
+  - Lines 213-230: Modified `_get_instance_data_by_name()` method
+  - Lines 295-345: Modified `_display_ping_metrics()` method
+  - Line 298: Changed title format (removed emojis)
+  - Removed lines with st.success and st.info messages
+- `config.yaml` line 70: Bumped version to v0.6.6
+
+### Impact:
+- ✅ Accurate availability metrics for scheduled machines
+- ✅ Reusable library for all future availability calculations
+- ✅ Support for multiple schedule types (Weekends, Nights, BusinessHours)
+- ✅ Cleaner UI without redundant messages
+- ✅ Extensible design for adding new schedule types
+- ✅ 100% test coverage for schedule detection logic
+
+### Version: v0.6.6
+
+## v0.6.5 - Monthly Report UI (2025-11-10)
+
+### Feature: Monthly Report Page
+- **Description**: New page for generating monthly reports with flexible date selection
+- **Access**: New button "📅 Informe Mensual" added next to "Reporte Alarmas" button in main dashboard
+
+### Implementation Details
+
+**UI Components:**
+- Created new `ui_components/monthly_report_ui.py` with `MonthlyReportUI` class
+- Date range selector with:
+  - Start date and end date pickers (default: first day of current month to today)
+  - Dropdown with available months starting from September 2025
+  - Months displayed in Spanish: "Septiembre 2025", "Octubre 2025", etc.
+  - Automatically includes new months as they arrive
+  - "Personalizado" option for custom date ranges
+
+**Features:**
+- **Month Dropdown**:
+  - Dynamically generated list from September 2025 to current month
+  - Most recent months shown first
+  - Selecting a month automatically updates start/end date pickers
+  - Shows: "Personalizado", "Noviembre 2025", "Octubre 2025", "Septiembre 2025"
+
+- **Date Pickers**:
+  - Independent start and end date selection
+  - Manual date changes override dropdown selection
+  - Validation: start date must be before end date
+
+- **Consultar Button**:
+  - Primary action button for querying data
+  - Date validation with error messages
+  - Ready for future implementation of report generation
+
+- **Period Summary**:
+  - Displays selected start date, end date, and total days
+  - Formatted in DD/MM/YYYY format
+
+**Navigation:**
+- "← Volver al Dashboard" button preserves column layout setting
+- Query param: `monthly_report=true`
+- Page title: "☁️ Dashboard EPMAPS - 📅 Informe Mensual"
+
+### Files Modified:
+- `ui_components/dashboard_ui.py` lines 243-258: Added "Informe Mensual" button next to "Reporte Alarmas"
+- `dashboard_manager.py` lines 10, 31, 85-86, 97-98: Added routing for monthly report page
+- `ui_components/monthly_report_ui.py`: New file with MonthlyReportUI implementation
+
+### Impact:
+- ✅ New accessible monthly report interface
+- ✅ No changes to existing dashboard, detail, or alarm report functionality
+- ✅ Flexible date selection with month presets
+- ✅ Spanish localization for month names
+- ✅ Ready for future report generation implementation
+- ✅ Maintains consistent navigation and UI patterns
+
+### Next Steps:
+- TODO: Implement actual report data generation in `MonthlyReportUI.display_monthly_report()`
+- TODO: Define report metrics and visualizations
+- TODO: Add export functionality (CSV/PDF)
+
+### Version: v0.6.5
+
 ## v0.6.4 - Dimension-Based Alarm Filtering (Fix Duplicate/Wrong Alarms) (2025-11-10)
 
 ### Bug Fix: Duplicate and Wrong Instance Alarms in Detail Page

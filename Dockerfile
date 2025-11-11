@@ -4,6 +4,13 @@ FROM python:3.11-slim
 # Set the working directory in the container
 WORKDIR /app
 
+# Install system dependencies required for kaleido (chromium-based) and PDF generation
+# These are needed for plotly chart to image conversion
+RUN apt-get update && apt-get install -y \
+    chromium \
+    chromium-driver \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy the dependencies file to the working directory
 COPY requirements.txt .
 

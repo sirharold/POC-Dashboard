@@ -192,7 +192,8 @@ class AWSService:
                         'OperatingSystem': instance.get('PlatformDetails', 'Linux/UNIX'),
                         'PrivateIP': instance.get('PrivateIpAddress', 'N/A'),
                         'DiskCount': disk_count,
-                        'AlarmObjects': alarms_list_for_instance
+                        'AlarmObjects': alarms_list_for_instance,
+                        'Schedule': tags.get('Schedule', None)  # For availability calculations (case sensitive)
                     }
                     
                     
@@ -266,7 +267,7 @@ class AWSService:
                 Period=300,  # 5-minute intervals
                 Statistics=[statistic]
             )
-            
+
             if not response['Datapoints']:
                 return pd.DataFrame()
 
@@ -278,6 +279,51 @@ class AWSService:
         except Exception as e:
             # Don't show error for metrics that might not exist
             # st.warning(f"Could not retrieve metric {metric_name}: {e}")
+            return pd.DataFrame()
+
+    def get_metric_history_by_name(self, instance_name: str, metric_name: str, namespace: str,
+                                     start_time: datetime.datetime, end_time: datetime.datetime,
+                                     statistic: str = 'Average', period: int = 300) -> pd.DataFrame:
+        """
+        Get time-series data for a specific CloudWatch metric using instance name.
+
+        Args:
+            instance_name: Name of the instance (e.g., 'SRVERPQA')
+            metric_name: CloudWatch metric name (e.g., 'PingReachable')
+            namespace: CloudWatch namespace (e.g., 'CWAgent')
+            start_time: Start time for the query
+            end_time: End time for the query
+            statistic: Statistic to retrieve (Average, Sum, Maximum, etc.)
+            period: Period in seconds (default 300 = 5 minutes)
+
+        Returns:
+            DataFrame with Timestamp and metric values
+        """
+        try:
+            cloudwatch = self.get_cross_account_boto3_client('cloudwatch')
+            if not cloudwatch:
+                return pd.DataFrame()
+
+            response = cloudwatch.get_metric_statistics(
+                Namespace=namespace,
+                MetricName=metric_name,
+                Dimensions=[{'Name': 'Name', 'Value': instance_name}],
+                StartTime=start_time,
+                EndTime=end_time,
+                Period=period,
+                Statistics=[statistic]
+            )
+
+            if not response['Datapoints']:
+                return pd.DataFrame()
+
+            # Convert to DataFrame and sort
+            df = pd.DataFrame(response['Datapoints'])
+            df = df.sort_values(by='Timestamp').reset_index(drop=True)
+            return df
+
+        except Exception as e:
+            st.error(f"Error obteniendo métrica {metric_name} para {instance_name}: {str(e)}")
             return pd.DataFrame()
 
     def get_log_groups(self, instance_id: str) -> list:

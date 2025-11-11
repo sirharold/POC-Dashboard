@@ -13,23 +13,54 @@ Este es un dashboard de monitoreo de máquinas virtuales construido con Streamli
 ## Estructura del Proyecto
 ```
 .
-├── app.py                    # Archivo principal de la aplicación
-├── config.yaml              # Configuración central (grupos, colores, ajustes)
-├── requirements.txt         # Dependencias de Python
-├── Dockerfile              # Configuración para contenedores
-├── assets/                 # Estilos CSS personalizados
-├── components/             # Componentes reutilizables de UI
-│   ├── server_card.py     # Tarjetas de servidor
-│   └── group_container.py # Contenedores de grupo
-├── utils/                  # Funciones auxiliares
-├── ScriptsUtil/           # Scripts de despliegue y configuración
-└── docs/                  # Documentación de despliegue
+├── app.py                      # Punto de entrada de la aplicación
+├── dashboard_manager.py        # Gestor principal y router de páginas
+├── config.yaml                 # Configuración central (grupos, colores, versión)
+├── requirements.txt            # Dependencias de Python
+├── Dockerfile                  # Configuración para contenedores
+├── assets/                     # Estilos CSS personalizados
+├── services/                   # Lógica de negocio y servicios
+│   ├── aws_service.py         # Servicio para integraciones con AWS
+│   └── sap_service.py         # Servicio para datos de SAP
+├── ui_components/              # Componentes de interfaz de usuario
+│   ├── dashboard_ui.py        # Dashboard principal de monitoreo
+│   ├── detail_ui.py           # Página de detalles de instancia
+│   ├── alarm_report_ui.py     # Página de reporte de alarmas
+│   └── monthly_report_ui.py   # Página de informe mensual
+├── utils/                      # Funciones auxiliares
+│   ├── helpers.py             # Funciones de utilidad general
+│   ├── auth.py                # Autenticación de usuarios
+│   └── availability_calculator.py  # Cálculo de disponibilidad con schedules
+├── ScriptsUtil/                # Scripts de despliegue y debug
+│   ├── deploy_*.sh            # Scripts de despliegue
+│   ├── test_aws_connection.py # Test de conexión AWS
+│   ├── analyze_alarm_dimensions.py  # Análisis de alarmas
+│   ├── debug_alarm_matching.py      # Debug de matching de alarmas
+│   ├── debug_ping_metrics.py        # Debug de métricas CloudWatch
+│   └── test_availability_calculator.py  # Tests de disponibilidad
+└── docs/                       # Documentación de despliegue
 ```
 
 ## Comandos de Desarrollo
 
+### Setup AWS Local
+```bash
+# Configurar AWS profile
+aws configure --profile aquito-role
+
+# Exportar profile para desarrollo local
+export AWS_PROFILE=aquito-role
+
+# Verificar conexión AWS
+python ScriptsUtil/test_aws_connection.py
+```
+
 ### Ejecutar localmente
 ```bash
+# Asegurarse de tener el AWS profile exportado
+export AWS_PROFILE=aquito-role
+
+# Ejecutar aplicación
 streamlit run app.py
 ```
 
@@ -99,16 +130,42 @@ flake8 app.py components/ utils/
 - `ScriptsUtil/deploy_fargate.sh` - Despliega en AWS Fargate
 - `ScriptsUtil/create_cloudwatch_alarms.sh` - Crea alarmas de CloudWatch
 
-### Debug
-- `ScriptsUtil/debug_aws.py` - Herramienta para depurar integraciones AWS
+### Debug y Análisis
+- `ScriptsUtil/test_aws_connection.py` - Verifica conexión AWS y permisos de rol
+- `ScriptsUtil/analyze_alarm_dimensions.py` - Analiza dimensiones de todas las alarmas de CloudWatch
+- `ScriptsUtil/debug_alarm_matching.py` - Debug de matching de alarmas por instancia
+- `ScriptsUtil/debug_ping_metrics.py` - Debug de métricas CloudWatch (namespace, dimensiones)
+- `ScriptsUtil/test_availability_calculator.py` - Tests de cálculo de disponibilidad con schedules
+- `ScriptsUtil/debug_aws.py` - Herramienta general para depurar integraciones AWS
 
 ## Notas Importantes
 
-1. **Versión**: La versión actual se mantiene en `config.yaml`
+1. **Versión**: La versión actual se mantiene en `config.yaml` (actualmente v0.6.7)
 2. **Cache**: La aplicación usa un sistema de cache con thread de actualización en background
 3. **Múltiples Cuentas AWS**: Soporta asumir roles en diferentes cuentas AWS
 4. **Refresh**: El intervalo de actualización es configurable en config.yaml
 5. **Alarmas**: Soporta alarmas preventivas y críticas con diferentes colores
+6. **Páginas Disponibles**:
+   - Dashboard principal: Monitoreo en tiempo real
+   - Página de detalles: Vista detallada de instancia
+   - Reporte de alarmas: Análisis global de alarmas
+   - Informe mensual: Reportes históricos con selección de fecha, métricas de ping, y exportación a PDF
+7. **Filtrado de Alarmas**: Usa matching basado en dimensiones (InstanceId y Server) para precisión
+8. **Cálculo de Disponibilidad**: La librería `utils/availability_calculator.py` considera schedules de mantenimiento:
+   - **Weekends**: Apagado viernes 21:00 - lunes 10:00
+   - **Nights**: Apagado diariamente 21:00 - 06:00
+   - **BusinessHours**: Solo disponible L-V 08:00-18:00
+   - El cálculo excluye el downtime programado de las métricas de disponibilidad
+9. **Tags de Schedule**: Para que una instancia use cálculo inteligente de disponibilidad:
+   - Agregar tag `Schedule` (case sensitive, con mayúscula) con valor: `Weekends`, `Nights`, o `BusinessHours`
+   - El AWS service extrae automáticamente este tag y lo usa en los reportes
+10. **Exportación a PDF**: Los informes mensuales se pueden exportar a PDF:
+   - Botón "📄 PDF" junto al título del reporte
+   - Formato landscape (11" x 8.5") con 4 columnas
+   - Incluye título con fechas y gráficos de disponibilidad
+   - Usa `plotly[kaleido]` para convertir Plotly a imágenes y `reportlab` para generar PDF
+   - **Importante**: Instalar usando `pip install 'plotly[kaleido]>=6.1.1'` para evitar problemas de compatibilidad
+   - Versiones compatibles: Plotly 6.4.0 + Kaleido 1.2.0
 
 ## Tareas Comunes
 
@@ -123,10 +180,45 @@ flake8 app.py components/ utils/
 3. Usar las clases CSS existentes cuando sea posible
 
 ### Debugging de problemas AWS
-1. Verificar credenciales AWS configuradas
-2. Usar `ScriptsUtil/debug_aws.py` para probar conexiones
-3. Revisar logs de CloudWatch para errores
-4. Verificar permisos IAM del rol asumido
+1. Verificar credenciales AWS configuradas: `aws sts get-caller-identity`
+2. Probar conexión y permisos de rol: `python ScriptsUtil/test_aws_connection.py`
+3. Analizar dimensiones de alarmas: `python ScriptsUtil/analyze_alarm_dimensions.py`
+4. Debug de matching de alarmas específicas: `python ScriptsUtil/debug_alarm_matching.py <instance_name>`
+5. Revisar logs de CloudWatch para errores
+6. Verificar Trust Policy del rol RecolectorDeDashboard incluya el rol local
+
+### Troubleshooting PDF Generation
+Si encuentras error: `ImportError: cannot import name 'broadcast_args_to_dicts' from 'plotly.io._utils'`
+
+**Solución:**
+```bash
+# Desinstalar kaleido independiente si está instalado
+pip uninstall -y kaleido
+
+# Reinstalar plotly con kaleido bundled
+pip install 'plotly[kaleido]>=6.1.1'
+
+# Verificar instalación
+python ScriptsUtil/test_pdf_generation.py
+```
+
+**Versiones compatibles verificadas:**
+- Plotly 6.4.0
+- Kaleido 1.2.0 (instalado automáticamente por plotly[kaleido])
+- ReportLab 4.4.4
+
+### Setup de permisos AWS local
+Para desarrollo local, el rol RecolectorDeDashboard debe tener en su Trust Policy:
+```json
+{
+  "Principal": {
+    "AWS": [
+      "arn:aws:iam::687634808667:root",
+      "arn:aws:iam::011528297340:role/morrisopazo"
+    ]
+  }
+}
+```
 
 ## Contacto y Documentación
 - README.md contiene instrucciones de despliegue

@@ -7,6 +7,7 @@ from services.aws_service import AWSService
 from ui_components.dashboard_ui import DashboardUI
 from ui_components.detail_ui import DetailUI
 from ui_components.alarm_report_ui import AlarmReportUI
+from ui_components.monthly_report_ui import MonthlyReportUI
 from utils.helpers import load_css
 from utils.auth import get_authenticator
 
@@ -27,6 +28,7 @@ class DashboardManager:
         self.dashboard_ui = DashboardUI(self.aws_service)
         self.detail_ui = DetailUI(self.aws_service)
         self.alarm_report_ui = AlarmReportUI(self.aws_service)
+        self.monthly_report_ui = MonthlyReportUI(self.aws_service)
         
         # Configuration values
         self.show_aws_errors = self.config['settings']['show_aws_errors']
@@ -80,6 +82,8 @@ class DashboardManager:
                 # Detect current page and show appropriate title
                 if 'alarm_report' in st.query_params:
                     st.markdown("# ☁️ Dashboard EPMAPS - 📊 Reporte de Alarmas")
+                elif 'monthly_report' in st.query_params:
+                    st.markdown("# ☁️ Dashboard EPMAPS - 📅 Informe Mensual")
                 elif 'poc_vm_id' in st.query_params:
                     st.markdown("# ☁️ Dashboard EPMAPS - Detalle VM")
                 else:
@@ -90,6 +94,8 @@ class DashboardManager:
             # Router principal: decidir qué vista mostrar basado en la URL
             if 'alarm_report' in st.query_params:
                 self.alarm_report_ui.display_alarm_report()
+            elif 'monthly_report' in st.query_params:
+                self.monthly_report_ui.display_monthly_report()
             elif 'poc_vm_id' in st.query_params:
                 self.detail_ui.display_detail_page(st.query_params['poc_vm_id'])
             else:

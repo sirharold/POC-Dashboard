@@ -10,9 +10,22 @@ env/
 venv/
 .venv/
 
+# AWS Credentials (NEVER commit these)
+~/.aws/credentials
+~/.aws/config
+trust-policy.json
+assume-role-policy.json
+
+# Debug logs
+/tmp/streamlit_aws_debug.log
+*.log
+
+# Streamlit cache
+.streamlit/
+
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# User specified
-ScriptsUtil/
+# User specified (comentado porque los scripts son parte del proyecto)
+# ScriptsUtil/

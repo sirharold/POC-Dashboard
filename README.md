@@ -11,6 +11,9 @@ Dashboard de monitoreo centralizado para máquinas virtuales, diseñado para vis
 - ⚡ **Cache Inteligente**: La página de AWS utiliza un hilo de fondo y una cache compartida para un rendimiento óptimo y multiusuario.
 - 🚀 **Despliegue Continuo (CI/CD)**: Automatización del despliegue a EC2 mediante **GitHub Actions** cada vez que se actualiza la rama `main`.
 - 🐳 **Soporte para Contenedores**: `Dockerfile` incluido para despliegues portables.
+- 📊 **Informes Mensuales**: Generación de reportes de métricas de ping con exportación a PDF.
+- 📄 **Exportación PDF**: Generación automática de reportes en formato PDF landscape con gráficos profesionales.
+- 📅 **Cálculo Inteligente de Disponibilidad**: Considera schedules de mantenimiento programado (Weekends, Nights, BusinessHours).
 
 ---
 
@@ -19,7 +22,14 @@ Dashboard de monitoreo centralizado para máquinas virtuales, diseñado para vis
 ### Ejecución Local (para Desarrollo)
 
 1.  **Clonar el repositorio**
-2.  **Instalar dependencias**: `pip install -r requirements.txt`
+2.  **Instalar dependencias**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+    **Nota importante**: El proyecto requiere `plotly[kaleido]>=6.1.1` para la generación de PDF. Si encuentras errores de importación, ejecuta:
+    ```bash
+    pip install 'plotly[kaleido]>=6.1.1' reportlab
+    ```
 3.  **Configurar credenciales de AWS** (si se va a usar la página POC Live).
 4.  **Ejecutar la aplicación**: `streamlit run app.py`
 
@@ -31,6 +41,12 @@ Existen dos métodos de despliegue documentados:
     - **Guía:** [`docs/deploy_using_app_runner.md`](docs/deploy_using_app_runner.md)
 2.  **Instancia EC2 con CI/CD (Configuración Actual)**: Despliegue automatizado desde GitHub.
     - **Guía:** [`docs/deploy_using_ec2instance.md`](docs/deploy_using_ec2instance.md)
+
+**📋 Notas importantes de despliegue**: Ver [`DEPLOY_NOTES.md`](DEPLOY_NOTES.md) para:
+- Dependencias del sistema requeridas (chromium para PDF)
+- Troubleshooting de problemas comunes
+- Verificación post-despliegue
+- Checklist completo de despliegue
 
 ---
 

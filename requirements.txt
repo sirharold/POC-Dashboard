@@ -1,6 +1,7 @@
 streamlit
-plotly
 PyYAML
 boto3
 pandas
 streamlit-authenticator
+plotly[kaleido]>=6.1.1
+reportlab
