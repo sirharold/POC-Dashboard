@@ -51,6 +51,7 @@ AHORA: Muestra TODOS los environments (Production, QA, DEV) organizados en secci
 
 ✅ Eliminación de notificaciones:
    - Reemplazada st.info() por subtítulos
+   - Eliminado st.warning() para servidores sin datos (skip silencioso)
    - Spinner solo durante carga de datos
    - UI más limpia y profesional
 
@@ -58,6 +59,7 @@ AHORA: Muestra TODOS los environments (Production, QA, DEV) organizados en secci
    - Incluye todos los environments
    - Mantiene orden: Production → QA → DEV
    - Un solo archivo con todas las métricas
+   - Botón centrado al final: "📄 Descargar PDF" (tipo primary)
 
 📝 CÓDIGO MODIFICADO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

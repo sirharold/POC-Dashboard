@@ -30,6 +30,7 @@
 
 **UI Improvements:**
 - ❌ Removed: `st.info("Procesando X servidor(es) de QA...")`
+- ❌ Removed: `st.warning("⚠️ Sin datos de ping para {instance_name}")` - now skips silently
 - ✅ Added: Section subtitles with semantic hierarchy (####)
 - ✅ Added: Visual separators between environment sections
 - ✅ Maintained: Spinner during data loading
@@ -39,6 +40,7 @@
 - Includes ALL servers from ALL environments
 - Maintains order: Production → QA → DEV
 - Single unified PDF with complete metrics
+- Button positioned at the end (centered): "📄 Descargar PDF" (primary type)
 
 ### User Experience
 
@@ -54,8 +56,6 @@
 
 **Layout Example:**
 ```
-### Métricas de Ping Desde 01/11/2025 hasta 11/11/2025        [📄 PDF]
-
 #### Producción (5 servidores)
 [Chart 1] [Chart 2] [Chart 3] [Chart 4]
 [Chart 5]
@@ -74,6 +74,8 @@
 [Chart 1] [Chart 2] [Chart 3]
 
 ───────────────────────────────────────────────
+
+                [📄 Descargar PDF]
 ```
 
 ### Files Modified:
