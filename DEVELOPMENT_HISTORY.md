@@ -1,5 +1,136 @@
 # Dashboard EPMAPS POC - Development History
 
+## v0.7.0 - SAP Availability Metrics in Monthly Report (2025-11-12)
+
+### Feature: SAP Availability (Heartbeat) Metrics
+- **Description**: Added full support for SAP availability heartbeat metrics from CloudWatch
+- **Namespaces**:
+  - Production: `SAP_Monitoring_Availability_Prod` (49 metrics)
+  - QA/DEV: `SAP_Monitoring_Availability` (59 metrics)
+- **Total metrics**: 108 availability metrics across all environments
+
+### Implementation Details
+
+**New methods in `services/aws_service.py`:**
+
+1. `get_availability_metrics_for_instance(instance_id, environment)`:
+   - Lists all heartbeat metrics for a specific EC2 instance
+   - Auto-selects namespace based on environment
+   - Filters by InstanceId dimension
+   - Returns metrics matching 'heartbeat' pattern
+
+2. `get_availability_metric_data(namespace, metric_name, dimensions, start_time, end_time, period)`:
+   - Retrieves time-series data with all required dimensions
+   - Dimensions: VMName, Path, InstanceId
+   - Returns DataFrame with Average, Minimum, Maximum
+   - Default period: 900 seconds (15 minutes)
+
+**New method in `ui_components/monthly_report_ui.py`:**
+
+`_display_availability_metrics(start_date, end_date)`:
+- Processes and displays SAP availability metrics
+- One chart per SAP service per server
+- Structure mirrors `_display_ping_metrics`
+- Handles multiple services per server automatically
+- Extracts service name from metric name
+- Chart titles: "{ServerName} - {Service} - Disp: XX.X%"
+
+**Metric Naming Convention:**
+```
+{ServerName}_{System}_{Service}_heartbeat
+
+Examples:
+- SRVERPQA_ERQ_ASCS01_heartbeat
+- SRVBWPRD_BIP_D00_heartbeat
+- DMZ-SRVWDPRD_DAA_SMDA98_heartbeat
+```
+
+**Visual Differences from Ping:**
+- Color: Green (#2ca02c) vs Ping Blue (#1f77b4)
+- Font size: 14px vs 16px (to fit longer service names)
+- Multiple charts per server (one per SAP service)
+- Fixed period: 15 minutes
+
+### User Experience
+
+**Display Flow:**
+1. User selects "Availability" from metric type dropdown
+2. User selects date range and clicks "🔍 Consultar"
+3. System shows title: "Métricas de Availability (SAP) Desde DD/MM/YYYY hasta DD/MM/YYYY"
+4. For each environment (Production, QA, DEV):
+   - Shows subtitle: "Producción (X servidores)"
+   - For each server, shows all its SAP services as separate charts
+   - Example: SRVBWPRD might show BIP_D00, BJP_SCS03, DAA_SMDA98
+5. PDF button generates: Availability_Report_YYYYMMDD_YYYYMMDD.pdf
+
+**Example Server with Multiple Services:**
+```
+SRVBWPRD in Production may have:
+[SRVBWPRD - BIP_D00 - Disp: 98.5%]
+[SRVBWPRD - BJP_SCS03 - Disp: 99.2%]
+[SRVBWPRD - DAA_SMDA98 - Disp: 97.1%]
+```
+
+### Files Modified:
+- `services/aws_service.py`:
+  - Lines 329-367: New `get_availability_metrics_for_instance()` method
+  - Lines 369-410: New `get_availability_metric_data()` method
+- `ui_components/monthly_report_ui.py`:
+  - Line 212: Connected availability routing
+  - Lines 551-736: New `_display_availability_metrics()` method (186 lines)
+- `config.yaml` line 70: Bumped version to v0.7.0
+- `ScriptsUtil/explore_availability_metrics.py`: New exploration script (188 lines)
+
+### Testing Results:
+
+**Exploration Script Results:**
+- ✅ 59 metrics in QA/DEV namespace
+- ✅ 49 metrics in Production namespace
+- ✅ All metrics have data (672 datapoints for 7 days)
+- ✅ Values are binary (0-1) as expected
+- ✅ Period: 15 minutes confirmed
+
+**Sample Metrics Found:**
+- srvcrmqasV_QCA_SUM_heartbeat (QA)
+- SRVCRMDEV_DCA_D00_heartbeat (DEV)
+- SRVBWPRD_BIP_D00_heartbeat (Prod)
+- DMZ-SRVWDPRD_DAA_SMDA98_heartbeat (Prod)
+
+### Impact:
+- ✅ Complete visibility of SAP service availability
+- ✅ Granular per-service monitoring (ASCS, DVEBMGS, SCS, D00, etc.)
+- ✅ Multiple services per server supported
+- ✅ Schedule-aware availability calculation
+- ✅ Organized by environment for clarity
+- ✅ PDF export with all services included
+- ✅ Same professional layout as Ping metrics
+
+### Technical Notes:
+
+**Dimension Requirements:**
+All three dimensions are required for queries:
+- VMName: Server name as appears in EC2 tags
+- Path: Full path to available.log file
+- InstanceId: EC2 instance ID
+
+**Service Name Extraction:**
+Service name extracted from metric name using pattern:
+```python
+service_name = metric_name.replace('_heartbeat', '')
+                          .replace(f'{instance_name}_', '')
+```
+Examples:
+- SRVERPQA_ERQ_ASCS01_heartbeat → ERQ_ASCS01
+- SRVBWPRD_BIP_D00_heartbeat → BIP_D00
+
+**Period Calculation:**
+Unlike Ping (dynamic period), Availability uses fixed 15-minute interval
+as this is the standard CloudWatch Agent collection period for these metrics.
+
+### Version: v0.7.0
+
+---
+
 ## v0.6.9 - Organize Monthly Report by Environment Sections (2025-11-11)
 
 ### Feature: Multiple Environment Sections in Monthly Report

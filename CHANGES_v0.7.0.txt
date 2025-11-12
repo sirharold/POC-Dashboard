@@ -1,0 +1,164 @@
+
+╔════════════════════════════════════════════════════════════════╗
+║         ✅ CAMBIOS COMPLETADOS - v0.7.0                       ║
+║     Métricas de SAP Availability en Informe Mensual          ║
+╚════════════════════════════════════════════════════════════════╝
+
+🎯 CAMBIO PRINCIPAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NUEVA FUNCIONALIDAD: Métricas de SAP Availability (heartbeat)
+
+Selector de métricas ahora incluye:
+  - Ping ✅
+  - Availability ✅ NUEVO
+  - Availability Percentage (en desarrollo)
+
+📊 MÉTRICAS DE AVAILABILITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Namespaces CloudWatch:
+   - Producción: SAP_Monitoring_Availability_Prod
+   - QA/DEV: SAP_Monitoring_Availability
+
+✅ Convención de nombres:
+   {ServerName}_{Sistema}_{Servicio}_heartbeat
+
+   Ejemplos:
+   - SRVERPQA_ERQ_ASCS01_heartbeat
+   - SRVBWPRD_BIP_D00_heartbeat
+   - DMZ-SRVWDPRD_DAA_SMDA98_heartbeat
+
+✅ Dimensiones requeridas:
+   - VMName: Nombre del servidor
+   - Path: Ruta del log (E:\usr\sap\... o /usr/sap/...)
+   - InstanceId: ID de instancia EC2
+
+✅ Valores binarios: 0 (no disponible) o 1 (disponible)
+
+✅ Periodo: 15 minutos (900 segundos)
+
+🎨 EXPERIENCIA DE USUARIO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Usuario selecciona "Availability" en tipo de métrica
+2. Usuario selecciona fechas y hace clic en 'Consultar'
+3. Sistema muestra título: "Métricas de Availability (SAP) Desde DD/MM/YYYY hasta DD/MM/YYYY"
+4. Servidores organizados por environment:
+
+   #### Producción (X servidores)
+   [SRVBWPRD - BIP_D00 - Disp: 98.5%]
+   [SRVBWPRD - BJP_SCS03 - Disp: 99.2%]
+   [SRVERPPRD - ERP_ASCS01 - Disp: 97.8%]
+   ...
+
+   #### QA (Y servidores)
+   [SRVERPQA - ERQ_ASCS01 - Disp: 96.3%]
+   [srvcrmqas - QCA_D00 - Disp: 95.7%]
+   ...
+
+   #### Desarrollo (Z servidores)
+   [SRVCRMDEV - DCA_ASCS01 - Disp: 94.2%]
+   ...
+
+5. Botón PDF genera: Availability_Report_YYYYMMDD_YYYYMMDD.pdf
+
+🎨 DETALLES VISUALES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Color diferenciado:
+   - Ping: Azul (#1f77b4)
+   - Availability: Verde (#2ca02c)
+
+✅ Títulos de gráficos:
+   Formato: "{Servidor} - {Servicio} - Disp: {%}"
+   Ejemplo: "SRVBWPRD - BIP_D00 - Disp: 98.5%"
+
+✅ Grid de 4 columnas por sección
+✅ Tamaño de fuente: 14px (vs 16px en Ping para acomodar nombres más largos)
+✅ Mismo layout y estilo que métricas de Ping
+
+📝 CÓDIGO IMPLEMENTADO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Nuevos métodos en services/aws_service.py:
+  1. get_availability_metrics_for_instance(instance_id, environment)
+     → Lista todas las métricas heartbeat de un servidor
+
+  2. get_availability_metric_data(namespace, metric_name, dimensions, ...)
+     → Obtiene datos de tiempo de una métrica específica
+
+Nuevo método en ui_components/monthly_report_ui.py:
+  _display_availability_metrics(start_date, end_date)
+  → Procesa y muestra métricas de availability
+  → Estructura idéntica a _display_ping_metrics
+  → Maneja múltiples servicios por servidor
+
+Script de exploración:
+  ScriptsUtil/explore_availability_metrics.py
+  → Herramienta de debug para explorar métricas disponibles
+
+✨ CARACTERÍSTICAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Múltiples servicios por servidor detectados automáticamente
+✅ Organización por environment (Production, QA, DEV)
+✅ Subtítulos con conteo de servidores
+✅ Cálculo inteligente de disponibilidad (considera schedules)
+✅ Skip silencioso de servicios sin datos
+✅ Extracción automática del nombre del servicio desde la métrica
+✅ PDF unificado con todos los environments y servicios
+✅ Spinner durante generación de gráficos y PDF
+✅ Grid responsive de 4 columnas
+✅ Compatible con schedules (Weekends, Nights, BusinessHours)
+
+🔄 EJEMPLO DE SERVIDORES CON MÚLTIPLES SERVICIOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SRVBWPRD puede tener:
+  - SRVBWPRD_BIP_D00_heartbeat
+  - SRVBWPRD_BJP_SCS03_heartbeat
+  - SRVBWPRD_DAA_SMDA98_heartbeat
+
+Cada uno se muestra como un gráfico separado:
+  [SRVBWPRD - BIP_D00 - Disp: 98.5%]
+  [SRVBWPRD - BJP_SCS03 - Disp: 99.2%]
+  [SRVBWPRD - DAA_SMDA98 - Disp: 97.1%]
+
+📊 RESULTADOS DE EXPLORACIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Namespace SAP_Monitoring_Availability (QA/DEV):
+  ✅ 59 métricas encontradas
+  ✅ Todas con datos válidos (672 datapoints en 7 días)
+
+Namespace SAP_Monitoring_Availability_Prod:
+  ✅ 49 métricas encontradas
+  ✅ Todas con datos válidos (672 datapoints en 7 días)
+
+Total: 108 métricas de availability disponibles
+
+🔄 DIFERENCIAS: Ping vs Availability
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PING:
+  - Namespace: EC2/ICMPHealthcheck
+  - Métrica: PingReachable
+  - Dimensiones: InstanceId + Name
+  - Periodo: Variable (calculado dinámicamente)
+  - Resultado: 1 gráfico por servidor
+
+AVAILABILITY:
+  - Namespace: SAP_Monitoring_Availability[_Prod]
+  - Métrica: {Server}_{System}_{Service}_heartbeat
+  - Dimensiones: VMName + Path + InstanceId
+  - Periodo: 15 minutos (fijo)
+  - Resultado: N gráficos por servidor (uno por servicio SAP)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Version: v0.7.0
+Status: ✅ READY FOR TESTING
+Changes: services/aws_service.py, ui_components/monthly_report_ui.py,
+         ScriptsUtil/explore_availability_metrics.py, config.yaml
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
