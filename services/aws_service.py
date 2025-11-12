@@ -326,6 +326,89 @@ class AWSService:
             st.error(f"Error obteniendo métrica {metric_name} para {instance_name}: {str(e)}")
             return pd.DataFrame()
 
+    def get_availability_metrics_for_instance(self, instance_id: str, environment: str) -> list:
+        """
+        Get all availability heartbeat metrics for an instance.
+
+        Args:
+            instance_id: EC2 Instance ID (e.g., 'i-05b2454bb08ed6c8f')
+            environment: Environment tag value ('Production', 'QA', 'DEV')
+
+        Returns:
+            List of metric dictionaries with MetricName and Dimensions
+        """
+        try:
+            cloudwatch = self.get_cross_account_boto3_client('cloudwatch')
+            if not cloudwatch:
+                return []
+
+            # Determine namespace based on environment
+            if environment and environment.upper() == 'PRODUCTION':
+                namespace = 'SAP_Monitoring_Availability_Prod'
+            else:
+                namespace = 'SAP_Monitoring_Availability'
+
+            # List all metrics in the namespace filtered by InstanceId
+            paginator = cloudwatch.get_paginator('list_metrics')
+            page_iterator = paginator.paginate(
+                Namespace=namespace,
+                Dimensions=[{'Name': 'InstanceId', 'Value': instance_id}]
+            )
+
+            metrics = []
+            for page in page_iterator:
+                for metric in page['Metrics']:
+                    if 'heartbeat' in metric['MetricName'].lower():
+                        metrics.append(metric)
+
+            return metrics
+
+        except Exception as e:
+            return []
+
+    def get_availability_metric_data(self, namespace: str, metric_name: str, dimensions: list,
+                                       start_time: datetime.datetime, end_time: datetime.datetime,
+                                       period: int = 900) -> pd.DataFrame:
+        """
+        Get availability metric data with dimensions.
+
+        Args:
+            namespace: CloudWatch namespace
+            metric_name: Metric name (e.g., 'SRVERPQA_ERQ_ASCS01_heartbeat')
+            dimensions: List of dimension dicts [{'Name': 'VMName', 'Value': '...'}, ...]
+            start_time: Start datetime
+            end_time: End datetime
+            period: Period in seconds (default 900 = 15 minutes)
+
+        Returns:
+            DataFrame with Timestamp and metric values
+        """
+        try:
+            cloudwatch = self.get_cross_account_boto3_client('cloudwatch')
+            if not cloudwatch:
+                return pd.DataFrame()
+
+            response = cloudwatch.get_metric_statistics(
+                Namespace=namespace,
+                MetricName=metric_name,
+                Dimensions=dimensions,
+                StartTime=start_time,
+                EndTime=end_time,
+                Period=period,
+                Statistics=['Average', 'Minimum', 'Maximum']
+            )
+
+            if not response['Datapoints']:
+                return pd.DataFrame()
+
+            # Convert to DataFrame and sort
+            df = pd.DataFrame(response['Datapoints'])
+            df = df.sort_values(by='Timestamp').reset_index(drop=True)
+            return df
+
+        except Exception as e:
+            return pd.DataFrame()
+
     def get_log_groups(self, instance_id: str) -> list:
         """Find CloudWatch log groups potentially related to an instance ID."""
         try:
