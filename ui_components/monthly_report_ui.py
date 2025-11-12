@@ -530,17 +530,15 @@ class MonthlyReportUI:
         # Show PDF download button at the end if we have charts
         if len(all_charts_data) > 0:
             st.markdown("---")
-            st.write(f"**Descarga el informe aquí** ({len(all_charts_data)} servidor{'es' if len(all_charts_data) > 1 else ''})")
-            # PDF button centered at the bottom
-            col1, col2, col3 = st.columns([2, 1, 2])
-            with col2:
-                # Generate PDF with all environments
-                pdf_buffer = self._generate_pdf_report(all_charts_data, start_date, end_date)
 
-                # Create filename with dates
+            # Generate PDF with spinner
+            with st.spinner(f"Preparando informe PDF con {len(all_charts_data)} servidor{'es' if len(all_charts_data) != 1 else ''}..."):
+                pdf_buffer = self._generate_pdf_report(all_charts_data, start_date, end_date)
                 filename = f"Ping_Report_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.pdf"
 
-                # Download button
+            # Show download button in centered column
+            col1, col2, col3 = st.columns([2, 1, 2])
+            with col2:
                 st.download_button(
                     label="📄 Descargar PDF",
                     data=pdf_buffer,
