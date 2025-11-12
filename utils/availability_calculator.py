@@ -20,6 +20,10 @@ class AvailabilityCalculator:
         'BusinessHours': {
             'description': 'Only available Monday-Friday 08:00-18:00',
             'is_scheduled_downtime': lambda dt: AvailabilityCalculator._is_outside_business_hours(dt)
+        },
+        'Weekdays': {
+            'description': 'Only available Monday-Friday 10:00-21:00 Chile time (since Nov 6, 2024)',
+            'is_scheduled_downtime': lambda dt: AvailabilityCalculator._is_weekdays_downtime(dt)
         }
     }
 
@@ -89,6 +93,36 @@ class AvailabilityCalculator:
 
         # Outside 08:00-18:00
         if hour < 8 or hour >= 18:
+            return True
+
+        return False
+
+    @staticmethod
+    def _is_weekdays_downtime(dt: datetime) -> bool:
+        """
+        Check if datetime is outside weekdays operating hours (Monday-Friday 10:00-21:00 Chile time).
+        This schedule only applies from November 6, 2024 onwards.
+
+        Args:
+            dt: datetime to check
+
+        Returns:
+            True if outside scheduled weekdays operating hours
+        """
+        # Only apply this schedule from November 6, 2024
+        cutoff_date = datetime(2024, 11, 6)
+        if dt < cutoff_date:
+            return False
+
+        weekday = dt.weekday()  # Monday=0, Sunday=6
+        hour = dt.hour
+
+        # Weekend (Saturday or Sunday)
+        if weekday >= 5:
+            return True
+
+        # Weekday but outside 10:00-21:00
+        if hour < 10 or hour >= 21:
             return True
 
         return False
