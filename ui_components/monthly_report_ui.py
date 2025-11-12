@@ -209,7 +209,7 @@ class MonthlyReportUI:
                 if metric_type == "Ping":
                     self._display_ping_metrics(start_date, end_date)
                 elif metric_type == "Availability":
-                    st.info("Funcionalidad de Availability en desarrollo...")
+                    self._display_availability_metrics(start_date, end_date)
                 elif metric_type == "Availability Percentage":
                     st.info("Funcionalidad de Availability Percentage en desarrollo...")
 
@@ -535,6 +535,193 @@ class MonthlyReportUI:
             with st.spinner(f"Preparando informe PDF con {len(all_charts_data)} servidor{'es' if len(all_charts_data) != 1 else ''}..."):
                 pdf_buffer = self._generate_pdf_report(all_charts_data, start_date, end_date)
                 filename = f"Ping_Report_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.pdf"
+
+            # Show download button in centered column
+            col1, col2, col3 = st.columns([2, 1, 2])
+            with col2:
+                st.download_button(
+                    label="📄 Descargar PDF",
+                    data=pdf_buffer,
+                    file_name=filename,
+                    mime="application/pdf",
+                    use_container_width=True,
+                    type="primary"
+                )
+
+    def _display_availability_metrics(self, start_date, end_date):
+        """Display SAP availability metrics for the selected period organized by environment."""
+        # Title
+        title_text = f"Métricas de Availability (SAP) Desde {start_date.strftime('%d/%m/%Y')} hasta {end_date.strftime('%d/%m/%Y')}"
+        st.markdown(f"### {title_text}")
+
+        # Convert dates to datetime objects with time
+        start_datetime = datetime.combine(start_date, datetime.min.time())
+        end_datetime = datetime.combine(end_date, datetime.max.time())
+
+        # Calculate optimal period once (same for all instances) - 15 min for availability
+        period = 900  # Availability metrics use 15-minute intervals
+
+        # We'll store chart data for PDF generation (all environments)
+        all_charts_data = []
+
+        # Process each environment in order: Production, QA, DEV
+        environments = [
+            ('Production', 'Producción'),
+            ('QA', 'QA'),
+            ('DEV', 'Desarrollo')
+        ]
+
+        for env_tag, env_display_name in environments:
+            # Get instances for this environment
+            with st.spinner(f"Obteniendo servidores de {env_display_name}..."):
+                env_instances = self._get_instances_by_environment(env_tag)
+
+            # Skip if no instances found
+            if not env_instances:
+                continue
+
+            # Display section subtitle
+            st.markdown(f"#### {env_display_name} ({len(env_instances)} servidor{'es' if len(env_instances) > 1 else ''})")
+
+            # Store charts for this environment section
+            section_charts_data = []
+
+            # Process each instance in this environment
+            for idx, instance_data in enumerate(env_instances):
+                instance_id = instance_data['ID']
+                instance_name = instance_data['Name']
+                schedule_tag = instance_data['Schedule']
+
+                # Get all availability metrics for this instance
+                with st.spinner(f"Obteniendo métricas de {instance_name}..."):
+                    availability_metrics = self.aws_service.get_availability_metrics_for_instance(
+                        instance_id=instance_id,
+                        environment=env_tag
+                    )
+
+                # Skip if no availability metrics found
+                if not availability_metrics:
+                    continue
+
+                # Process each availability metric for this instance
+                for metric_info in availability_metrics:
+                    metric_name = metric_info['MetricName']
+                    dimensions = metric_info.get('Dimensions', [])
+
+                    # Determine namespace based on environment
+                    if env_tag.upper() == 'PRODUCTION':
+                        namespace = 'SAP_Monitoring_Availability_Prod'
+                    else:
+                        namespace = 'SAP_Monitoring_Availability'
+
+                    # Get metric data
+                    df = self.aws_service.get_availability_metric_data(
+                        namespace=namespace,
+                        metric_name=metric_name,
+                        dimensions=dimensions,
+                        start_time=start_datetime,
+                        end_time=end_datetime,
+                        period=period
+                    )
+
+                    # Skip silently if no data
+                    if df.empty:
+                        continue
+
+                    # Calculate availability using the AvailabilityCalculator
+                    stat_column = 'Average' if 'Average' in df.columns else 'Maximum'
+                    availability_stats = AvailabilityCalculator.calculate_availability(
+                        df=df,
+                        schedule_tag=schedule_tag,
+                        value_column=stat_column
+                    )
+
+                    # Use scheduled availability percentage (excludes scheduled downtime)
+                    availability_percentage = availability_stats['scheduled_availability_percentage']
+
+                    # Extract service name from metric name (e.g., ERQ_ASCS01 from SRVERPQA_ERQ_ASCS01_heartbeat)
+                    # Format: {ServerName}_{System}_{Service}_heartbeat
+                    service_name = metric_name.replace('_heartbeat', '').replace(f'{instance_name}_', '').replace(f'{instance_name}-', '')
+                    if not service_name or service_name == metric_name:
+                        # Fallback if pattern doesn't match
+                        service_name = metric_name.split('_')[0] if '_' in metric_name else metric_name
+
+                    # Format title string
+                    chart_title = "{} - {} - Disp: {:.1f}%".format(instance_name, service_name, availability_percentage)
+
+                    # Create plotly line chart
+                    fig = go.Figure()
+
+                    fig.add_trace(go.Scatter(
+                        x=df['Timestamp'],
+                        y=df[stat_column],
+                        mode='lines+markers',
+                        name='Availability Status',
+                        line=dict(color='#2ca02c', width=2),  # Green color for availability
+                        marker=dict(size=4),
+                        hovertemplate='<b>Fecha:</b> %{x|%d/%m/%Y %H:%M}<br><b>Estado:</b> %{y}<extra></extra>'
+                    ))
+
+                    # Configure layout for binary data (0 or 1)
+                    fig.update_layout(
+                        title=dict(
+                            text=chart_title,
+                            x=0.5,
+                            xanchor='center',
+                            font=dict(size=14, family='Arial, sans-serif', color='black')
+                        ),
+                        height=300,
+                        margin=dict(l=30, r=20, t=50, b=40),
+                        xaxis=dict(
+                            title="",
+                            gridcolor='lightgray',
+                            showgrid=True
+                        ),
+                        yaxis=dict(
+                            title="",
+                            gridcolor='lightgray',
+                            showgrid=True,
+                            tickmode='array',
+                            tickvals=[0, 1],
+                            ticktext=['0', '1'],
+                            range=[-0.1, 1.1]
+                        ),
+                        hovermode='x unified',
+                        plot_bgcolor='white',
+                        paper_bgcolor='white'
+                    )
+
+                    # Store chart data for this section
+                    section_charts_data.append((f"{instance_name} - {service_name}", availability_percentage, fig))
+
+            # Display charts for this environment in a 4-column grid
+            if section_charts_data:
+                num_charts = len(section_charts_data)
+                cols_per_row = 4
+
+                # Create rows with 4 columns each
+                for row_start in range(0, num_charts, cols_per_row):
+                    cols = st.columns(cols_per_row)
+                    row_charts = section_charts_data[row_start:row_start + cols_per_row]
+
+                    for col_idx, (service_label, avail_pct, chart_fig) in enumerate(row_charts):
+                        with cols[col_idx]:
+                            st.plotly_chart(chart_fig, use_container_width=True)
+
+                # Add all section charts to the global list for PDF
+                all_charts_data.extend(section_charts_data)
+
+                # Add spacing between environment sections
+                st.markdown("---")
+
+        # Show PDF download button at the end if we have charts
+        if len(all_charts_data) > 0:
+            st.markdown("---")
+
+            # Generate PDF with spinner
+            with st.spinner(f"Preparando informe PDF con {len(all_charts_data)} métrica{'s' if len(all_charts_data) != 1 else ''}..."):
+                pdf_buffer = self._generate_pdf_report(all_charts_data, start_date, end_date)
+                filename = f"Availability_Report_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.pdf"
 
             # Show download button in centered column
             col1, col2, col3 = st.columns([2, 1, 2])
