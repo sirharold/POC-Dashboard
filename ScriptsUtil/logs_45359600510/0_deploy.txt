@@ -1,0 +1,193 @@
+﻿2025-09-12T14:37:25.2218924Z Current runner version: '2.328.0'
+2025-09-12T14:37:25.2252789Z ##[group]Runner Image Provisioner
+2025-09-12T14:37:25.2253990Z Hosted Compute Agent
+2025-09-12T14:37:25.2255134Z Version: 20250829.383
+2025-09-12T14:37:25.2256165Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-12T14:37:25.2257359Z Build Date: 2025-08-29T13:48:48Z
+2025-09-12T14:37:25.2258457Z ##[endgroup]
+2025-09-12T14:37:25.2259400Z ##[group]Operating System
+2025-09-12T14:37:25.2260688Z Ubuntu
+2025-09-12T14:37:25.2261606Z 24.04.3
+2025-09-12T14:37:25.2262509Z LTS
+2025-09-12T14:37:25.2263554Z ##[endgroup]
+2025-09-12T14:37:25.2264470Z ##[group]Runner Image
+2025-09-12T14:37:25.2265450Z Image: ubuntu-24.04
+2025-09-12T14:37:25.2266488Z Version: 20250907.24.1
+2025-09-12T14:37:25.2268451Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-12T14:37:25.2271521Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-12T14:37:25.2273362Z ##[endgroup]
+2025-09-12T14:37:25.2275544Z ##[group]GITHUB_TOKEN Permissions
+2025-09-12T14:37:25.2278622Z Contents: read
+2025-09-12T14:37:25.2279715Z Metadata: read
+2025-09-12T14:37:25.2280897Z Packages: read
+2025-09-12T14:37:25.2281807Z ##[endgroup]
+2025-09-12T14:37:25.2284684Z Secret source: Actions
+2025-09-12T14:37:25.2286250Z Prepare workflow directory
+2025-09-12T14:37:25.2740885Z Prepare all required actions
+2025-09-12T14:37:25.2796258Z Getting action download info
+2025-09-12T14:37:25.5564313Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-12T14:37:25.6208831Z Download action repository 'aws-actions/configure-aws-credentials@v4' (SHA:7474bc4690e29a8392af63c5b98e7449536d5c3a)
+2025-09-12T14:37:25.9410304Z Complete job name: deploy
+2025-09-12T14:37:26.0076602Z ##[group]Run actions/checkout@v4
+2025-09-12T14:37:26.0077439Z with:
+2025-09-12T14:37:26.0077879Z   repository: sirharold/POC-Dashboard
+2025-09-12T14:37:26.0078588Z   token: ***
+2025-09-12T14:37:26.0078999Z   ssh-strict: true
+2025-09-12T14:37:26.0079396Z   ssh-user: git
+2025-09-12T14:37:26.0080118Z   persist-credentials: true
+2025-09-12T14:37:26.0080592Z   clean: true
+2025-09-12T14:37:26.0081010Z   sparse-checkout-cone-mode: true
+2025-09-12T14:37:26.0081506Z   fetch-depth: 1
+2025-09-12T14:37:26.0081897Z   fetch-tags: false
+2025-09-12T14:37:26.0082312Z   show-progress: true
+2025-09-12T14:37:26.0082724Z   lfs: false
+2025-09-12T14:37:26.0083100Z   submodules: false
+2025-09-12T14:37:26.0083516Z   set-safe-directory: true
+2025-09-12T14:37:26.0084257Z ##[endgroup]
+2025-09-12T14:37:26.1174744Z Syncing repository: sirharold/POC-Dashboard
+2025-09-12T14:37:26.1177576Z ##[group]Getting Git version info
+2025-09-12T14:37:26.1178999Z Working directory is '/home/runner/work/POC-Dashboard/POC-Dashboard'
+2025-09-12T14:37:26.1181087Z [command]/usr/bin/git version
+2025-09-12T14:37:26.1196140Z git version 2.51.0
+2025-09-12T14:37:26.1222470Z ##[endgroup]
+2025-09-12T14:37:26.1235703Z Temporarily overriding HOME='/home/runner/work/_temp/dd1cfeda-bb04-446f-a115-5d3eb9f55dd4' before making global git config changes
+2025-09-12T14:37:26.1247406Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-12T14:37:26.1250001Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/POC-Dashboard/POC-Dashboard
+2025-09-12T14:37:26.1282450Z Deleting the contents of '/home/runner/work/POC-Dashboard/POC-Dashboard'
+2025-09-12T14:37:26.1285927Z ##[group]Initializing the repository
+2025-09-12T14:37:26.1289705Z [command]/usr/bin/git init /home/runner/work/POC-Dashboard/POC-Dashboard
+2025-09-12T14:37:26.1344708Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-09-12T14:37:26.1346338Z hint: is subject to change. To configure the initial branch name to use in all
+2025-09-12T14:37:26.1347818Z hint: of your new repositories, which will suppress this warning, call:
+2025-09-12T14:37:26.1348662Z hint:
+2025-09-12T14:37:26.1349169Z hint: 	git config --global init.defaultBranch <name>
+2025-09-12T14:37:26.1350386Z hint:
+2025-09-12T14:37:26.1350960Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-09-12T14:37:26.1351860Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-09-12T14:37:26.1352930Z hint:
+2025-09-12T14:37:26.1353436Z hint: 	git branch -m <name>
+2025-09-12T14:37:26.1353888Z hint:
+2025-09-12T14:37:26.1354482Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-09-12T14:37:26.1355492Z Initialized empty Git repository in /home/runner/work/POC-Dashboard/POC-Dashboard/.git/
+2025-09-12T14:37:26.1357689Z [command]/usr/bin/git remote add origin https://github.com/sirharold/POC-Dashboard
+2025-09-12T14:37:26.1389398Z ##[endgroup]
+2025-09-12T14:37:26.1390359Z ##[group]Disabling automatic garbage collection
+2025-09-12T14:37:26.1393696Z [command]/usr/bin/git config --local gc.auto 0
+2025-09-12T14:37:26.1421241Z ##[endgroup]
+2025-09-12T14:37:26.1421919Z ##[group]Setting up auth
+2025-09-12T14:37:26.1427659Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-12T14:37:26.1456180Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-12T14:37:26.1708955Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-09-12T14:37:26.1737752Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-09-12T14:37:26.1967604Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-09-12T14:37:26.2005947Z ##[endgroup]
+2025-09-12T14:37:26.2006690Z ##[group]Fetching the repository
+2025-09-12T14:37:26.2018670Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +afcf3b8657d6010f87d98b749008b355a281b5f1:refs/remotes/origin/main
+2025-09-12T14:37:26.4063887Z From https://github.com/sirharold/POC-Dashboard
+2025-09-12T14:37:26.4065264Z  * [new ref]         afcf3b8657d6010f87d98b749008b355a281b5f1 -> origin/main
+2025-09-12T14:37:26.4093648Z ##[endgroup]
+2025-09-12T14:37:26.4094399Z ##[group]Determining the checkout info
+2025-09-12T14:37:26.4095853Z ##[endgroup]
+2025-09-12T14:37:26.4100862Z [command]/usr/bin/git sparse-checkout disable
+2025-09-12T14:37:26.4137184Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-09-12T14:37:26.4163993Z ##[group]Checking out the ref
+2025-09-12T14:37:26.4167451Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-09-12T14:37:26.4227793Z Switched to a new branch 'main'
+2025-09-12T14:37:26.4230983Z branch 'main' set up to track 'origin/main'.
+2025-09-12T14:37:26.4236583Z ##[endgroup]
+2025-09-12T14:37:26.4268502Z [command]/usr/bin/git log -1 --format=%H
+2025-09-12T14:37:26.4289703Z afcf3b8657d6010f87d98b749008b355a281b5f1
+2025-09-12T14:37:26.4528461Z ##[group]Run aws-actions/configure-aws-credentials@v4
+2025-09-12T14:37:26.4529068Z with:
+2025-09-12T14:37:26.4529555Z   aws-access-key-id: ***
+2025-09-12T14:37:26.4530468Z   aws-secret-access-key: ***
+2025-09-12T14:37:26.4530942Z   aws-region: us-east-1
+2025-09-12T14:37:26.4531410Z   audience: sts.amazonaws.com
+2025-09-12T14:37:26.4531892Z   output-env-credentials: true
+2025-09-12T14:37:26.4532346Z ##[endgroup]
+2025-09-12T14:37:26.6686402Z Proceeding with IAM user credentials
+2025-09-12T14:37:26.6846395Z ##[group]Run aws ssm send-command \
+2025-09-12T14:37:26.6847118Z [36;1maws ssm send-command \[0m
+2025-09-12T14:37:26.6849197Z [36;1m  --instance-ids $(aws ec2 describe-instances --filters "Name=tag:Name,Values=Streamlit-App-Server" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].InstanceId" --output text --region us-east-1) \[0m
+2025-09-12T14:37:26.6851817Z [36;1m  --document-name "AWS-RunShellScript" \[0m
+2025-09-12T14:37:26.6852647Z [36;1m  --comment "Deploy Streamlit app from GitHub Actions" \[0m
+2025-09-12T14:37:26.6855837Z [36;1m  --parameters commands="'set -x && cd *** && echo \"Current directory: $(pwd)\" && git pull origin main 2>&1 | tee /tmp/git_pull_output.log && echo \"Git pull output:\" && cat /tmp/git_pull_output.log && /usr/bin/python3.11 -m pip install -r requirements.txt && sudo systemctl restart *** && sudo systemctl status ***'" \[0m
+2025-09-12T14:37:26.6858255Z [36;1m  --timeout-seconds 600 \[0m
+2025-09-12T14:37:26.6858881Z [36;1m  --region us-east-1[0m
+2025-09-12T14:37:26.6908962Z shell: /usr/bin/bash -e {0}
+2025-09-12T14:37:26.6909519Z env:
+2025-09-12T14:37:26.6910181Z   AWS_DEFAULT_REGION: us-east-1
+2025-09-12T14:37:26.6910725Z   AWS_REGION: us-east-1
+2025-09-12T14:37:26.6911310Z   AWS_ACCESS_KEY_ID: ***
+2025-09-12T14:37:26.6912000Z   AWS_SECRET_ACCESS_KEY: ***
+2025-09-12T14:37:26.6912510Z ##[endgroup]
+2025-09-12T14:37:30.5921815Z {
+2025-09-12T14:37:30.5922407Z     "Command": {
+2025-09-12T14:37:30.5922969Z         "CommandId": "ec228efa-395d-449a-8716-b5e596850cf5",
+2025-09-12T14:37:30.5923635Z         "DocumentName": "AWS-RunShellScript",
+2025-09-12T14:37:30.5924197Z         "DocumentVersion": "$DEFAULT",
+2025-09-12T14:37:30.5924789Z         "Comment": "Deploy Streamlit app from GitHub Actions",
+2025-09-12T14:37:30.5925475Z         "ExpiresAfter": "2025-09-12T15:47:30.575000+00:00",
+2025-09-12T14:37:30.5926019Z         "Parameters": {
+2025-09-12T14:37:30.5926481Z             "commands": [
+2025-09-12T14:37:30.5929496Z                 "set -x && cd *** && echo \"Current directory: /home/runner/work/POC-Dashboard/POC-Dashboard\" && git pull origin main 2>&1 | tee /tmp/git_pull_output.log && echo \"Git pull output:\" && cat /tmp/git_pull_output.log && /usr/bin/python3.11 -m pip install -r requirements.txt && sudo systemctl restart *** && sudo systemctl status ***"
+2025-09-12T14:37:30.5931617Z             ]
+2025-09-12T14:37:30.5931977Z         },
+2025-09-12T14:37:30.5932340Z         "InstanceIds": [],
+2025-09-12T14:37:30.5932788Z         "Targets": [],
+2025-09-12T14:37:30.5933309Z         "RequestedDateTime": "2025-09-12T14:37:30.575000+00:00",
+2025-09-12T14:37:30.5933862Z         "Status": "Pending",
+2025-09-12T14:37:30.5934320Z         "StatusDetails": "Pending",
+2025-09-12T14:37:30.5934772Z         "OutputS3Region": "us-east-1",
+2025-09-12T14:37:30.5935228Z         "OutputS3BucketName": "",
+2025-09-12T14:37:30.5935673Z         "OutputS3KeyPrefix": "",
+2025-09-12T14:37:30.5936103Z         "MaxConcurrency": "50",
+2025-09-12T14:37:30.5936523Z         "MaxErrors": "0",
+2025-09-12T14:37:30.5936935Z         "TargetCount": 0,
+2025-09-12T14:37:30.5937340Z         "CompletedCount": 0,
+2025-09-12T14:37:30.5937749Z         "ErrorCount": 0,
+2025-09-12T14:37:30.5938157Z         "DeliveryTimedOutCount": 0,
+2025-09-12T14:37:30.5938588Z         "ServiceRole": "",
+2025-09-12T14:37:30.5938997Z         "NotificationConfig": {
+2025-09-12T14:37:30.5939468Z             "NotificationArn": "",
+2025-09-12T14:37:30.5940097Z             "NotificationEvents": [],
+2025-09-12T14:37:30.5940582Z             "NotificationType": ""
+2025-09-12T14:37:30.5940990Z         },
+2025-09-12T14:37:30.5941339Z         "CloudWatchOutputConfig": {
+2025-09-12T14:37:30.5941911Z             "CloudWatchLogGroupName": "",
+2025-09-12T14:37:30.5942426Z             "CloudWatchOutputEnabled": false
+2025-09-12T14:37:30.5942961Z         },
+2025-09-12T14:37:30.5943298Z         "TimeoutSeconds": 600,
+2025-09-12T14:37:30.5943709Z         "AlarmConfiguration": {
+2025-09-12T14:37:30.5944647Z             "IgnorePollAlarmFailure": false,
+2025-09-12T14:37:30.5945131Z             "Alarms": []
+2025-09-12T14:37:30.5945495Z         },
+2025-09-12T14:37:30.5945836Z         "TriggeredAlarms": []
+2025-09-12T14:37:30.5946220Z     }
+2025-09-12T14:37:30.5946518Z }
+2025-09-12T14:37:30.6676340Z ##[group]Run # This part is more complex to get the command ID and check status, 
+2025-09-12T14:37:30.6677150Z [36;1m# This part is more complex to get the command ID and check status, [0m
+2025-09-12T14:37:30.6677660Z [36;1m# but for now, we assume send-command succeeds if no error is returned.[0m
+2025-09-12T14:37:30.6678189Z [36;1mecho "SSM command sent. Check SSM Run Command history in AWS console for status."[0m
+2025-09-12T14:37:30.6709535Z shell: /usr/bin/bash -e {0}
+2025-09-12T14:37:30.6709968Z env:
+2025-09-12T14:37:30.6710213Z   AWS_DEFAULT_REGION: us-east-1
+2025-09-12T14:37:30.6710494Z   AWS_REGION: us-east-1
+2025-09-12T14:37:30.6771923Z   AWS_ACCESS_KEY_ID: ***
+2025-09-12T14:37:30.6772408Z   AWS_SECRET_ACCESS_KEY: ***
+2025-09-12T14:37:30.6772727Z ##[endgroup]
+2025-09-12T14:37:30.6824242Z SSM command sent. Check SSM Run Command history in AWS console for status.
+2025-09-12T14:37:30.6905111Z Post job cleanup.
+2025-09-12T14:37:30.8180923Z Post job cleanup.
+2025-09-12T14:37:30.9090125Z [command]/usr/bin/git version
+2025-09-12T14:37:30.9124719Z git version 2.51.0
+2025-09-12T14:37:30.9166491Z Temporarily overriding HOME='/home/runner/work/_temp/8b021a59-8522-45f0-af41-ac74d55efc56' before making global git config changes
+2025-09-12T14:37:30.9167537Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-12T14:37:30.9172316Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/POC-Dashboard/POC-Dashboard
+2025-09-12T14:37:30.9206423Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-12T14:37:30.9237936Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-12T14:37:30.9456788Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-09-12T14:37:30.9478161Z http.https://github.com/.extraheader
+2025-09-12T14:37:30.9491381Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-09-12T14:37:30.9521440Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-09-12T14:37:30.9837794Z Cleaning up orphan processes

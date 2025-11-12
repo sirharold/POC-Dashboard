@@ -1,0 +1,401 @@
+timestamp,message
+1757887377233,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVBWDEV"", ""instance_id"": ""i-0c8464be95df05ce7"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   21.08.2025 14:17:39 - 14.09.2025 17:02:51"", ""timestamp"": ""2025-09-14T22:02:57.233160"", ""environment"": ""QADEV""}
+"
+1757887377233,"[INFO] ✅ SRVBWDEV - SAP heartbeat AVAILABLE
+"
+1757887377233,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVBWDEV"", ""instance_id"": ""i-0c8464be95df05ce7"", ""file_path"": ""/usr/sap/JID/J02/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 11:27:42 - 14.09.2025 17:02:53"", ""timestamp"": ""2025-09-14T22:02:57.233232"", ""environment"": ""QADEV""}
+"
+1757887377235,"[INFO] ✅ SRVBWDEV - SAP heartbeat AVAILABLE
+"
+1757887377273,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVBWDEV"", ""instance_id"": ""i-0c8464be95df05ce7"", ""file_path"": ""/usr/sap/JID/SCS03/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 11:26:42 - 14.09.2025 17:02:51"", ""timestamp"": ""2025-09-14T22:02:57.273113"", ""environment"": ""QADEV""}
+"
+1757887377273,"Thread 0: Completed processing, 5 metrics
+"
+1757887377524,"[INFO] ✅ SRVERPQA-28/08/2025 - SAP heartbeat AVAILABLE
+"
+1757887377524,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   29.08.2025 21:54:07 - 14.09.2025 17:02:15"", ""timestamp"": ""2025-09-14T22:02:57.524046"", ""environment"": ""QADEV""}
+"
+1757887377524,"[WARN] ❌ SRVERPQA-28/08/2025 - SAP heartbeat UNAVAILABLE
+"
+1757887377524,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/EPQ/J02/work/available.log"", ""status"": ""UNAVAILABLE"", ""details"": ""Service marked as unavailable in log"", ""raw_output"": ""Unavailable 29.08.2025 22:46:07 - 14.09.2025 17:02:15"", ""timestamp"": ""2025-09-14T22:02:57.524106"", ""environment"": ""QADEV""}
+"
+1757887377524,"[INFO] ✅ SRVERPQA-28/08/2025 - SAP heartbeat AVAILABLE
+"
+1757887377524,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/EPQ/SCS03/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   29.08.2025 22:15:07 - 14.09.2025 17:02:15"", ""timestamp"": ""2025-09-14T22:02:57.524141"", ""environment"": ""QADEV""}
+"
+1757887377524,"[INFO] ✅ SRVERPQA-28/08/2025 - SAP heartbeat AVAILABLE
+"
+1757887377524,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/ERQ/ASCS01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   29.08.2025 22:11:06 - 14.09.2025 17:02:13"", ""timestamp"": ""2025-09-14T22:02:57.524169"", ""environment"": ""QADEV""}
+"
+1757887377524,"[INFO] ✅ SRVERPQA-28/08/2025 - SAP heartbeat AVAILABLE
+"
+1757887377524,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/ERQ/D00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   29.08.2025 22:11:07 - 14.09.2025 17:02:15"", ""timestamp"": ""2025-09-14T22:02:57.524195"", ""environment"": ""QADEV""}
+"
+1757887377524,"Thread 5: Completed processing, 5 metrics
+"
+1757887377948,"[INFO] ✅ SRVHANDBDEV - SAP heartbeat AVAILABLE
+"
+1757887377948,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVHANDBDEV"", ""instance_id"": ""i-08c3341d91e993521"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 13:01:50 - 14.09.2025 17:01:59"", ""timestamp"": ""2025-09-14T22:02:57.948116"", ""environment"": ""QADEV""}
+"
+1757887377948,"Thread 1: Completed processing, 1 metrics
+"
+1757887378009,"[INFO] ✅ SRVGTWDEV - SAP heartbeat AVAILABLE
+"
+1757887378009,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVGTWDEV"", ""instance_id"": ""i-05634690d2de085a0"", ""file_path"": ""/usr/sap/GWD/ASCS02/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   04.09.2025 08:31:27 - 14.09.2025 17:02:31"", ""timestamp"": ""2025-09-14T22:02:58.009017"", ""environment"": ""QADEV""}
+"
+1757887378009,"[INFO] ✅ SRVGTWDEV - SAP heartbeat AVAILABLE
+"
+1757887378009,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVGTWDEV"", ""instance_id"": ""i-05634690d2de085a0"", ""file_path"": ""/usr/sap/GWD/D01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   04.09.2025 08:30:26 - 14.09.2025 17:02:31"", ""timestamp"": ""2025-09-14T22:02:58.009077"", ""environment"": ""QADEV""}
+"
+1757887378009,"Thread 7: Completed processing, 2 metrics
+"
+1757887378210,"[INFO] ✅ SRVSAPDEV1 - SAP heartbeat AVAILABLE
+"
+1757887378210,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVSAPDEV1"", ""instance_id"": ""i-023948ea3ec8455ad"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 16:03:21 - 14.09.2025 17:02:29"", ""timestamp"": ""2025-09-14T22:02:58.210228"", ""environment"": ""QADEV""}
+"
+1757887378210,"[INFO] ✅ SRVSAPDEV1 - SAP heartbeat AVAILABLE
+"
+1757887378210,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVSAPDEV1"", ""instance_id"": ""i-023948ea3ec8455ad"", ""file_path"": ""/usr/sap/ERD/ASCS01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   04.09.2025 16:11:24 - 14.09.2025 17:02:29"", ""timestamp"": ""2025-09-14T22:02:58.210283"", ""environment"": ""QADEV""}
+"
+1757887378210,"[INFO] ✅ SRVSAPDEV1 - SAP heartbeat AVAILABLE
+"
+1757887378210,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVSAPDEV1"", ""instance_id"": ""i-023948ea3ec8455ad"", ""file_path"": ""/usr/sap/ERD/D00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   04.09.2025 16:11:25 - 14.09.2025 17:02:30"", ""timestamp"": ""2025-09-14T22:02:58.210315"", ""environment"": ""QADEV""}
+"
+1757887378210,"Thread 2: Completed processing, 3 metrics
+"
+1757887378254,"[INFO] ✅ SRVHANDBQAS - SAP heartbeat AVAILABLE
+"
+1757887378254,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVHANDBQAS"", ""instance_id"": ""i-0a8686f21692ab8dc"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   08.09.2025 09:42:06 - 14.09.2025 17:02:10"", ""timestamp"": ""2025-09-14T22:02:58.254317"", ""environment"": ""QADEV""}
+"
+1757887378254,"Thread 4: Completed processing, 1 metrics
+"
+1757887378280,"[INFO] ✅ DMZ-WEB DISPACHER (SRVHANWDDEV) - SAP heartbeat AVAILABLE
+"
+1757887378281,"FILE_CHECK_DETAIL: {""vm_name"": ""DMZ-WEB DISPACHER (SRVHANWDDEV)"", ""instance_id"": ""i-0bc14d1299451ec3e"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   01.09.2025 12:13:44 - 14.09.2025 17:02:51"", ""timestamp"": ""2025-09-14T22:02:58.280894"", ""environment"": ""QADEV""}
+"
+1757887378281,"[INFO] ✅ DMZ-WEB DISPACHER (SRVHANWDDEV) - SAP heartbeat AVAILABLE
+"
+1757887378281,"FILE_CHECK_DETAIL: {""vm_name"": ""DMZ-WEB DISPACHER (SRVHANWDDEV)"", ""instance_id"": ""i-0bc14d1299451ec3e"", ""file_path"": ""/usr/sap/WDQ/W00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   10.09.2025 14:50:46 - 14.09.2025 17:02:48"", ""timestamp"": ""2025-09-14T22:02:58.280963"", ""environment"": ""QADEV""}
+"
+1757887378281,"Thread 8: Completed processing, 2 metrics
+"
+1757887378347,"[INFO] ✅ srvpiqas - SAP heartbeat AVAILABLE
+"
+1757887378347,"FILE_CHECK_DETAIL: {""vm_name"": ""srvpiqas"", ""instance_id"": ""i-0bb2c1006d6a334d5"", ""file_path"": ""/usr/sap/POQ/J01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   11.09.2025 15:42:44 - 14.09.2025 22:02:45"", ""timestamp"": ""2025-09-14T22:02:58.347058"", ""environment"": ""QADEV""}
+"
+1757887378347,"[INFO] ✅ srvpiqas - SAP heartbeat AVAILABLE
+"
+1757887378347,"FILE_CHECK_DETAIL: {""vm_name"": ""srvpiqas"", ""instance_id"": ""i-0bb2c1006d6a334d5"", ""file_path"": ""/usr/sap/POQ/SCS02/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   11.09.2025 15:42:44 - 14.09.2025 22:02:45"", ""timestamp"": ""2025-09-14T22:02:58.347112"", ""environment"": ""QADEV""}
+"
+1757887378347,"Thread 6: Completed processing, 2 metrics
+"
+1757887378393,"[INFO] ✅ SRVCRMDEV - SAP heartbeat AVAILABLE
+"
+1757887378393,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVCRMDEV"", ""instance_id"": ""i-03b9dbf5b6f93a094"", ""file_path"": ""/usr/sap/DCA/ASCS01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   02.09.2025 11:27:49 - 14.09.2025 17:02:55"", ""timestamp"": ""2025-09-14T22:02:58.393311"", ""environment"": ""QADEV""}
+"
+1757887378393,"[INFO] ✅ SRVCRMDEV - SAP heartbeat AVAILABLE
+"
+1757887378393,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVCRMDEV"", ""instance_id"": ""i-03b9dbf5b6f93a094"", ""file_path"": ""/usr/sap/DCA/D00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   02.09.2025 11:27:48 - 14.09.2025 17:02:54"", ""timestamp"": ""2025-09-14T22:02:58.393368"", ""environment"": ""QADEV""}
+"
+1757887378393,"Thread 9: Completed processing, 2 metrics
+"
+1757887378673,"Published 25 metrics to CloudWatch
+"
+1757887378673,"EXECUTION_SUMMARY: {""execution_summary"": {""total_vms"": 10, ""metrics_published"": 25, ""results"": {""SRVBODEV_DA1_SMDA97_heartbeat"": 0, ""SRVBODEV_DAA_SMDA98_heartbeat"": 0, ""SRVBWDEV_BID_ASCS01_heartbeat"": 1, ""SRVBWDEV_BID_D00_heartbeat"": 1, ""SRVBWDEV_DAA_SMDA98_heartbeat"": 1, ""SRVBWDEV_JID_J02_heartbeat"": 1, ""SRVBWDEV_JID_SCS03_heartbeat"": 1, ""SRVERPQA-28/08/2025_DAA_SMDA98_heartbeat"": 1, ""SRVERPQA-28/08/2025_EPQ_J02_heartbeat"": 0, ""SRVERPQA-28/08/2025_EPQ_SCS03_heartbeat"": 1, ""SRVERPQA-28/08/2025_ERQ_ASCS01_heartbeat"": 1, ""SRVERPQA-28/08/2025_ERQ_D00_heartbeat"": 1, ""SRVHANDBDEV_available_heartbeat"": 1, ""SRVGTWDEV_GWD_ASCS02_heartbeat"": 1, ""SRVGTWDEV_GWD_D01_heartbeat"": 1, ""SRVSAPDEV1_DAA_SMDA98_heartbeat"": 1, ""SRVSAPDEV1_ERD_ASCS01_heartbeat"": 1, ""SRVSAPDEV1_ERD_D00_heartbeat"": 1, ""SRVHANDBQAS_available_heartbeat"": 1, ""DMZ-WEB DISPACHER (SRVHANWDDEV)_DAA_SMDA98_heartbeat"": 1, ""DMZ-WEB DISPACHER (SRVHANWDDEV)_WDQ_W00_heartbeat"": 1, ""srvpiqas_POQ_J01_heartbeat"": 1, ""srvpiqas_POQ_SCS02_heartbeat"": 1, ""SRVCRMDEV_DCA_ASCS01_heartbeat"": 1, ""SRVCRMDEV_DCA_D00_heartbeat"": 1}, ""timestamp"": ""2025-09-14T22:02:58.673838""}}
+"
+1757887378734,"END RequestId: 9268c73b-6a43-4f13-8f20-53d262051b48
+"
+1757887378734,"REPORT RequestId: 9268c73b-6a43-4f13-8f20-53d262051b48	Duration: 3702.28 ms	Billed Duration: 3703 ms	Memory Size: 128 MB	Max Memory Used: 95 MB	
+"
+1757887435080,"START RequestId: 9268c73b-a643-4f13-8f20-53d262051b48 Version: $LATEST
+"
+1757887435429,"Processing 10 VMs in 10 groups (1 VMs per group)
+"
+1757887435434,"Thread 0: Processing 1 VMs - QADEV
+"
+1757887435534,"Thread 1: Processing 1 VMs - QADEV
+"
+1757887435535,"Thread 2: Processing 1 VMs - QADEV
+"
+1757887435814,"Thread 3: Processing 1 VMs - QADEV
+"
+1757887436035,"Thread 4: Processing 1 VMs - QADEV
+"
+1757887436154,"ERROR_DETAIL: {""vm_name"": ""SRVBODEV"", ""instance_id"": ""i-0be2162c6b323bc9b"", ""status"": ""INSTANCE_NOT_IN_SSM"", ""details"": ""Instance not registered with SSM"", ""timestamp"": ""2025-09-14T22:03:56.074645"", ""environment"": ""QADEV""}
+"
+1757887436154,"Thread 3: Completed processing, 2 metrics
+"
+1757887436154,"Thread 6: Processing 1 VMs - QADEV
+"
+1757887436194,"Thread 5: Processing 1 VMs - QADEV
+"
+1757887436374,"Thread 7: Processing 1 VMs - QADEV
+"
+1757887436574,"Thread 8: Processing 1 VMs - QADEV
+"
+1757887436694,"Thread 9: Processing 1 VMs - QADEV
+"
+1757887436995,"[INFO] ✅ SRVBWDEV - SAP heartbeat AVAILABLE
+"
+1757887436995,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVBWDEV"", ""instance_id"": ""i-0c8464be95df05ce7"", ""file_path"": ""/usr/sap/BID/ASCS01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 11:11:41 - 14.09.2025 17:03:50"", ""timestamp"": ""2025-09-14T22:03:56.994747"", ""environment"": ""QADEV""}
+"
+1757887436995,"[INFO] ✅ SRVBWDEV - SAP heartbeat AVAILABLE
+"
+1757887436995,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVBWDEV"", ""instance_id"": ""i-0c8464be95df05ce7"", ""file_path"": ""/usr/sap/BID/D00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 11:20:06 - 14.09.2025 17:03:16"", ""timestamp"": ""2025-09-14T22:03:56.994799"", ""environment"": ""QADEV""}
+"
+1757887436995,"[INFO] ✅ SRVBWDEV - SAP heartbeat AVAILABLE
+"
+1757887436995,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVBWDEV"", ""instance_id"": ""i-0c8464be95df05ce7"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   21.08.2025 14:17:39 - 14.09.2025 17:03:51"", ""timestamp"": ""2025-09-14T22:03:56.994829"", ""environment"": ""QADEV""}
+"
+1757887436995,"[INFO] ✅ SRVBWDEV - SAP heartbeat AVAILABLE
+"
+1757887436995,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVBWDEV"", ""instance_id"": ""i-0c8464be95df05ce7"", ""file_path"": ""/usr/sap/JID/J02/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 11:27:42 - 14.09.2025 17:03:53"", ""timestamp"": ""2025-09-14T22:03:56.994855"", ""environment"": ""QADEV""}
+"
+1757887436995,"[INFO] ✅ SRVBWDEV - SAP heartbeat AVAILABLE
+"
+1757887436995,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVBWDEV"", ""instance_id"": ""i-0c8464be95df05ce7"", ""file_path"": ""/usr/sap/JID/SCS03/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 11:26:42 - 14.09.2025 17:03:51"", ""timestamp"": ""2025-09-14T22:03:56.994881"", ""environment"": ""QADEV""}
+"
+1757887436995,"Thread 0: Completed processing, 5 metrics
+"
+1757887437554,"[INFO] ✅ SRVHANDBDEV - SAP heartbeat AVAILABLE
+"
+1757887437554,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVHANDBDEV"", ""instance_id"": ""i-08c3341d91e993521"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 13:01:50 - 14.09.2025 17:02:59"", ""timestamp"": ""2025-09-14T22:03:57.554733"", ""environment"": ""QADEV""}
+"
+1757887437554,"Thread 1: Completed processing, 1 metrics
+"
+1757887437851,"[INFO] ✅ SRVSAPDEV1 - SAP heartbeat AVAILABLE
+"
+1757887437851,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVSAPDEV1"", ""instance_id"": ""i-023948ea3ec8455ad"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 16:03:21 - 14.09.2025 17:03:29"", ""timestamp"": ""2025-09-14T22:03:57.851775"", ""environment"": ""QADEV""}
+"
+1757887437851,"[INFO] ✅ SRVSAPDEV1 - SAP heartbeat AVAILABLE
+"
+1757887437851,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVSAPDEV1"", ""instance_id"": ""i-023948ea3ec8455ad"", ""file_path"": ""/usr/sap/ERD/ASCS01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   04.09.2025 16:11:24 - 14.09.2025 17:03:29"", ""timestamp"": ""2025-09-14T22:03:57.851829"", ""environment"": ""QADEV""}
+"
+1757887437851,"[INFO] ✅ SRVSAPDEV1 - SAP heartbeat AVAILABLE
+"
+1757887437851,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVSAPDEV1"", ""instance_id"": ""i-023948ea3ec8455ad"", ""file_path"": ""/usr/sap/ERD/D00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   04.09.2025 16:11:25 - 14.09.2025 17:03:30"", ""timestamp"": ""2025-09-14T22:03:57.851860"", ""environment"": ""QADEV""}
+"
+1757887437851,"Thread 2: Completed processing, 3 metrics
+"
+1757887438103,"[INFO] ✅ SRVHANDBQAS - SAP heartbeat AVAILABLE
+"
+1757887438103,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVHANDBQAS"", ""instance_id"": ""i-0a8686f21692ab8dc"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   08.09.2025 09:42:06 - 14.09.2025 17:03:10"", ""timestamp"": ""2025-09-14T22:03:58.103823"", ""environment"": ""QADEV""}
+"
+1757887438103,"Thread 4: Completed processing, 1 metrics
+"
+1757887438243,"[INFO] ✅ DMZ-WEB DISPACHER (SRVHANWDDEV) - SAP heartbeat AVAILABLE
+"
+1757887438243,"FILE_CHECK_DETAIL: {""vm_name"": ""DMZ-WEB DISPACHER (SRVHANWDDEV)"", ""instance_id"": ""i-0bc14d1299451ec3e"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   01.09.2025 12:13:44 - 14.09.2025 17:03:51"", ""timestamp"": ""2025-09-14T22:03:58.243381"", ""environment"": ""QADEV""}
+"
+1757887438243,"[INFO] ✅ DMZ-WEB DISPACHER (SRVHANWDDEV) - SAP heartbeat AVAILABLE
+"
+1757887438243,"FILE_CHECK_DETAIL: {""vm_name"": ""DMZ-WEB DISPACHER (SRVHANWDDEV)"", ""instance_id"": ""i-0bc14d1299451ec3e"", ""file_path"": ""/usr/sap/WDQ/W00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   10.09.2025 14:50:46 - 14.09.2025 17:03:48"", ""timestamp"": ""2025-09-14T22:03:58.243436"", ""environment"": ""QADEV""}
+"
+1757887438243,"Thread 8: Completed processing, 2 metrics
+"
+1757887438534,"[INFO] ✅ SRVCRMDEV - SAP heartbeat AVAILABLE
+"
+1757887438534,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVCRMDEV"", ""instance_id"": ""i-03b9dbf5b6f93a094"", ""file_path"": ""/usr/sap/DCA/ASCS01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   02.09.2025 11:27:49 - 14.09.2025 17:03:55"", ""timestamp"": ""2025-09-14T22:03:58.534528"", ""environment"": ""QADEV""}
+"
+1757887438534,"[INFO] ✅ SRVCRMDEV - SAP heartbeat AVAILABLE
+"
+1757887438534,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVCRMDEV"", ""instance_id"": ""i-03b9dbf5b6f93a094"", ""file_path"": ""/usr/sap/DCA/D00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   02.09.2025 11:27:48 - 14.09.2025 17:03:54"", ""timestamp"": ""2025-09-14T22:03:58.534583"", ""environment"": ""QADEV""}
+"
+1757887438534,"Thread 9: Completed processing, 2 metrics
+"
+1757887438575,"[INFO] ✅ srvpiqas - SAP heartbeat AVAILABLE
+"
+1757887438575,"FILE_CHECK_DETAIL: {""vm_name"": ""srvpiqas"", ""instance_id"": ""i-0bb2c1006d6a334d5"", ""file_path"": ""/usr/sap/POQ/J01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   11.09.2025 15:42:44 - 14.09.2025 22:03:45"", ""timestamp"": ""2025-09-14T22:03:58.575156"", ""environment"": ""QADEV""}
+"
+1757887438594,"[INFO] ✅ srvpiqas - SAP heartbeat AVAILABLE
+"
+1757887438594,"FILE_CHECK_DETAIL: {""vm_name"": ""srvpiqas"", ""instance_id"": ""i-0bb2c1006d6a334d5"", ""file_path"": ""/usr/sap/POQ/SCS02/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   11.09.2025 15:42:44 - 14.09.2025 22:03:45"", ""timestamp"": ""2025-09-14T22:03:58.594550"", ""environment"": ""QADEV""}
+"
+1757887438594,"Thread 6: Completed processing, 2 metrics
+"
+1757887438615,"[INFO] ✅ SRVGTWDEV - SAP heartbeat AVAILABLE
+"
+1757887438615,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVGTWDEV"", ""instance_id"": ""i-05634690d2de085a0"", ""file_path"": ""/usr/sap/GWD/ASCS02/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   04.09.2025 08:31:27 - 14.09.2025 17:03:31"", ""timestamp"": ""2025-09-14T22:03:58.615825"", ""environment"": ""QADEV""}
+"
+1757887438615,"[INFO] ✅ SRVGTWDEV - SAP heartbeat AVAILABLE
+"
+1757887438615,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVGTWDEV"", ""instance_id"": ""i-05634690d2de085a0"", ""file_path"": ""/usr/sap/GWD/D01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   04.09.2025 08:30:26 - 14.09.2025 17:03:31"", ""timestamp"": ""2025-09-14T22:03:58.615898"", ""environment"": ""QADEV""}
+"
+1757887438615,"Thread 7: Completed processing, 2 metrics
+"
+1757887438650,"[INFO] ✅ SRVERPQA-28/08/2025 - SAP heartbeat AVAILABLE
+"
+1757887438650,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   29.08.2025 21:54:07 - 14.09.2025 17:03:15"", ""timestamp"": ""2025-09-14T22:03:58.650446"", ""environment"": ""QADEV""}
+"
+1757887438650,"[WARN] ❌ SRVERPQA-28/08/2025 - SAP heartbeat UNAVAILABLE
+"
+1757887438654,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/EPQ/J02/work/available.log"", ""status"": ""UNAVAILABLE"", ""details"": ""Service marked as unavailable in log"", ""raw_output"": ""Unavailable 29.08.2025 22:46:07 - 14.09.2025 17:03:15"", ""timestamp"": ""2025-09-14T22:03:58.654000"", ""environment"": ""QADEV""}
+"
+1757887438654,"[INFO] ✅ SRVERPQA-28/08/2025 - SAP heartbeat AVAILABLE
+"
+1757887438654,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/EPQ/SCS03/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   29.08.2025 22:15:07 - 14.09.2025 17:03:15"", ""timestamp"": ""2025-09-14T22:03:58.654122"", ""environment"": ""QADEV""}
+"
+1757887438654,"[INFO] ✅ SRVERPQA-28/08/2025 - SAP heartbeat AVAILABLE
+"
+1757887438654,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/ERQ/ASCS01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   29.08.2025 22:11:06 - 14.09.2025 17:03:13"", ""timestamp"": ""2025-09-14T22:03:58.654156"", ""environment"": ""QADEV""}
+"
+1757887438654,"[INFO] ✅ SRVERPQA-28/08/2025 - SAP heartbeat AVAILABLE
+"
+1757887438654,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/ERQ/D00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   29.08.2025 22:11:07 - 14.09.2025 17:03:15"", ""timestamp"": ""2025-09-14T22:03:58.654185"", ""environment"": ""QADEV""}
+"
+1757887438654,"Thread 5: Completed processing, 5 metrics
+"
+1757887438934,"Published 25 metrics to CloudWatch
+"
+1757887438934,"EXECUTION_SUMMARY: {""execution_summary"": {""total_vms"": 10, ""metrics_published"": 25, ""results"": {""SRVBODEV_DA1_SMDA97_heartbeat"": 0, ""SRVBODEV_DAA_SMDA98_heartbeat"": 0, ""SRVBWDEV_BID_ASCS01_heartbeat"": 1, ""SRVBWDEV_BID_D00_heartbeat"": 1, ""SRVBWDEV_DAA_SMDA98_heartbeat"": 1, ""SRVBWDEV_JID_J02_heartbeat"": 1, ""SRVBWDEV_JID_SCS03_heartbeat"": 1, ""SRVHANDBDEV_available_heartbeat"": 1, ""SRVSAPDEV1_DAA_SMDA98_heartbeat"": 1, ""SRVSAPDEV1_ERD_ASCS01_heartbeat"": 1, ""SRVSAPDEV1_ERD_D00_heartbeat"": 1, ""SRVHANDBQAS_available_heartbeat"": 1, ""DMZ-WEB DISPACHER (SRVHANWDDEV)_DAA_SMDA98_heartbeat"": 1, ""DMZ-WEB DISPACHER (SRVHANWDDEV)_WDQ_W00_heartbeat"": 1, ""SRVCRMDEV_DCA_ASCS01_heartbeat"": 1, ""SRVCRMDEV_DCA_D00_heartbeat"": 1, ""srvpiqas_POQ_J01_heartbeat"": 1, ""srvpiqas_POQ_SCS02_heartbeat"": 1, ""SRVGTWDEV_GWD_ASCS02_heartbeat"": 1, ""SRVGTWDEV_GWD_D01_heartbeat"": 1, ""SRVERPQA-28/08/2025_DAA_SMDA98_heartbeat"": 1, ""SRVERPQA-28/08/2025_EPQ_J02_heartbeat"": 0, ""SRVERPQA-28/08/2025_EPQ_SCS03_heartbeat"": 1, ""SRVERPQA-28/08/2025_ERQ_ASCS01_heartbeat"": 1, ""SRVERPQA-28/08/2025_ERQ_D00_heartbeat"": 1}, ""timestamp"": ""2025-09-14T22:03:58.934748""}}
+"
+1757887439015,"END RequestId: 9268c73b-a643-4f13-8f20-53d262051b48
+"
+1757887439015,"REPORT RequestId: 9268c73b-a643-4f13-8f20-53d262051b48	Duration: 3933.99 ms	Billed Duration: 3934 ms	Memory Size: 128 MB	Max Memory Used: 95 MB	
+"
+1757887495086,"START RequestId: 9268c73b-e243-4f13-8f20-53d262051b48 Version: $LATEST
+"
+1757887495544,"Processing 10 VMs in 10 groups (1 VMs per group)
+"
+1757887495554,"Thread 0: Processing 1 VMs - QADEV
+"
+1757887495557,"Thread 1: Processing 1 VMs - QADEV
+"
+1757887495934,"Thread 2: Processing 1 VMs - QADEV
+"
+1757887496015,"Thread 3: Processing 1 VMs - QADEV
+"
+1757887496234,"Thread 4: Processing 1 VMs - QADEV
+"
+1757887496374,"Thread 5: Processing 1 VMs - QADEV
+"
+1757887496414,"Thread 6: Processing 1 VMs - QADEV
+"
+1757887496475,"Thread 7: Processing 1 VMs - QADEV
+"
+1757887496754,"Thread 8: Processing 1 VMs - QADEV
+"
+1757887496915,"ERROR_DETAIL: {""vm_name"": ""SRVBODEV"", ""instance_id"": ""i-0be2162c6b323bc9b"", ""status"": ""INSTANCE_NOT_IN_SSM"", ""details"": ""Instance not registered with SSM"", ""timestamp"": ""2025-09-14T22:04:56.915164"", ""environment"": ""QADEV""}
+"
+1757887496915,"Thread 3: Completed processing, 2 metrics
+"
+1757887496915,"Thread 9: Processing 1 VMs - QADEV
+"
+1757887497095,"[INFO] ✅ SRVBWDEV - SAP heartbeat AVAILABLE
+"
+1757887497095,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVBWDEV"", ""instance_id"": ""i-0c8464be95df05ce7"", ""file_path"": ""/usr/sap/BID/ASCS01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 11:11:41 - 14.09.2025 17:04:50"", ""timestamp"": ""2025-09-14T22:04:57.095204"", ""environment"": ""QADEV""}
+"
+1757887497095,"[INFO] ✅ SRVBWDEV - SAP heartbeat AVAILABLE
+"
+1757887497114,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVBWDEV"", ""instance_id"": ""i-0c8464be95df05ce7"", ""file_path"": ""/usr/sap/BID/D00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 11:20:06 - 14.09.2025 17:04:16"", ""timestamp"": ""2025-09-14T22:04:57.095258"", ""environment"": ""QADEV""}
+"
+1757887497114,"[INFO] ✅ SRVBWDEV - SAP heartbeat AVAILABLE
+"
+1757887497114,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVBWDEV"", ""instance_id"": ""i-0c8464be95df05ce7"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   21.08.2025 14:17:39 - 14.09.2025 17:04:51"", ""timestamp"": ""2025-09-14T22:04:57.114726"", ""environment"": ""QADEV""}
+"
+1757887497114,"[INFO] ✅ SRVBWDEV - SAP heartbeat AVAILABLE
+"
+1757887497114,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVBWDEV"", ""instance_id"": ""i-0c8464be95df05ce7"", ""file_path"": ""/usr/sap/JID/J02/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 11:27:42 - 14.09.2025 17:04:53"", ""timestamp"": ""2025-09-14T22:04:57.114876"", ""environment"": ""QADEV""}
+"
+1757887497114,"[INFO] ✅ SRVBWDEV - SAP heartbeat AVAILABLE
+"
+1757887497115,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVBWDEV"", ""instance_id"": ""i-0c8464be95df05ce7"", ""file_path"": ""/usr/sap/JID/SCS03/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 11:26:42 - 14.09.2025 17:04:51"", ""timestamp"": ""2025-09-14T22:04:57.114993"", ""environment"": ""QADEV""}
+"
+1757887497115,"Thread 0: Completed processing, 5 metrics
+"
+1757887497297,"[INFO] ✅ SRVHANDBDEV - SAP heartbeat AVAILABLE
+"
+1757887497297,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVHANDBDEV"", ""instance_id"": ""i-08c3341d91e993521"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 13:01:50 - 14.09.2025 17:03:59"", ""timestamp"": ""2025-09-14T22:04:57.297265"", ""environment"": ""QADEV""}
+"
+1757887497394,"Thread 1: Completed processing, 1 metrics
+"
+1757887497397,"[INFO] ✅ SRVSAPDEV1 - SAP heartbeat AVAILABLE
+"
+1757887497397,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVSAPDEV1"", ""instance_id"": ""i-023948ea3ec8455ad"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   27.08.2025 16:03:21 - 14.09.2025 17:04:29"", ""timestamp"": ""2025-09-14T22:04:57.397277"", ""environment"": ""QADEV""}
+"
+1757887497397,"[INFO] ✅ SRVSAPDEV1 - SAP heartbeat AVAILABLE
+"
+1757887497435,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVSAPDEV1"", ""instance_id"": ""i-023948ea3ec8455ad"", ""file_path"": ""/usr/sap/ERD/ASCS01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   04.09.2025 16:11:24 - 14.09.2025 17:04:29"", ""timestamp"": ""2025-09-14T22:04:57.397386"", ""environment"": ""QADEV""}
+"
+1757887497436,"[INFO] ✅ SRVSAPDEV1 - SAP heartbeat AVAILABLE
+"
+1757887497437,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVSAPDEV1"", ""instance_id"": ""i-023948ea3ec8455ad"", ""file_path"": ""/usr/sap/ERD/D00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   04.09.2025 16:11:25 - 14.09.2025 17:04:30"", ""timestamp"": ""2025-09-14T22:04:57.437057"", ""environment"": ""QADEV""}
+"
+1757887497437,"Thread 2: Completed processing, 3 metrics
+"
+1757887497613,"[INFO] ✅ SRVHANDBQAS - SAP heartbeat AVAILABLE
+"
+1757887497613,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVHANDBQAS"", ""instance_id"": ""i-0a8686f21692ab8dc"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   08.09.2025 09:42:06 - 14.09.2025 17:04:10"", ""timestamp"": ""2025-09-14T22:04:57.613672"", ""environment"": ""QADEV""}
+"
+1757887497613,"Thread 4: Completed processing, 1 metrics
+"
+1757887497892,"[INFO] ✅ SRVERPQA-28/08/2025 - SAP heartbeat AVAILABLE
+"
+1757887497892,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   29.08.2025 21:54:07 - 14.09.2025 17:04:15"", ""timestamp"": ""2025-09-14T22:04:57.892636"", ""environment"": ""QADEV""}
+"
+1757887497892,"[WARN] ❌ SRVERPQA-28/08/2025 - SAP heartbeat UNAVAILABLE
+"
+1757887497892,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/EPQ/J02/work/available.log"", ""status"": ""UNAVAILABLE"", ""details"": ""Service marked as unavailable in log"", ""raw_output"": ""Unavailable 29.08.2025 22:46:07 - 14.09.2025 17:04:15"", ""timestamp"": ""2025-09-14T22:04:57.892697"", ""environment"": ""QADEV""}
+"
+1757887497892,"[INFO] ✅ SRVERPQA-28/08/2025 - SAP heartbeat AVAILABLE
+"
+1757887497892,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/EPQ/SCS03/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   29.08.2025 22:15:07 - 14.09.2025 17:04:15"", ""timestamp"": ""2025-09-14T22:04:57.892745"", ""environment"": ""QADEV""}
+"
+1757887497892,"[INFO] ✅ SRVERPQA-28/08/2025 - SAP heartbeat AVAILABLE
+"
+1757887497892,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/ERQ/ASCS01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   29.08.2025 22:11:06 - 14.09.2025 17:04:13"", ""timestamp"": ""2025-09-14T22:04:57.892780"", ""environment"": ""QADEV""}
+"
+1757887497892,"[INFO] ✅ SRVERPQA-28/08/2025 - SAP heartbeat AVAILABLE
+"
+1757887497892,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVERPQA-28/08/2025"", ""instance_id"": ""i-05b2454bb08ed6c8f"", ""file_path"": ""/usr/sap/ERQ/D00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   29.08.2025 22:11:07 - 14.09.2025 17:04:15"", ""timestamp"": ""2025-09-14T22:04:57.892810"", ""environment"": ""QADEV""}
+"
+1757887497892,"Thread 5: Completed processing, 5 metrics
+"
+1757887498195,"[INFO] ✅ DMZ-WEB DISPACHER (SRVHANWDDEV) - SAP heartbeat AVAILABLE
+"
+1757887498195,"FILE_CHECK_DETAIL: {""vm_name"": ""DMZ-WEB DISPACHER (SRVHANWDDEV)"", ""instance_id"": ""i-0bc14d1299451ec3e"", ""file_path"": ""/usr/sap/DAA/SMDA98/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   01.09.2025 12:13:44 - 14.09.2025 17:04:51"", ""timestamp"": ""2025-09-14T22:04:58.195811"", ""environment"": ""QADEV""}
+"
+1757887498195,"[INFO] ✅ DMZ-WEB DISPACHER (SRVHANWDDEV) - SAP heartbeat AVAILABLE
+"
+1757887498195,"FILE_CHECK_DETAIL: {""vm_name"": ""DMZ-WEB DISPACHER (SRVHANWDDEV)"", ""instance_id"": ""i-0bc14d1299451ec3e"", ""file_path"": ""/usr/sap/WDQ/W00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   10.09.2025 14:50:46 - 14.09.2025 17:04:48"", ""timestamp"": ""2025-09-14T22:04:58.195873"", ""environment"": ""QADEV""}
+"
+1757887498195,"Thread 8: Completed processing, 2 metrics
+"
+1757887498249,"[INFO] ✅ SRVCRMDEV - SAP heartbeat AVAILABLE
+"
+1757887498250,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVCRMDEV"", ""instance_id"": ""i-03b9dbf5b6f93a094"", ""file_path"": ""/usr/sap/DCA/ASCS01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   02.09.2025 11:27:49 - 14.09.2025 17:04:55"", ""timestamp"": ""2025-09-14T22:04:58.249960"", ""environment"": ""QADEV""}
+"
+1757887498250,"[INFO] ✅ SRVCRMDEV - SAP heartbeat AVAILABLE
+"
+1757887498250,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVCRMDEV"", ""instance_id"": ""i-03b9dbf5b6f93a094"", ""file_path"": ""/usr/sap/DCA/D00/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   02.09.2025 11:27:48 - 14.09.2025 17:04:54"", ""timestamp"": ""2025-09-14T22:04:58.250016"", ""environment"": ""QADEV""}
+"
+1757887498250,"Thread 9: Completed processing, 2 metrics
+"
+1757887498515,"[INFO] ✅ srvpiqas - SAP heartbeat AVAILABLE
+"
+1757887498515,"FILE_CHECK_DETAIL: {""vm_name"": ""srvpiqas"", ""instance_id"": ""i-0bb2c1006d6a334d5"", ""file_path"": ""/usr/sap/POQ/J01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   11.09.2025 15:42:44 - 14.09.2025 22:04:45"", ""timestamp"": ""2025-09-14T22:04:58.515274"", ""environment"": ""QADEV""}
+"
+1757887498515,"[INFO] ✅ srvpiqas - SAP heartbeat AVAILABLE
+"
+1757887498515,"FILE_CHECK_DETAIL: {""vm_name"": ""srvpiqas"", ""instance_id"": ""i-0bb2c1006d6a334d5"", ""file_path"": ""/usr/sap/POQ/SCS02/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   11.09.2025 15:42:44 - 14.09.2025 22:04:45"", ""timestamp"": ""2025-09-14T22:04:58.515331"", ""environment"": ""QADEV""}
+"
+1757887498515,"Thread 6: Completed processing, 2 metrics
+"
+1757887498535,"[INFO] ✅ SRVGTWDEV - SAP heartbeat AVAILABLE
+"
+1757887498535,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVGTWDEV"", ""instance_id"": ""i-05634690d2de085a0"", ""file_path"": ""/usr/sap/GWD/ASCS02/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   04.09.2025 08:31:27 - 14.09.2025 17:04:31"", ""timestamp"": ""2025-09-14T22:04:58.535456"", ""environment"": ""QADEV""}
+"
+1757887498535,"[INFO] ✅ SRVGTWDEV - SAP heartbeat AVAILABLE
+"
+1757887498535,"FILE_CHECK_DETAIL: {""vm_name"": ""SRVGTWDEV"", ""instance_id"": ""i-05634690d2de085a0"", ""file_path"": ""/usr/sap/GWD/D01/work/available.log"", ""status"": ""AVAILABLE"", ""details"": ""Service is available"", ""raw_output"": ""Available   04.09.2025 08:30:26 - 14.09.2025 17:04:31"", ""timestamp"": ""2025-09-14T22:04:58.535511"", ""environment"": ""QADEV""}
+"
+1757887498535,"Thread 7: Completed processing, 2 metrics
+"
+1757887498835,"Published 25 metrics to CloudWatch
+"
+1757887498835,"EXECUTION_SUMMARY: {""execution_summary"": {""total_vms"": 10, ""metrics_published"": 25, ""results"": {""SRVBODEV_DA1_SMDA97_heartbeat"": 0, ""SRVBODEV_DAA_SMDA98_heartbeat"": 0, ""SRVBWDEV_BID_ASCS01_heartbeat"": 1, ""SRVBWDEV_BID_D00_heartbeat"": 1, ""SRVBWDEV_DAA_SMDA98_heartbeat"": 1, ""SRVBWDEV_JID_J02_heartbeat"": 1, ""SRVBWDEV_JID_SCS03_heartbeat"": 1, ""SRVHANDBDEV_available_heartbeat"": 1, ""SRVSAPDEV1_DAA_SMDA98_heartbeat"": 1, ""SRVSAPDEV1_ERD_ASCS01_heartbeat"": 1, ""SRVSAPDEV1_ERD_D00_heartbeat"": 1, ""SRVHANDBQAS_available_heartbeat"": 1, ""SRVERPQA-28/08/2025_DAA_SMDA98_heartbeat"": 1, ""SRVERPQA-28/08/2025_EPQ_J02_heartbeat"": 0, ""SRVERPQA-28/08/2025_EPQ_SCS03_heartbeat"": 1, ""SRVERPQA-28/08/2025_ERQ_ASCS01_heartbeat"": 1, ""SRVERPQA-28/08/2025_ERQ_D00_heartbeat"": 1, ""DMZ-WEB DISPACHER (SRVHANWDDEV)_DAA_SMDA98_heartbeat"": 1, ""DMZ-WEB DISPACHER (SRVHANWDDEV)_WDQ_W00_heartbeat"": 1, ""SRVCRMDEV_DCA_ASCS01_heartbeat"": 1, ""SRVCRMDEV_DCA_D00_heartbeat"": 1, ""srvpiqas_POQ_J01_heartbeat"": 1, ""srvpiqas_POQ_SCS02_heartbeat"": 1, ""SRVGTWDEV_GWD_ASCS02_heartbeat"": 1, ""SRVGTWDEV_GWD_D01_heartbeat"": 1}, ""timestamp"": ""2025-09-14T22:04:58.835149""}}
+"
+1757887498895,"END RequestId: 9268c73b-e243-4f13-8f20-53d262051b48
+"
+1757887498896,"REPORT RequestId: 9268c73b-e243-4f13-8f20-53d262051b48	Duration: 3808.47 ms	Billed Duration: 3809 ms	Memory Size: 128 MB	Max Memory Used: 96 MB	
+"

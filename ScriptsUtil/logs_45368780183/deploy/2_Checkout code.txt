@@ -1,0 +1,69 @@
+﻿2025-09-12T16:54:30.6995929Z ##[group]Run actions/checkout@v4
+2025-09-12T16:54:30.6996866Z with:
+2025-09-12T16:54:30.6997356Z   repository: sirharold/POC-Dashboard
+2025-09-12T16:54:30.6998284Z   token: ***
+2025-09-12T16:54:30.6998745Z   ssh-strict: true
+2025-09-12T16:54:30.6999184Z   ssh-user: git
+2025-09-12T16:54:30.6999629Z   persist-credentials: true
+2025-09-12T16:54:30.7000123Z   clean: true
+2025-09-12T16:54:30.7000573Z   sparse-checkout-cone-mode: true
+2025-09-12T16:54:30.7001103Z   fetch-depth: 1
+2025-09-12T16:54:30.7001534Z   fetch-tags: false
+2025-09-12T16:54:30.7001978Z   show-progress: true
+2025-09-12T16:54:30.7002429Z   lfs: false
+2025-09-12T16:54:30.7002836Z   submodules: false
+2025-09-12T16:54:30.7003311Z   set-safe-directory: true
+2025-09-12T16:54:30.7004051Z ##[endgroup]
+2025-09-12T16:54:30.8092671Z Syncing repository: sirharold/POC-Dashboard
+2025-09-12T16:54:30.8095797Z ##[group]Getting Git version info
+2025-09-12T16:54:30.8097355Z Working directory is '/home/runner/work/POC-Dashboard/POC-Dashboard'
+2025-09-12T16:54:30.8099092Z [command]/usr/bin/git version
+2025-09-12T16:54:30.8138061Z git version 2.51.0
+2025-09-12T16:54:30.8164630Z ##[endgroup]
+2025-09-12T16:54:30.8180458Z Temporarily overriding HOME='/home/runner/work/_temp/cf129005-54ab-461c-a87f-f7d0130d8a6d' before making global git config changes
+2025-09-12T16:54:30.8183248Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-12T16:54:30.8194087Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/POC-Dashboard/POC-Dashboard
+2025-09-12T16:54:30.8228337Z Deleting the contents of '/home/runner/work/POC-Dashboard/POC-Dashboard'
+2025-09-12T16:54:30.8232056Z ##[group]Initializing the repository
+2025-09-12T16:54:30.8236890Z [command]/usr/bin/git init /home/runner/work/POC-Dashboard/POC-Dashboard
+2025-09-12T16:54:30.8329970Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-09-12T16:54:30.8331504Z hint: is subject to change. To configure the initial branch name to use in all
+2025-09-12T16:54:30.8332756Z hint: of your new repositories, which will suppress this warning, call:
+2025-09-12T16:54:30.8333957Z hint:
+2025-09-12T16:54:30.8334822Z hint: 	git config --global init.defaultBranch <name>
+2025-09-12T16:54:30.8336642Z hint:
+2025-09-12T16:54:30.8338051Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-09-12T16:54:30.8339967Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-09-12T16:54:30.8341509Z hint:
+2025-09-12T16:54:30.8342298Z hint: 	git branch -m <name>
+2025-09-12T16:54:30.8343179Z hint:
+2025-09-12T16:54:30.8344371Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-09-12T16:54:30.8346585Z Initialized empty Git repository in /home/runner/work/POC-Dashboard/POC-Dashboard/.git/
+2025-09-12T16:54:30.8350140Z [command]/usr/bin/git remote add origin https://github.com/sirharold/POC-Dashboard
+2025-09-12T16:54:30.8382473Z ##[endgroup]
+2025-09-12T16:54:30.8383295Z ##[group]Disabling automatic garbage collection
+2025-09-12T16:54:30.8387811Z [command]/usr/bin/git config --local gc.auto 0
+2025-09-12T16:54:30.8416421Z ##[endgroup]
+2025-09-12T16:54:30.8418111Z ##[group]Setting up auth
+2025-09-12T16:54:30.8424030Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-12T16:54:30.8454753Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-12T16:54:30.8754750Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-09-12T16:54:30.8784749Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-09-12T16:54:30.8999610Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-09-12T16:54:30.9033049Z ##[endgroup]
+2025-09-12T16:54:30.9034619Z ##[group]Fetching the repository
+2025-09-12T16:54:30.9050741Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +8573d8e4480b7bdab94770f555c4e5f70afe8eee:refs/remotes/origin/main
+2025-09-12T16:54:31.1400439Z From https://github.com/sirharold/POC-Dashboard
+2025-09-12T16:54:31.1401630Z  * [new ref]         8573d8e4480b7bdab94770f555c4e5f70afe8eee -> origin/main
+2025-09-12T16:54:31.1431298Z ##[endgroup]
+2025-09-12T16:54:31.1432810Z ##[group]Determining the checkout info
+2025-09-12T16:54:31.1434517Z ##[endgroup]
+2025-09-12T16:54:31.1439663Z [command]/usr/bin/git sparse-checkout disable
+2025-09-12T16:54:31.1479830Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-09-12T16:54:31.1508282Z ##[group]Checking out the ref
+2025-09-12T16:54:31.1512659Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-09-12T16:54:31.1574503Z Switched to a new branch 'main'
+2025-09-12T16:54:31.1577158Z branch 'main' set up to track 'origin/main'.
+2025-09-12T16:54:31.1583282Z ##[endgroup]
+2025-09-12T16:54:31.1616734Z [command]/usr/bin/git log -1 --format=%H
+2025-09-12T16:54:31.1638055Z 8573d8e4480b7bdab94770f555c4e5f70afe8eee

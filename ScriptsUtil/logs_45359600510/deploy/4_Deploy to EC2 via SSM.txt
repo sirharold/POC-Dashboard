@@ -1,0 +1,59 @@
+﻿2025-09-12T14:37:26.6846368Z ##[group]Run aws ssm send-command \
+2025-09-12T14:37:26.6847113Z [36;1maws ssm send-command \[0m
+2025-09-12T14:37:26.6849193Z [36;1m  --instance-ids $(aws ec2 describe-instances --filters "Name=tag:Name,Values=Streamlit-App-Server" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].InstanceId" --output text --region us-east-1) \[0m
+2025-09-12T14:37:26.6851808Z [36;1m  --document-name "AWS-RunShellScript" \[0m
+2025-09-12T14:37:26.6852642Z [36;1m  --comment "Deploy Streamlit app from GitHub Actions" \[0m
+2025-09-12T14:37:26.6855831Z [36;1m  --parameters commands="'set -x && cd *** && echo \"Current directory: $(pwd)\" && git pull origin main 2>&1 | tee /tmp/git_pull_output.log && echo \"Git pull output:\" && cat /tmp/git_pull_output.log && /usr/bin/python3.11 -m pip install -r requirements.txt && sudo systemctl restart *** && sudo systemctl status ***'" \[0m
+2025-09-12T14:37:26.6858252Z [36;1m  --timeout-seconds 600 \[0m
+2025-09-12T14:37:26.6858839Z [36;1m  --region us-east-1[0m
+2025-09-12T14:37:26.6908937Z shell: /usr/bin/bash -e {0}
+2025-09-12T14:37:26.6909515Z env:
+2025-09-12T14:37:26.6910174Z   AWS_DEFAULT_REGION: us-east-1
+2025-09-12T14:37:26.6910722Z   AWS_REGION: us-east-1
+2025-09-12T14:37:26.6911297Z   AWS_ACCESS_KEY_ID: ***
+2025-09-12T14:37:26.6911991Z   AWS_SECRET_ACCESS_KEY: ***
+2025-09-12T14:37:26.6912505Z ##[endgroup]
+2025-09-12T14:37:30.5921737Z {
+2025-09-12T14:37:30.5922391Z     "Command": {
+2025-09-12T14:37:30.5922962Z         "CommandId": "ec228efa-395d-449a-8716-b5e596850cf5",
+2025-09-12T14:37:30.5923629Z         "DocumentName": "AWS-RunShellScript",
+2025-09-12T14:37:30.5924185Z         "DocumentVersion": "$DEFAULT",
+2025-09-12T14:37:30.5924783Z         "Comment": "Deploy Streamlit app from GitHub Actions",
+2025-09-12T14:37:30.5925467Z         "ExpiresAfter": "2025-09-12T15:47:30.575000+00:00",
+2025-09-12T14:37:30.5926013Z         "Parameters": {
+2025-09-12T14:37:30.5926475Z             "commands": [
+2025-09-12T14:37:30.5929407Z                 "set -x && cd *** && echo \"Current directory: /home/runner/work/POC-Dashboard/POC-Dashboard\" && git pull origin main 2>&1 | tee /tmp/git_pull_output.log && echo \"Git pull output:\" && cat /tmp/git_pull_output.log && /usr/bin/python3.11 -m pip install -r requirements.txt && sudo systemctl restart *** && sudo systemctl status ***"
+2025-09-12T14:37:30.5931608Z             ]
+2025-09-12T14:37:30.5931972Z         },
+2025-09-12T14:37:30.5932336Z         "InstanceIds": [],
+2025-09-12T14:37:30.5932784Z         "Targets": [],
+2025-09-12T14:37:30.5933297Z         "RequestedDateTime": "2025-09-12T14:37:30.575000+00:00",
+2025-09-12T14:37:30.5933856Z         "Status": "Pending",
+2025-09-12T14:37:30.5934314Z         "StatusDetails": "Pending",
+2025-09-12T14:37:30.5934767Z         "OutputS3Region": "us-east-1",
+2025-09-12T14:37:30.5935222Z         "OutputS3BucketName": "",
+2025-09-12T14:37:30.5935668Z         "OutputS3KeyPrefix": "",
+2025-09-12T14:37:30.5936097Z         "MaxConcurrency": "50",
+2025-09-12T14:37:30.5936507Z         "MaxErrors": "0",
+2025-09-12T14:37:30.5936929Z         "TargetCount": 0,
+2025-09-12T14:37:30.5937335Z         "CompletedCount": 0,
+2025-09-12T14:37:30.5937745Z         "ErrorCount": 0,
+2025-09-12T14:37:30.5938152Z         "DeliveryTimedOutCount": 0,
+2025-09-12T14:37:30.5938583Z         "ServiceRole": "",
+2025-09-12T14:37:30.5938992Z         "NotificationConfig": {
+2025-09-12T14:37:30.5939462Z             "NotificationArn": "",
+2025-09-12T14:37:30.5940089Z             "NotificationEvents": [],
+2025-09-12T14:37:30.5940578Z             "NotificationType": ""
+2025-09-12T14:37:30.5940984Z         },
+2025-09-12T14:37:30.5941334Z         "CloudWatchOutputConfig": {
+2025-09-12T14:37:30.5941877Z             "CloudWatchLogGroupName": "",
+2025-09-12T14:37:30.5942421Z             "CloudWatchOutputEnabled": false
+2025-09-12T14:37:30.5942956Z         },
+2025-09-12T14:37:30.5943288Z         "TimeoutSeconds": 600,
+2025-09-12T14:37:30.5943705Z         "AlarmConfiguration": {
+2025-09-12T14:37:30.5944142Z             "IgnorePollAlarmFailure": false,
+2025-09-12T14:37:30.5945123Z             "Alarms": []
+2025-09-12T14:37:30.5945491Z         },
+2025-09-12T14:37:30.5945832Z         "TriggeredAlarms": []
+2025-09-12T14:37:30.5946216Z     }
+2025-09-12T14:37:30.5946513Z }

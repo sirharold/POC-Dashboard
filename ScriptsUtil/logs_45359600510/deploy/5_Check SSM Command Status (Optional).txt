@@ -1,0 +1,12 @@
+﻿2025-09-12T14:37:30.6676318Z ##[group]Run # This part is more complex to get the command ID and check status, 
+2025-09-12T14:37:30.6677145Z [36;1m# This part is more complex to get the command ID and check status, [0m
+2025-09-12T14:37:30.6677656Z [36;1m# but for now, we assume send-command succeeds if no error is returned.[0m
+2025-09-12T14:37:30.6678185Z [36;1mecho "SSM command sent. Check SSM Run Command history in AWS console for status."[0m
+2025-09-12T14:37:30.6709527Z shell: /usr/bin/bash -e {0}
+2025-09-12T14:37:30.6709964Z env:
+2025-09-12T14:37:30.6710209Z   AWS_DEFAULT_REGION: us-east-1
+2025-09-12T14:37:30.6710491Z   AWS_REGION: us-east-1
+2025-09-12T14:37:30.6771908Z   AWS_ACCESS_KEY_ID: ***
+2025-09-12T14:37:30.6772403Z   AWS_SECRET_ACCESS_KEY: ***
+2025-09-12T14:37:30.6772723Z ##[endgroup]
+2025-09-12T14:37:30.6824225Z SSM command sent. Check SSM Run Command history in AWS console for status.

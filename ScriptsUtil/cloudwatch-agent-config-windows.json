@@ -1,0 +1,119 @@
+{
+  "agent": {
+    "metrics_collection_interval": 60,
+    "run_as_user": "cwagent"
+  },
+  "metrics": {
+    "namespace": "CWAgent",
+    "metrics_collected": {
+      "cpu": {
+        "measurement": [
+          {
+            "name": "cpu_usage_idle",
+            "rename": "CPU_USAGE_IDLE",
+            "unit": "Percent"
+          },
+          "cpu_usage_active"
+        ],
+        "metrics_collection_interval": 60,
+        "totalcpu": false
+      },
+      "LogicalDisk": {
+        "measurement": [
+          {
+            "name": "% Free Space",
+            "rename": "disk_free_percent",
+            "unit": "Percent"
+          },
+          {
+            "name": "% Disk Time",
+            "rename": "disk_time_percent",
+            "unit": "Percent"
+          }
+        ],
+        "metrics_collection_interval": 60,
+        "resources": [
+          "*"
+        ]
+      },
+      "Memory": {
+        "measurement": [
+          {
+            "name": "% Committed Bytes In Use",
+            "rename": "mem_used_percent",
+            "unit": "Percent"
+          },
+          {
+            "name": "Available Bytes",
+            "rename": "mem_available",
+            "unit": "Bytes"
+          }
+        ],
+        "metrics_collection_interval": 60
+      },
+      "Network Interface": {
+        "measurement": [
+          {
+            "name": "Bytes Sent/sec",
+            "rename": "net_bytes_sent",
+            "unit": "Bytes/Second"
+          },
+          {
+            "name": "Bytes Received/sec",
+            "rename": "net_bytes_recv",
+            "unit": "Bytes/Second"
+          }
+        ],
+        "metrics_collection_interval": 60,
+        "resources": [
+          "*"
+        ]
+      },
+      "System": {
+        "measurement": [
+          {
+            "name": "Processor Queue Length",
+            "rename": "proc_queue_length",
+            "unit": "Count"
+          }
+        ],
+        "metrics_collection_interval": 60
+      }
+    },
+    "append_dimensions": {
+      "InstanceId": "${aws:InstanceId}",
+      "InstanceType": "${aws:InstanceType}",
+      "ImageId": "${aws:ImageId}",
+      "AutoScalingGroupName": "${aws:AutoScalingGroupName}"
+    },
+    "aggregation_dimensions": [
+      ["InstanceId"],
+      ["InstanceType"],
+      ["InstanceId", "InstanceType"]
+    ]
+  },
+  "logs": {
+    "logs_collected": {
+      "windows_events": {
+        "collect_list": [
+          {
+            "event_name": "System",
+            "event_levels": ["ERROR", "WARNING"],
+            "log_group_name": "/aws/ec2/windows/system",
+            "log_stream_name": "{instance_id}",
+            "event_format": "json",
+            "retention_in_days": 7
+          },
+          {
+            "event_name": "Application",
+            "event_levels": ["ERROR", "WARNING"],
+            "log_group_name": "/aws/ec2/windows/application",
+            "log_stream_name": "{instance_id}",
+            "event_format": "json",
+            "retention_in_days": 7
+          }
+        ]
+      }
+    }
+  }
+}

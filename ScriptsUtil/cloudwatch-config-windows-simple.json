@@ -1,0 +1,52 @@
+{
+  "agent": {
+    "metrics_collection_interval": 60,
+    "run_as_user": "cwagent"
+  },
+  "metrics": {
+    "namespace": "CWAgent",
+    "metrics_collected": {
+      "Memory": {
+        "measurement": [
+          {
+            "name": "% Committed Bytes In Use",
+            "rename": "mem_used_percent",
+            "unit": "Percent"
+          }
+        ],
+        "metrics_collection_interval": 60
+      },
+      "Processor": {
+        "measurement": [
+          {
+            "name": "% Processor Time",
+            "rename": "cpu_usage_active",
+            "unit": "Percent"
+          }
+        ],
+        "metrics_collection_interval": 60,
+        "resources": [
+          "_Total"
+        ]
+      },
+      "LogicalDisk": {
+        "measurement": [
+          {
+            "name": "% Free Space",
+            "rename": "disk_free_percent",
+            "unit": "Percent"
+          }
+        ],
+        "metrics_collection_interval": 60,
+        "resources": [
+          "*"
+        ]
+      }
+    },
+    "append_dimensions": {
+      "InstanceId": "${aws:InstanceId}",
+      "InstanceType": "${aws:InstanceType}",
+      "ImageId": "${aws:ImageId}"
+    }
+  }
+}

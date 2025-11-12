@@ -1,0 +1,26 @@
+﻿2025-09-12T16:48:26.2674005Z ##[group]Run aws ssm send-command 
+2025-09-12T16:48:26.2674537Z [36;1maws ssm send-command [0m
+2025-09-12T16:48:26.2675542Z [36;1m  --instance-ids $(aws ec2 describe-instances --filters "Name=tag:Name,Values=streamlit-dashboard" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].InstanceId" --output text --region us-east-1) [0m
+2025-09-12T16:48:26.2676783Z [36;1m  --document-name "AWS-RunShellScript" [0m
+2025-09-12T16:48:26.2677272Z [36;1m  --comment "Deploy Streamlit app from GitHub Actions" [0m
+2025-09-12T16:48:26.2679147Z [36;1m  --parameters commands="'set -x && cd *** && git config --global --add safe.directory *** && echo \"Current directory: $(pwd)\" && git pull origin main 2>&1 | tee /tmp/git_pull_output.log && echo \"Git pull output:\" && cat /tmp/git_pull_output.log && /usr/bin/python3.11 -m pip install -r requirements.txt && sudo systemctl restart *** && sudo systemctl status ***'" \[0m
+2025-09-12T16:48:26.2680420Z [36;1m  --timeout-seconds 600 \[0m
+2025-09-12T16:48:26.2680830Z [36;1m  --region us-east-1[0m
+2025-09-12T16:48:26.2737782Z shell: /usr/bin/bash -e {0}
+2025-09-12T16:48:26.2738181Z env:
+2025-09-12T16:48:26.2738478Z   AWS_DEFAULT_REGION: us-east-1
+2025-09-12T16:48:26.2738831Z   AWS_REGION: us-east-1
+2025-09-12T16:48:26.2739266Z   AWS_ACCESS_KEY_ID: ***
+2025-09-12T16:48:26.2739718Z   AWS_SECRET_ACCESS_KEY: ***
+2025-09-12T16:48:26.2740068Z ##[endgroup]
+2025-09-12T16:48:30.6897400Z 
+2025-09-12T16:48:30.6900350Z usage: aws [options] <command> <subcommand> [<subcommand> ...] [parameters]
+2025-09-12T16:48:30.6901698Z To see help text, you can run:
+2025-09-12T16:48:30.6902189Z 
+2025-09-12T16:48:30.6902444Z   aws help
+2025-09-12T16:48:30.6903148Z   aws <command> help
+2025-09-12T16:48:30.6904130Z   aws <command> <subcommand> help
+2025-09-12T16:48:30.6904594Z 
+2025-09-12T16:48:30.6904979Z aws: error: the following arguments are required: --document-name
+2025-09-12T16:48:30.6905518Z 
+2025-09-12T16:48:30.7683998Z ##[error]Process completed with exit code 252.
