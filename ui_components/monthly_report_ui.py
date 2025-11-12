@@ -530,6 +530,7 @@ class MonthlyReportUI:
         # Show PDF download button at the end if we have charts
         if len(all_charts_data) > 0:
             st.markdown("---")
+            st.write(f"**Descarga el informe aquí** ({len(all_charts_data)} servidor{'es' if len(all_charts_data) > 1 else ''})")
             # PDF button centered at the bottom
             col1, col2, col3 = st.columns([2, 1, 2])
             with col2:
