@@ -488,7 +488,8 @@ class MonthlyReportUI:
                         xaxis=dict(
                             title="",
                             gridcolor='lightgray',
-                            showgrid=True
+                            showgrid=True,
+                            tickfont=dict(color='black')
                         ),
                         yaxis=dict(
                             title="",
@@ -497,7 +498,8 @@ class MonthlyReportUI:
                             tickmode='array',
                             tickvals=[0, 1],
                             ticktext=['0', '1'],
-                            range=[-0.1, 1.1]
+                            range=[-0.1, 1.1],
+                            tickfont=dict(color='black')
                         ),
                         hovermode='x unified',
                         plot_bgcolor='white',
@@ -629,7 +631,7 @@ class MonthlyReportUI:
                         continue
 
                     # Calculate availability using the AvailabilityCalculator
-                    stat_column = 'Average' if 'Average' in df.columns else 'Maximum'
+                    stat_column = 'Maximum' if 'Maximum' in df.columns else 'Average'
                     availability_stats = AvailabilityCalculator.calculate_availability(
                         df=df,
                         schedule_tag=schedule_tag,
@@ -675,7 +677,8 @@ class MonthlyReportUI:
                         xaxis=dict(
                             title="",
                             gridcolor='lightgray',
-                            showgrid=True
+                            showgrid=True,
+                            tickfont=dict(color='black')
                         ),
                         yaxis=dict(
                             title="",
@@ -684,7 +687,8 @@ class MonthlyReportUI:
                             tickmode='array',
                             tickvals=[0, 1],
                             ticktext=['0', '1'],
-                            range=[-0.1, 1.1]
+                            range=[-0.1, 1.1],
+                            tickfont=dict(color='black')
                         ),
                         hovermode='x unified',
                         plot_bgcolor='white',
