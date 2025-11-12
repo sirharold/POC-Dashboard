@@ -601,8 +601,12 @@ class MonthlyReportUI:
                         environment=env_tag
                     )
 
+                # DEBUG: Show metrics found
+                st.write(f"🔎 DEBUG - {instance_name}: {len(availability_metrics)} métrica(s) encontrada(s)")
+
                 # Skip if no availability metrics found
                 if not availability_metrics:
+                    st.info(f"DEBUG - {instance_name}: No se encontraron métricas de availability")
                     continue
 
                 # Process each availability metric for this instance
@@ -628,15 +632,27 @@ class MonthlyReportUI:
 
                     # Skip silently if no data
                     if df.empty:
+                        st.warning(f"DEBUG - {metric_name}: DataFrame vacío")
                         continue
+
+                    # DEBUG: Show available columns and data
+                    st.write(f"🔍 DEBUG - Métrica: {metric_name}")
+                    st.write(f"📊 DEBUG - Columnas disponibles: {df.columns.tolist()}")
+                    st.write(f"📈 DEBUG - Shape: {df.shape}")
+                    st.write(f"📋 DEBUG - Primeras 3 filas:")
+                    st.dataframe(df.head(3))
 
                     # Calculate availability using the AvailabilityCalculator
                     stat_column = 'Maximum' if 'Maximum' in df.columns else 'Average'
+                    st.write(f"✅ DEBUG - stat_column seleccionada: {stat_column}")
+
                     availability_stats = AvailabilityCalculator.calculate_availability(
                         df=df,
                         schedule_tag=schedule_tag,
                         value_column=stat_column
                     )
+
+                    st.write(f"💯 DEBUG - Availability calculada: {availability_stats['scheduled_availability_percentage']:.2f}%")
 
                     # Use scheduled availability percentage (excludes scheduled downtime)
                     availability_percentage = availability_stats['scheduled_availability_percentage']
