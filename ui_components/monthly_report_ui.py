@@ -489,7 +489,8 @@ class MonthlyReportUI:
                             title="",
                             gridcolor='lightgray',
                             showgrid=True,
-                            tickfont=dict(color='black')
+                            tickfont=dict(color='black'),
+                            range=[start_datetime, end_datetime]
                         ),
                         yaxis=dict(
                             title="",
@@ -679,7 +680,8 @@ class MonthlyReportUI:
                             title="",
                             gridcolor='lightgray',
                             showgrid=True,
-                            tickfont=dict(color='black')
+                            tickfont=dict(color='black'),
+                            range=[start_datetime, end_datetime]
                         ),
                         yaxis=dict(
                             title="",
