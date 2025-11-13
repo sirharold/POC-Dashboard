@@ -409,42 +409,6 @@ class AWSService:
         except Exception as e:
             return pd.DataFrame()
 
-    def get_log_groups(self, instance_id: str) -> list:
-        """Find CloudWatch log groups potentially related to an instance ID."""
-        try:
-            logs_client = self.get_cross_account_boto3_client('logs')
-            if not logs_client: return []
-
-            # Search for log groups with the instance ID in their name
-            response = logs_client.describe_log_groups(
-                logGroupNamePrefix=f'/aws/ec2/{instance_id}' # A common convention
-            )
-            
-            groups = [lg['logGroupName'] for lg in response.get('logGroups', [])]
-            
-            # Also search for instance ID directly
-            response_alt = logs_client.describe_log_groups(logGroupNamePrefix=f'{instance_id}')
-            groups.extend([lg['logGroupName'] for lg in response_alt.get('logGroups', [])])
-
-            return sorted(list(set(groups))) # Return unique, sorted list
-        except Exception:
-            return []
-
-    def get_log_events(self, log_group_name: str, limit: int = 100) -> list:
-        """Get the most recent log events from a CloudWatch log group."""
-        try:
-            logs_client = self.get_cross_account_boto3_client('logs')
-            if not logs_client: return []
-
-            response = logs_client.filter_log_events(
-                logGroupName=log_group_name,
-                limit=limit,
-                interleaved=True # Returns events from all streams, sorted by time
-            )
-            return response.get('events', [])
-        except Exception:
-            return []
-
     def get_alarms_for_instance(self, instance_id: str):
         """Get CloudWatch alarms for an instance, including SAP alarms by name matching."""
         try:
@@ -489,3 +453,85 @@ class AWSService:
             return instance_alarms
         except ClientError:
             return []
+
+    def read_file_from_instance(self, instance_id: str, file_path: str, os_type: str = 'linux') -> dict:
+        """
+        Read a file from an EC2 instance using SSM Run Command.
+
+        Args:
+            instance_id: The EC2 instance ID
+            file_path: The path to the file on the instance
+            os_type: The OS type ('linux' or 'windows')
+
+        Returns:
+            dict with keys: 'success' (bool), 'content' (str), 'error' (str)
+        """
+        try:
+            ssm = self.get_cross_account_boto3_client('ssm')
+            if not ssm:
+                return {'success': False, 'content': '', 'error': 'Failed to get SSM client'}
+
+            # Determine the command based on OS type
+            if os_type.lower() == 'windows':
+                command = f'Get-Content -Path "{file_path}" -ErrorAction Stop'
+                document_name = 'AWS-RunPowerShellScript'
+            else:  # linux
+                command = f'cat "{file_path}"'
+                document_name = 'AWS-RunShellScript'
+
+            # Send command
+            response = ssm.send_command(
+                InstanceIds=[instance_id],
+                DocumentName=document_name,
+                Parameters={'commands': [command]},
+                TimeoutSeconds=30
+            )
+
+            command_id = response['Command']['CommandId']
+
+            # Wait for command to complete (with timeout)
+            max_attempts = 10
+            for attempt in range(max_attempts):
+                time.sleep(1)
+
+                try:
+                    result = ssm.get_command_invocation(
+                        CommandId=command_id,
+                        InstanceId=instance_id
+                    )
+
+                    status = result['Status']
+
+                    if status == 'Success':
+                        return {
+                            'success': True,
+                            'content': result.get('StandardOutputContent', ''),
+                            'error': ''
+                        }
+                    elif status in ['Failed', 'Cancelled', 'TimedOut']:
+                        return {
+                            'success': False,
+                            'content': '',
+                            'error': result.get('StandardErrorContent', f'Command {status}')
+                        }
+                    # If status is 'InProgress' or 'Pending', continue waiting
+
+                except ClientError as e:
+                    if 'InvocationDoesNotExist' in str(e):
+                        # Command not yet registered, keep waiting
+                        continue
+                    else:
+                        raise
+
+            return {
+                'success': False,
+                'content': '',
+                'error': 'Command timeout - took too long to execute'
+            }
+
+        except Exception as e:
+            return {
+                'success': False,
+                'content': '',
+                'error': str(e)
+            }

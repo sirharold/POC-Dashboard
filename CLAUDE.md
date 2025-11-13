@@ -30,7 +30,13 @@ Este es un dashboard de monitoreo de máquinas virtuales construido con Streamli
 ├── utils/                      # Funciones auxiliares
 │   ├── helpers.py             # Funciones de utilidad general
 │   ├── auth.py                # Autenticación de usuarios
-│   └── availability_calculator.py  # Cálculo de disponibilidad con schedules
+│   ├── availability_calculator.py  # Cálculo de disponibilidad con schedules
+│   └── parameters_loader.py   # Cargador de parámetros de VMs desde JSON
+├── Parameters/                 # Archivos JSON con configuración de VMs
+│   ├── Params_Prod_A.json     # Configuración VMs producción grupo A
+│   ├── Params_Prod_B.json     # Configuración VMs producción grupo B
+│   ├── Params_QADEV_A.json    # Configuración VMs QA/Dev grupo A
+│   └── Params_QADEV_B.json    # Configuración VMs QA/Dev grupo B
 ├── ScriptsUtil/                # Scripts de despliegue y debug
 │   ├── deploy_*.sh            # Scripts de despliegue
 │   ├── test_aws_connection.py # Test de conexión AWS
@@ -166,6 +172,17 @@ flake8 app.py components/ utils/
    - Usa `plotly[kaleido]` para convertir Plotly a imágenes y `reportlab` para generar PDF
    - **Importante**: Instalar usando `pip install 'plotly[kaleido]>=6.1.1'` para evitar problemas de compatibilidad
    - Versiones compatibles: Plotly 6.4.0 + Kaleido 1.2.0
+11. **Descarga de Logs SAP**: La página de detalles incluye un visor de logs SAP:
+   - Muestra archivos `available.log` configurados en `Parameters/*.json`
+   - Usa AWS Systems Manager (SSM) para leer archivos remotos desde las instancias
+   - Botón de descarga para cada archivo con formato: `AvailableLog_SERVERNAME_PATH_YYYYMMDD_HHMM.log`
+   - Soporta tanto instancias Linux (usando `cat`) como Windows (usando PowerShell `Get-Content`)
+   - Los archivos de parámetros deben incluir: `instance_id`, `name`, `os_type`, y `paths` (array de rutas)
+   - **Requisitos**:
+     - SSM Agent instalado en las instancias
+     - Rol `RecolectorDeDashboard` con permisos SSM
+     - IAM Instance Profile en las instancias con `AmazonSSMManagedInstanceCore`
+     - Ver `docs/SSM_SETUP.md` para instrucciones completas de configuración
 
 ## Tareas Comunes
 
@@ -187,6 +204,15 @@ flake8 app.py components/ utils/
 5. Revisar logs de CloudWatch para errores
 6. Verificar Trust Policy del rol RecolectorDeDashboard incluya el rol local
 
+### Configuración de SSM para descarga de logs
+Si encuentras error: `User is not authorized to perform: ssm:SendCommand`
+
+**Solución:**
+1. Ver documentación completa en `docs/SSM_SETUP.md`
+2. Agregar política SSM al rol `RecolectorDeDashboard` usando `docs/SSM_PERMISSIONS_POLICY.json`
+3. Verificar que las instancias tengan SSM Agent instalado
+4. Verificar que las instancias tengan IAM Instance Profile con `AmazonSSMManagedInstanceCore`
+
 ### Troubleshooting PDF Generation
 Si encuentras error: `ImportError: cannot import name 'broadcast_args_to_dicts' from 'plotly.io._utils'`
 
@@ -206,6 +232,30 @@ python ScriptsUtil/test_pdf_generation.py
 - Plotly 6.4.0
 - Kaleido 1.2.0 (instalado automáticamente por plotly[kaleido])
 - ReportLab 4.4.4
+
+### Agregar nuevos archivos de logs SAP
+1. Editar el archivo JSON correspondiente en `Parameters/`
+2. Agregar el `instance_id` si la VM no existe en el archivo
+3. Agregar la ruta del archivo `available.log` al array `paths`
+4. Verificar que el SSM Agent esté instalado en la instancia
+5. No es necesario reiniciar la aplicación, los cambios se cargan dinámicamente
+
+Ejemplo de estructura JSON:
+```json
+{
+  "vms": [
+    {
+      "instance_id": "i-1234567890abcdef0",
+      "name": "SRVERPTEST",
+      "os_type": "linux",
+      "paths": [
+        "/usr/sap/ERP/D00/work/available.log",
+        "/usr/sap/ERP/ASCS01/work/available.log"
+      ]
+    }
+  ]
+}
+```
 
 ### Setup de permisos AWS local
 Para desarrollo local, el rol RecolectorDeDashboard debe tener en su Trust Policy:

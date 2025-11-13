@@ -27,5 +27,8 @@ assume-role-policy.json
 .DS_Store
 Thumbs.db
 
+# Temporary and analysis files
+temp/
+
 # User specified (comentado porque los scripts son parte del proyecto)
 # ScriptsUtil/

@@ -6,6 +6,7 @@ import datetime
 import plotly.graph_objects as go
 import pandas as pd
 from utils.helpers import create_alarm_item_html, create_alarm_legend
+from utils.parameters_loader import ParametersLoader
 
 
 class DetailUI:
@@ -14,6 +15,7 @@ class DetailUI:
     def __init__(self, aws_service):
         """Initialize with AWS service dependency."""
         self.aws_service = aws_service
+        self.params_loader = ParametersLoader()
 
     def get_cpu_utilization(self, instance_id: str):
         """Get CPU utilization. Same as original function."""
@@ -580,29 +582,60 @@ class DetailUI:
             else:
                 st.info("No se encontraron volúmenes EBS para esta instancia.")
 
-            # --- CloudWatch Log Viewer ---
+            # --- SAP Available.log Viewer ---
             st.markdown("---")
-            st.markdown("## 📜 Visor de Logs")
-            log_groups = self.aws_service.get_log_groups(instance_id)
+            st.markdown("## 📄 Visor de Logs SAP (available.log)")
 
-            if not log_groups:
-                st.info("No se encontraron grupos de logs asociados a esta instancia.")
+            # Get available.log paths from parameters
+            available_log_paths = self.params_loader.get_available_log_paths(instance_id)
+            vm_info = self.params_loader.get_instance_info(instance_id)
+
+            if not available_log_paths:
+                st.info("No se encontraron archivos available.log configurados para esta instancia.")
             else:
-                selected_log_group = st.selectbox("Selecciona un grupo de logs para inspeccionar:", options=log_groups)
-                if selected_log_group:
-                    log_events = self.aws_service.get_log_events(selected_log_group)
-                    if not log_events:
-                        st.warning(f"No se encontraron eventos recientes en el grupo '{selected_log_group}'.")
-                    else:
-                        # Format logs for display
-                        header = "Mostrando los últimos eventos...\n"
-                        header += "------------------------------------\n"
-                        
-                        log_lines = []
-                        for event in sorted(log_events, key=lambda x: x['timestamp'], reverse=True):
-                            ts = datetime.datetime.fromtimestamp(event['timestamp'] / 1000).strftime('%Y-%m-%d %H:%M:%S')
-                            msg = event['message']
-                            log_lines.append(f"[{ts}] {msg}")
-                        
-                        formatted_logs = header + "\n".join(log_lines)
-                        st.code(formatted_logs, language='log')
+                st.markdown(f"**{len(available_log_paths)} archivo(s) disponible(s):**")
+
+                # Display each path as a download button
+                for idx, log_path in enumerate(available_log_paths):
+                    col_btn, col_info = st.columns([1, 3])
+
+                    with col_btn:
+                        # Create unique key for each button
+                        button_key = f"download_log_{instance_id}_{idx}"
+
+                        if st.button(f"📥 Descargar", key=button_key, help=f"Descargar {log_path}"):
+                            # Get OS type
+                            os_type = vm_info.get('os_type', 'linux') if vm_info else 'linux'
+
+                            # Show loading message
+                            with st.spinner(f"Leyendo archivo desde instancia..."):
+                                result = self.aws_service.read_file_from_instance(
+                                    instance_id=instance_id,
+                                    file_path=log_path,
+                                    os_type=os_type
+                                )
+
+                            if result['success']:
+                                # Generate filename: AvailableLog_SERVERNAME_PATH_YYYYMMDD_HHMM.log
+                                now = datetime.datetime.now()
+                                timestamp = now.strftime("%Y%m%d_%H%M")
+
+                                # Clean path for filename (replace / or \ with _)
+                                clean_path = log_path.replace('/', '_').replace('\\', '_').replace(':', '')
+
+                                filename = f"AvailableLog_{instance_name}_{clean_path}_{timestamp}.log"
+
+                                # Offer download
+                                st.download_button(
+                                    label=f"💾 Guardar como {filename}",
+                                    data=result['content'],
+                                    file_name=filename,
+                                    mime="text/plain",
+                                    key=f"save_{button_key}"
+                                )
+                                st.success("✅ Archivo leído correctamente")
+                            else:
+                                st.error(f"❌ Error al leer archivo: {result['error']}")
+
+                    with col_info:
+                        st.code(log_path, language=None)
