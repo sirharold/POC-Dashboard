@@ -241,20 +241,26 @@ class DashboardUI:
             st.markdown(f"<h2 style='text-align: center; margin: 0; padding: 0;'>{current_env}</h2>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align: center; font-size: 0.75em; color: grey; margin: 0; padding: 0;'>Esta página se actualiza cada {refresh_interval} segundos {app_version}</p>", unsafe_allow_html=True)
             # Add report buttons
-            col_center = st.columns([1, 1, 1, 1])
-            with col_center[1]:
+            col1, col2, col3 = st.columns(3)
+            with col1:
                 if st.button("📊 Reporte Alarmas", use_container_width=True, type="secondary"):
                     # Preserve columns param when navigating
                     columns_param = st.query_params.get('columns', '2')
                     st.query_params.clear()
                     st.query_params.update({"alarm_report": "true", "columns": columns_param})
                     st.rerun()
-            with col_center[2]:
+            with col2:
                 if st.button("📅 Informe Mensual", use_container_width=True, type="secondary"):
                     # Preserve columns param when navigating
                     columns_param = st.query_params.get('columns', '2')
                     st.query_params.clear()
                     st.query_params.update({"monthly_report": "true", "columns": columns_param})
+                    st.rerun()
+            with col3:
+                if st.button("🩺 Análisis de Salud", use_container_width=True, type="secondary"):
+                    columns_param = st.query_params.get('columns', '2')
+                    st.query_params.clear()
+                    st.query_params.update({"alarm_health": "true", "columns": columns_param})
                     st.rerun()
         
         st.divider()

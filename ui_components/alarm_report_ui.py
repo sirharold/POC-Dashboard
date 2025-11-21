@@ -138,32 +138,9 @@ class AlarmReportUI:
             )
             
             # Export buttons
-            row1_col1, row1_col2 = st.columns(2)
-            row2_col1, row2_col2 = st.columns(2)
+            col1, col2 = st.columns(2)
 
-            with row1_col1:
-                # Original CSV export
-                csv = df.to_csv(index=False)
-                st.download_button(
-                    label="📥 Descargar CSV",
-                    data=csv,
-                    file_name=f"reporte_alarmas_{current_env}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
-            
-            with row1_col2:
-                # Important alarms CSV export (using all instance data)
-                important_csv = self._generate_important_alarms_csv(instances_data)
-                st.download_button(
-                    label="🚨 Descargar alarmas importantes",
-                    data=important_csv,
-                    file_name=f"alarmas_importantes_global_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
-
-            with row2_col1:
+            with col1:
                 # Problem report document
                 problem_report_txt = self._generate_problem_report_txt(report_data, filtered_instances)
                 st.download_button(
@@ -174,7 +151,7 @@ class AlarmReportUI:
                     use_container_width=True
                 )
             
-            with row2_col2:
+            with col2:
                 # New report by type
                 problem_report_by_type_txt = self._generate_problem_report_by_type_txt(report_data, filtered_instances)
                 st.download_button(

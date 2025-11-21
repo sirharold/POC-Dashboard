@@ -4,7 +4,8 @@ AWS Service class that wraps existing AWS functions without changing behavior.
 import streamlit as st
 import boto3
 import time
-from collections import Counter
+import re
+from collections import Counter, defaultdict
 from botocore.exceptions import ClientError
 import pandas as pd
 import datetime
@@ -542,3 +543,114 @@ class AWSService:
                 'content': '',
                 'error': str(e)
             }
+
+    def analyze_alarm_health(self) -> dict:
+        """
+        Analyzes all CloudWatch alarms to find orphans, duplicates, and other issues.
+
+        Returns:
+            A dictionary containing lists of problematic alarms.
+        """
+        try:
+            cloudwatch = self.get_cross_account_boto3_client('cloudwatch')
+            ec2 = self.get_cross_account_boto3_client('ec2')
+            if not cloudwatch or not ec2:
+                return {}
+
+            # --- Step A: Fetch all necessary data ---
+            all_alarms = []
+            paginator = cloudwatch.get_paginator('describe_alarms')
+            for page in paginator.paginate():
+                all_alarms.extend(page['MetricAlarms'])
+
+            # Get all active instances and their states
+            instance_states = {}
+            paginator = ec2.get_paginator('describe_instances')
+            pages = paginator.paginate(Filters=[{'Name': 'instance-state-name', 'Values': ['pending', 'running', 'stopping', 'stopped']}])
+            for page in pages:
+                for reservation in page['Reservations']:
+                    for instance in reservation['Instances']:
+                        instance_states[instance['InstanceId']] = instance.get('State', {}).get('Name', 'unknown')
+            
+            active_instance_ids = set(instance_states.keys())
+
+            # --- Initialize result structure ---
+            analysis_results = {
+                'orphan_by_terminated_instance': [],
+                'orphan_by_missing_dimension': [],
+                'duplicates': [],
+                'perpetual_insufficient_data': [],
+                'perpetual_alarm': [],
+            }
+            
+            duplicate_tracker = defaultdict(list)
+            now = datetime.datetime.now(datetime.timezone.utc)
+            insufficient_threshold = now - datetime.timedelta(days=1)
+            perpetual_alarm_threshold = now - datetime.timedelta(days=2)
+
+            # --- Analyze each alarm ---
+            for alarm in all_alarms:
+                alarm_name = alarm.get('AlarmName', 'N/A')
+                state_updated = alarm.get('StateUpdatedTimestamp')
+
+                # --- Orphan Analysis ---
+                dimensions = alarm.get('Dimensions', [])
+                if not dimensions:
+                    analysis_results['orphan_by_missing_dimension'].append(alarm)
+                else:
+                    instance_id_dim = next((d['Value'] for d in dimensions if d['Name'] == 'InstanceId'), None)
+                    if instance_id_dim and instance_id_dim not in active_instance_ids:
+                        analysis_results['orphan_by_terminated_instance'].append(alarm)
+
+                # --- Duplicate Analysis ---
+                dim_tuple = tuple(sorted((d['Name'], d['Value']) for d in dimensions))
+                metric_name = alarm.get('MetricName')
+                namespace = alarm.get('Namespace')
+                unique_key = (namespace, metric_name, dim_tuple)
+                duplicate_tracker[unique_key].append(alarm_name)
+
+                # --- "Don't Make Sense" Analysis ---
+                if alarm.get('StateValue') == 'INSUFFICIENT_DATA' and state_updated < insufficient_threshold:
+                    # Only report if the instance is not stopped
+                    instance_id_dim = next((d['Value'] for d in alarm.get('Dimensions', []) if d['Name'] == 'InstanceId'), None)
+                    if not instance_id_dim or instance_states.get(instance_id_dim) != 'stopped':
+                        analysis_results['perpetual_insufficient_data'].append(alarm)
+                
+                if alarm.get('StateValue') == 'ALARM' and state_updated < perpetual_alarm_threshold:
+                    analysis_results['perpetual_alarm'].append(alarm)
+
+            # --- Finalize Duplicate List with advanced filtering ---
+            def get_normalized_base_and_type(name):
+                uname = name.upper()
+                alarm_type = None
+                
+                if 'ALERTA' in uname:
+                    base_name = uname.replace('ALERTA', '')
+                    alarm_type = 'ALERTA'
+                elif 'INCIDENTE' in uname:
+                    base_name = uname.replace('INCIDENTE', '')
+                    alarm_type = 'INCIDENTE'
+                else:
+                    base_name = uname
+                
+                normalized_base = re.sub(r'[-/_]', '', base_name)
+                return normalized_base, alarm_type
+
+            for key, alarm_names in duplicate_tracker.items():
+                if len(alarm_names) <= 1:
+                    continue
+
+                if len(alarm_names) == 2:
+                    name1, name2 = alarm_names[0], alarm_names[1]
+                    base1, type1 = get_normalized_base_and_type(name1)
+                    base2, type2 = get_normalized_base_and_type(name2)
+
+                    if type1 and type2 and type1 != type2 and base1 == base2:
+                        continue
+
+                analysis_results['duplicates'].append(alarm_names)
+            
+            return analysis_results
+
+        except Exception as e:
+            return {'error': str(e)}

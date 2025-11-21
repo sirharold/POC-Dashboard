@@ -345,8 +345,14 @@ class DetailUI:
         st.markdown("</div>", unsafe_allow_html=True)
 
     def display_detail_page(self, instance_id: str):
-        """Display detail page. Exact same logic as original function."""
+        """Display detail page. Now uses efficient data fetching."""
+        # Get all data once
+        all_instances_data = self.aws_service.get_aws_data()
+        instance_data = next((inst for inst in all_instances_data if inst.get('ID') == instance_id), None)
+        
+        # Also get detailed metadata (for now, for VPC, SG, etc.)
         details = self.aws_service.get_instance_details(instance_id)
+
         # Preserve columns parameter when returning to dashboard
         columns_param = st.query_params.get('columns', '2')
         if st.button("← Volver al Dashboard", type="secondary"):
@@ -354,10 +360,14 @@ class DetailUI:
             st.query_params.clear()
             st.query_params.update({"columns": columns_param})
             st.rerun()
-        if not details:
+
+        if not details or not instance_data:
             st.error(f"No se pudieron obtener los detalles para la instancia con ID: {instance_id}")
             return
-        instance_name = next((tag['Value'] for tag in details.get('Tags', []) if tag['Key'] == 'Name'), instance_id)
+
+        # Get alarms and name from the pre-fetched, consolidated data
+        alarms = instance_data.get('AlarmObjects', [])
+        instance_name = instance_data.get('Name', instance_id)
 
         # Get machine state and create badge if not running
         state = details.get('State', {}).get('Name', 'unknown')
@@ -404,7 +414,6 @@ class DetailUI:
                     st.text("No hay grupos de seguridad asociados.")
 
             # --- SAP Service Status ---
-            alarms = self.aws_service.get_alarms_for_instance(instance_id)
             self._display_sap_service_alarms(alarms, details)
 
             st.markdown("## 🚨 Alarmas Generales")
