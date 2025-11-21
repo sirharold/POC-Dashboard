@@ -193,6 +193,7 @@ class AWSService:
                         'PrivateIP': instance.get('PrivateIpAddress', 'N/A'),
                         'DiskCount': disk_count,
                         'AlarmObjects': alarms_list_for_instance,
+                        'CpuOptions': instance.get('CpuOptions', {}),
                         'Schedule': tags.get('Schedule', None)  # For availability calculations (case sensitive)
                     }
                     
@@ -410,7 +411,13 @@ class AWSService:
             return pd.DataFrame()
 
     def get_alarms_for_instance(self, instance_id: str):
-        """Get CloudWatch alarms for an instance, including SAP alarms by name matching."""
+        """
+        DEPRECATED: This method is highly inefficient as it fetches all CloudWatch alarms on every call.
+        It is kept for backward compatibility only.
+        For new development, use the `AlarmObjects` key from the dictionary returned by `get_aws_data()`.
+        
+        Get CloudWatch alarms for an instance, including SAP alarms by name matching.
+        """
         try:
             cloudwatch = self.get_cross_account_boto3_client('cloudwatch')
             if not cloudwatch: 

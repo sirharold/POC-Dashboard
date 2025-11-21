@@ -412,8 +412,8 @@ class DetailUI:
             
             if alarms:
                 # --- Advanced Alarm Categorization ---
-                proactiva_disk_alarms = []
                 alerta_disk_alarms = []
+                incidente_disk_alarms = []
                 unassociated_disk_alarms = []
                 other_alarms = []
                 
@@ -427,9 +427,9 @@ class DetailUI:
                     if 'INCIDENTE SAP' in alarm_name_upper:
                         continue
 
-                    # Category 1: Named PROACTIVA-DISK
-                    if 'PROACTIVA-DISK' in alarm_name_upper:
-                        proactiva_disk_alarms.append(alarm)
+                    # Category 1: Named INCIDENTE-DISK
+                    if 'INCIDENTE-DISK' in alarm_name_upper:
+                        incidente_disk_alarms.append(alarm)
                         continue
                     
                     # Category 2: Named ALERTA-DISK
@@ -453,9 +453,9 @@ class DetailUI:
                         other_alarms.append(alarm)
 
                 # --- Render Categorized Alarms ---
-                with st.expander(f"🟡 Alarmas PROACTIVA-DISK ({len(proactiva_disk_alarms)})"):
-                    if proactiva_disk_alarms:
-                        for alarm in proactiva_disk_alarms:
+                with st.expander(f"🟡 Alarmas ALERTA-DISK ({len(alerta_disk_alarms)})"):
+                    if alerta_disk_alarms:
+                        for alarm in alerta_disk_alarms:
                             state = alarm.get('StateValue')
                             alarm_name = alarm.get('AlarmName', '')
                             # Check if alarm contains SMDA98 to mark as preventive (yellow)
@@ -467,16 +467,12 @@ class DetailUI:
                     else:
                         st.text("No hay alarmas de este tipo.")
 
-                with st.expander(f"🟡 Alarmas ALERTA-DISK ({len(alerta_disk_alarms)})"):
-                    if alerta_disk_alarms:
-                        for alarm in alerta_disk_alarms:
+                with st.expander(f"🔴 Incidentes de Disco ({len(incidente_disk_alarms)})"):
+                    if incidente_disk_alarms:
+                        for alarm in incidente_disk_alarms:
                             state = alarm.get('StateValue')
                             alarm_name = alarm.get('AlarmName', '')
-                            # Check if alarm contains SMDA98 to mark as preventive (yellow)
-                            if state == "ALARM" and 'SMDA98' in alarm_name.upper():
-                                color = "yellow"
-                            else:
-                                color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
+                            color = "red" if state == "ALARM" else "gray" if state == "INSUFFICIENT_DATA" else "green"
                             st.markdown(create_alarm_item_html(alarm_name, color), unsafe_allow_html=True)
                     else:
                         st.text("No hay alarmas de este tipo.")
