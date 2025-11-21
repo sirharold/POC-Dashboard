@@ -462,7 +462,12 @@ class DetailUI:
                         other_alarms.append(alarm)
 
                 # --- Render Categorized Alarms ---
-                with st.expander(f"🟡 Alarmas ALERTA-DISK ({len(alerta_disk_alarms)})"):
+                # Determine status for ALERTA-DISK
+                alerta_disk_status_icon = "🟢"
+                if any(alarm.get('StateValue') == 'ALARM' for alarm in alerta_disk_alarms):
+                    alerta_disk_status_icon = "🟡"
+
+                with st.expander(f"{alerta_disk_status_icon} Alarmas ALERTA-DISK ({len(alerta_disk_alarms)})"):
                     if alerta_disk_alarms:
                         for alarm in alerta_disk_alarms:
                             state = alarm.get('StateValue')
@@ -476,7 +481,12 @@ class DetailUI:
                     else:
                         st.text("No hay alarmas de este tipo.")
 
-                with st.expander(f"🔴 Incidentes de Disco ({len(incidente_disk_alarms)})"):
+                # Determine status for INCIDENTE-DISK
+                incidente_disk_status_icon = "🟢"
+                if any(alarm.get('StateValue') == 'ALARM' for alarm in incidente_disk_alarms):
+                    incidente_disk_status_icon = "🔴"
+
+                with st.expander(f"{incidente_disk_status_icon} Incidentes de Disco ({len(incidente_disk_alarms)})"):
                     if incidente_disk_alarms:
                         for alarm in incidente_disk_alarms:
                             state = alarm.get('StateValue')
