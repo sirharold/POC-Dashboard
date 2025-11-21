@@ -63,8 +63,8 @@ class AlarmReportUI:
         if report_data:
             df = pd.DataFrame(report_data)
 
-            # Add Theoretical Alarms Column
-            df['total_alarms_theoretical'] = 2 + 1 + (df['disk_count'] * 2) + 1
+            # Add Theoretical Alarms Column (1 CPU + 1 RAM + 2*disks + 1 ping)
+            df['total_alarms_theoretical'] = 1 + 1 + (df['disk_count'] * 2) + 1
             
             # Define column order and names
             column_order = [
@@ -275,9 +275,9 @@ class AlarmReportUI:
 
         border_style = ' box-shadow: inset 0 0 0 2px red;'
 
-        # CPU validation
+        # CPU validation (solo 1 alarma de CPU por instancia)
         cpu_idx = get_col_index('Alarmas CPU')
-        if cpu_idx != -1 and row['Alarmas CPU'] != 2:
+        if cpu_idx != -1 and row['Alarmas CPU'] != 1:
             styles[cpu_idx] += border_style
 
         # RAM validation
@@ -626,9 +626,13 @@ class AlarmReportUI:
         """Helper function to get a list of problem strings for an instance."""
         problems = []
         
-        # Check for missing alarms
-        if instance_data.get('cpu_alarms', 0) != 2:
-            problems.append(f"- Faltan {2 - instance_data.get('cpu_alarms', 0)} alarma(s) de CPU.\n")
+        # Check for missing alarms (solo 1 alarma de CPU por instancia)
+        if instance_data.get('cpu_alarms', 0) != 1:
+            current = instance_data.get('cpu_alarms', 0)
+            if current == 0:
+                problems.append("- Falta alarma de CPU.\n")
+            else:
+                problems.append(f"- Tiene {current} alarma(s) de CPU (esperada: 1).\n")
         if instance_data.get('ram_alarms', 0) == 0:
             problems.append("- Falta alarma de RAM.\n")
         
@@ -704,15 +708,15 @@ class AlarmReportUI:
 
             suffix = " (actualmente servidor apagado)" if instance_state == 'stopped' else ""
 
-            # Check for missing CPU alarms
-            # Rule: 1 alarm per vCPU. vCPU = CoreCount * ThreadsPerCore
-            vcpu_count = cpu_options.get('CoreCount', 1) * cpu_options.get('ThreadsPerCore', 1)
+            # Check for missing CPU alarms (solo 1 alarma de CPU por instancia)
             current_cpu_alarms = instance_data.get('cpu_alarms', 0)
-            if current_cpu_alarms < vcpu_count:
-                missing_count = vcpu_count - current_cpu_alarms
-                problems_by_type['Alarmas de CPU Faltantes'].append(
-                    f"- {instance_name}: {current_cpu_alarms} Alarma(s), {vcpu_count} CPU, falta(n) {missing_count} alarma(s){suffix}\n"
-                )
+            if current_cpu_alarms != 1:
+                if current_cpu_alarms == 0:
+                    problems_by_type['Alarmas de CPU Faltantes'].append(f"- {instance_name}{suffix}\n")
+                else:
+                    problems_by_type['Alarmas de CPU Faltantes'].append(
+                        f"- {instance_name}: Tiene {current_cpu_alarms} alarma(s) (esperada: 1){suffix}\n"
+                    )
 
             # Check for missing RAM alarms
             if instance_data.get('ram_alarms', 0) == 0:
@@ -768,9 +772,11 @@ class AlarmReportUI:
             ]
             for title in section_order:
                 if title in problems_by_type:
-                    problems = problems_by_type[title]
-                    output.write(f"{title}:\n")
-                    output.write("-" * (len(title) + 1) + "\n")
+                    problems = sorted(problems_by_type[title])  # Ordenar alfabéticamente
+                    count = len(problems)
+                    section_header = f"{title} ({count})"
+                    output.write(f"{section_header}:\n")
+                    output.write("-" * (len(section_header) + 1) + "\n")
                     for problem in problems:
                         output.write(problem)
                     output.write("\n")
