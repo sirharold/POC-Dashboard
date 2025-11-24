@@ -617,7 +617,9 @@ class AWSService:
                         analysis_results['perpetual_insufficient_data'].append(alarm)
                 
                 if alarm.get('StateValue') == 'ALARM' and state_updated < perpetual_alarm_threshold:
-                    analysis_results['perpetual_alarm'].append(alarm)
+                    instance_id_dim = next((d['Value'] for d in alarm.get('Dimensions', []) if d['Name'] == 'InstanceId'), None)
+                    if not instance_id_dim or instance_states.get(instance_id_dim) != 'stopped':
+                        analysis_results['perpetual_alarm'].append(alarm)
 
             # --- Finalize Duplicate List with advanced filtering ---
             def get_normalized_base_and_type(name):
