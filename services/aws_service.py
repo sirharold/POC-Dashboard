@@ -633,7 +633,7 @@ class AWSService:
                 else:
                     base_name = uname
                 
-                normalized_base = re.sub(r'[-/_]', '', base_name)
+                normalized_base = re.sub(r'[\s\-_/()]', '', base_name)
                 return normalized_base, alarm_type
 
             for key, alarm_names in duplicate_tracker.items():
