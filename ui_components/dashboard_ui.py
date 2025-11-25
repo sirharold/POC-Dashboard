@@ -45,6 +45,7 @@ class DashboardUI:
         vm_name = instance.get('Name', instance.get('ID', 'N/A'))
         instance_id = instance.get('ID', '')
         private_ip = instance.get('PrivateIP', 'N/A')
+        owner = instance.get('Owner', 'N/A')
         state = instance.get('State', 'unknown')
         alerts = instance.get('Alarms', Counter())
         alarm_objects = instance.get('AlarmObjects', [])
@@ -76,7 +77,7 @@ class DashboardUI:
             # Non-running machine: only show name, IP, and state
             card_content = f'''<div class='server-card server-card-{card_status}'>
                 <div class='server-name'>{vm_name}</div>
-                <div style='font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 2px;'>{private_ip}</div>
+                <div style='font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 2px;'>{private_ip} | {owner}</div>
                 <div style='margin-top: 20px; text-align: center;'>
                     <div style='font-size: 0.85rem; color: rgba(255,255,255,0.9); font-weight: 600;'>{state_label}</div>
                 </div>
@@ -103,7 +104,7 @@ class DashboardUI:
             alert_bar_html = self.create_alert_bar_html(alerts)
             card_content = f'''<div class='server-card server-card-{card_status}'>
                 <div class='server-name'>{vm_name}</div>
-                <div style='font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 2px;'>{private_ip}</div>
+                <div style='font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 2px;'>{private_ip} | {owner}</div>
                 <div style='margin-top: 12px;'>
                     <div style='font-size: 0.7rem; color: rgba(255,255,255,0.8); margin-bottom: 4px; text-align: center;'>🚨 Alertas</div>
                     {alert_bar_html}

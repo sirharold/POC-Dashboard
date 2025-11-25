@@ -187,6 +187,7 @@ class AWSService:
                         'Name': tags.get('Name', instance_id),
                         'State': instance_state,
                         'Environment': tags.get('Environment', 'Unknown'),
+                        'Owner': tags.get('Owner') or 'TBD',
                         'DashboardGroup': dashboard_group,
                         'Alarms': instance_alarms,
                         'AlarmsList': [], # Placeholder, as alarms_list is not defined here
@@ -246,7 +247,7 @@ class AWSService:
                 volume_details[volume['VolumeId']] = {
                     'Size': volume.get('Size'),
                     'Iops': volume.get('Iops'),
-                    'Tags': tags,
+                    'Owner': tags.get('Owner') or 'TBD',
                     'VolumeType': volume.get('VolumeType')
                 }
             return volume_details

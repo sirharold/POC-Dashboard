@@ -588,7 +588,7 @@ class DetailUI:
                             "Tamaño (GB)": details.get('Size'),
                             "IOPS": details.get('Iops'),
                             "Tipo": details.get('VolumeType'),
-                            "Tags": str(details.get('Tags', {}))
+                            "Owner": details.get('Owner', 'TBD')
                         })
                 df_vols = pd.DataFrame(aws_disk_data)
                 # Sort by device name
