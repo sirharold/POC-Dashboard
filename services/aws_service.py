@@ -480,12 +480,15 @@ class AWSService:
             if not ssm:
                 return {'success': False, 'content': '', 'error': 'Failed to get SSM client'}
 
-            # Determine the command based on OS type
+            # Determine the command based on OS type to read the END of the file.
+            # This ensures that if the output is truncated by SSM, we see the most recent logs.
             if os_type.lower() == 'windows':
-                command = f'Get-Content -Path "{file_path}" -ErrorAction Stop'
+                # Get the last 1000 lines, which is safer than byte-based for PowerShell
+                command = f'Get-Content -Path "{file_path}" -Tail 1000 -ErrorAction Stop'
                 document_name = 'AWS-RunPowerShellScript'
             else:  # linux
-                command = f'cat "{file_path}"'
+                # Get the last 24500 bytes, safely within SSM's 25000 character limit
+                command = f'tail -c 24500 "{file_path}"'
                 document_name = 'AWS-RunShellScript'
 
             # Send command

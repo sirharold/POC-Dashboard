@@ -182,7 +182,11 @@ class DashboardUI:
             return
         
         # Filtra las instancias por el entorno seleccionado
-        filtered_instances = [inst for inst in instances if inst.get('Environment') == environment]
+        # Para Production, también incluir Production-Burbuja
+        if environment == "Production":
+            filtered_instances = [inst for inst in instances if inst.get('Environment') in ['Production', 'Production-Burbuja']]
+        else:
+            filtered_instances = [inst for inst in instances if inst.get('Environment') == environment]
 
         if not filtered_instances:
             st.warning(f"No se encontraron instancias con el tag 'Environment={environment}'.")

@@ -240,14 +240,24 @@ class MonthlyReportUI:
             instances_data = self.aws_service.get_aws_data()
 
             # Filter instances by environment
+            # Para Production, también incluir Production-Burbuja
             env_instances = []
             for instance in instances_data:
-                if instance.get('Environment', '').upper() == environment.upper():
-                    env_instances.append({
-                        'ID': instance.get('ID'),
-                        'Name': instance.get('Name'),
-                        'Schedule': instance.get('Schedule', None)
-                    })
+                instance_env = instance.get('Environment', '').upper()
+                if environment.upper() == 'PRODUCTION':
+                    if instance_env in ['PRODUCTION', 'PRODUCTION-BURBUJA']:
+                        env_instances.append({
+                            'ID': instance.get('ID'),
+                            'Name': instance.get('Name'),
+                            'Schedule': instance.get('Schedule', None)
+                        })
+                else:
+                    if instance_env == environment.upper():
+                        env_instances.append({
+                            'ID': instance.get('ID'),
+                            'Name': instance.get('Name'),
+                            'Schedule': instance.get('Schedule', None)
+                        })
 
             return env_instances
         except Exception as e:
